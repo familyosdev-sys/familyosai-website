@@ -1,348 +1,162 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FamilyOS — let the app do the asking</title>
-<meta name="description" content="A household that runs itself — without anyone raising its voice. Local-first, privacy-by-design, flat family rate.">
-<meta name="theme-color" content="#150e08">
-<link rel="icon" href="assets/brand/familyos-appicon.png">
-<link rel="apple-touch-icon" href="assets/brand/familyos-appicon.png">
-<meta property="og:title" content="FamilyOS — let the app do the asking">
-<meta property="og:description" content="A household that runs itself — without anyone raising its voice. The app does the asking so you don't have to.">
-<meta property="og:image" content="https://familyosai.com/assets/brand/og-card.png">
-<meta property="og:url" content="https://familyosai.com/">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="FamilyOS">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="FamilyOS — let the app do the asking">
-<meta name="twitter:description" content="A household that runs itself — without anyone raising its voice. The app does the asking so you don't have to.">
-<meta name="twitter:image" content="https://familyosai.com/assets/brand/og-card.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap">
-<style>
-:root{--pg:#150e08;--ink:#f6e7c6;--sub:#cbb994;--mut:#a8946e;--acc:#e8a33c;--accT:#ffe08a;--onacc:#1c1206;--line:rgba(184,145,47,.4);--line2:rgba(184,145,47,.22);--card:rgba(48,33,16,.5);--chipbg:rgba(232,163,60,.07);--gold:#f4c95d;--ok:#a3c47e;--meterfill:linear-gradient(90deg,#e8a33c,#f4c95d);--df:'Cormorant Garamond',serif;--sans:'Outfit',system-ui,sans-serif;--mono:'SF Mono',Consolas,monospace;--secY:110px;--gap:24px;--cardP:36px}
-html[data-accent="violet"]{--acc:#8b5cf6;--accT:#c4b5fd;--onacc:#fff;--gold:#a78bfa;--meterfill:linear-gradient(90deg,#8b5cf6,#c4b5fd);--line:rgba(139,92,246,.42);--line2:rgba(139,92,246,.22);--chipbg:rgba(139,92,246,.08)}
-html[data-density="airy"]{--secY:170px;--gap:36px;--cardP:48px}
-html[data-pricing="off"] #pricing{display:none}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--pg);color:var(--ink);font-family:var(--sans)}
-a{color:var(--accT);text-decoration:none}a:hover{color:var(--ink)}
-.wrap{max-width:1240px;margin:0 auto;padding:0 40px}
-.nav{position:absolute;left:0;right:0;top:0;z-index:5;background:linear-gradient(180deg,rgba(21,14,8,.85),transparent)}
-.nav .wrap{display:flex;align-items:center;gap:26px;padding-top:22px;padding-bottom:22px;max-width:1360px}
-.nav .links{display:flex;gap:26px;margin-left:auto;align-items:center}
-.nav .links a{color:var(--sub);font-size:14px;font-weight:600}
-.mark{display:flex;align-items:center;gap:12px;font-size:21px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:14px 30px;font-weight:700;font-size:15px;border:1px solid transparent;cursor:pointer;font-family:var(--sans)}
-.btn-p{background:var(--acc);color:var(--onacc)}.btn-p:hover{filter:brightness(1.08);color:var(--onacc)}
-.btn-g{border-color:var(--line);color:var(--ink)}.btn-g:hover{background:var(--chipbg);color:var(--ink)}
-.btn.sm{padding:9px 20px;font-size:13.5px}
-.eyeb{font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accT)}
-.sec{padding-top:var(--secY)}
-.h2{font-family:var(--df);font-size:54px;font-weight:600;line-height:1.06;margin:14px 0 18px;text-wrap:balance}
-.lead{font-size:17px;line-height:1.65;color:var(--sub);max-width:64ch;margin:0;text-wrap:pretty}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px}
-.chip{background:var(--chipbg);border:1px solid var(--line2);border-radius:12px}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--gap)}
-.tick{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.55;color:var(--sub)}
-.tick b{color:var(--ink)}
-.tick .dot{flex:none;width:22px;height:22px;border-radius:50%;background:var(--chipbg);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;color:var(--accT);margin-top:1px}
-.stepn{font-family:var(--df);font-size:17px;font-weight:700;letter-spacing:.14em;color:var(--accT)}
-.bubble{border-radius:16px;padding:16px 20px;font-size:15px;line-height:1.55;border:1px solid var(--line2)}
-.meter{height:8px;border-radius:4px;background:rgba(127,127,127,.18)}
-.meter i{display:block;height:8px;border-radius:4px;background:var(--meterfill)}
-.qrow{display:flex;align-items:center;gap:14px;padding:14px 16px}
-.ph{flex:none;width:52px;height:40px;border-radius:8px;background:repeating-linear-gradient(45deg,rgba(232,163,60,.2) 0 6px,rgba(232,163,60,.08) 6px 12px);display:grid;place-items:center;font:600 8px/1 var(--mono);color:var(--mut);text-align:center}
-.fn{padding:26px}
-.fn h3{font-family:var(--df);font-weight:600;font-size:25px;margin:14px 0 8px;line-height:1.15}
-.fn p{font-size:14.5px;line-height:1.6;color:var(--sub);margin:0}
-.fn .ic{width:34px;height:34px;border-radius:9px;background:var(--chipbg);border:1px solid var(--line2);display:grid;place-items:center;font-size:16px;color:var(--accT)}
-.prin{padding:24px;display:flex;flex-direction:column;gap:8px}
-.prin .pl{font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
-.prin h4{font-family:var(--df);font-weight:600;font-size:24px;margin:0;line-height:1.2}
-.prin p{font-size:14px;line-height:1.6;color:var(--sub);margin:0}
-.vs{padding:28px;display:grid;gap:14px}
-.vs .vt{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
-.vs .ln{font-size:15.5px;line-height:1.5;padding-left:18px;position:relative;color:var(--sub)}
-.vs .ln::before{content:"";position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.55}
-.tier{padding:28px;display:flex;flex-direction:column;position:relative}
-.tier .tn{font-weight:800;font-size:17px}
-.tier .tp{font-family:var(--df);font-size:44px;font-weight:600;margin-top:10px}
-.tier .tp span{font-size:15px;font-weight:600;color:var(--mut);font-family:var(--sans)}
-.tier .ta{font-size:13px;color:var(--accT);font-weight:600;margin-top:4px}
-.tier p{font-size:13.5px;line-height:1.5;color:var(--sub);margin:14px 0 0;min-height:60px}
-.tier ul{margin:14px 0 0;padding:14px 0 0;border-top:1px solid var(--line2);list-style:none;display:grid;gap:8px;font-size:13px;color:var(--sub)}
-.tier ul li{padding-left:20px;position:relative}
-.tier ul li::before{content:"✓";position:absolute;left:0;color:var(--accT);font-weight:700}
-.tier.hot{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc),0 16px 48px rgba(0,0,0,.4)}
-.ribbon{position:absolute;top:-12px;left:24px;background:var(--acc);color:var(--onacc);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:5px 12px}
-.faq{border-bottom:1px solid var(--line2);padding:20px 4px}
-.faq summary{font-size:16.5px;font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:24px}
-.faq summary::after{content:"+";font-size:22px;font-weight:400;color:var(--accT)}
-.faq[open] summary::after{content:"–"}
-.faq p{font-size:14.5px;line-height:1.6;color:var(--sub);margin:12px 0 0;max-width:70ch}
-.quote{padding:26px;display:flex;flex-direction:column;gap:16px}
-.quote .qt{font-family:var(--df);font-size:21px;font-weight:600;line-height:1.45}
-.quote .who{font-size:13px;color:var(--mut);font-weight:600;margin-top:auto}
-.cap{display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:8px 16px;font-size:13px;font-weight:600;color:#f1f5f9;backdrop-filter:blur(4px)}
-.input{flex:1;background:rgba(127,127,127,.1);border:1px solid var(--line);border-radius:999px;padding:14px 22px;font-size:15px;color:var(--ink);font-family:var(--sans);outline:none}
-.input::placeholder{color:var(--mut)}
-.foot{display:flex;align-items:center;gap:24px;padding:28px 0;border-top:1px solid var(--line2);font-size:13px;color:var(--mut)}
-.foot .links{margin-left:auto;display:flex;gap:20px}
-.foot .links a{color:var(--mut)}
-.hero{position:relative;height:clamp(780px,100vh,1000px);overflow:hidden}
-.hero .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.hero .grade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(21,14,8,.6),rgba(21,14,8,.2) 32%,rgba(21,14,8,.05) 50%,rgba(21,14,8,.96) 88%,#150e08)}
-.hero .fig{position:absolute;bottom:48px;filter:drop-shadow(0 16px 36px rgba(0,0,0,.6))}
-.hero .copy{position:absolute;top:15%;left:0;right:0;text-align:center;padding:0 200px}
-@media (max-width:1100px){.g2,.g3,.tiers{grid-template-columns:1fr!important}.hero .copy{padding:0 40px}.hero .fig{display:none}.nav .links a{display:none}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FamilyOS — let the app do the asking</title>
+  <meta name="description" content="A household that runs itself — without anyone raising their voice. Local-first, privacy-by-design, flat family rate.">
+  <meta name="theme-color" content="#150e08">
+  <link rel="icon" href="assets/brand/familyos-appicon.png">
+  <meta property="og:title" content="FamilyOS — let the app do the asking">
+  <meta property="og:description" content="A household that runs itself — without anyone raising its voice. The app does the asking so you don't have to.">
+  <meta property="og:image" content="https://familyosai.com/assets/brand/og-card.png">
+  <meta property="og:url" content="https://familyosai.com/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap">
+  <style>
+    :root{--pg:#150e08;--ink:#f6e7c6;--sub:#cbb994;--acc:#f4c95d;--accT:#ffe08a;--onacc:#1c1206;--line:rgba(184,145,47,.4);--card:rgba(48,33,16,.5);--chipbg:rgba(232,163,60,.07)}
+    body{margin:0;background:var(--pg);color:var(--ink);font-family:'Outfit',sans-serif}
+    .wrap{max-width:1240px;margin:0 auto;padding:0 40px}
+    .hero{position:relative;height:100vh;overflow:hidden}
+    .hero .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .hero .grade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(21,14,8,.6),transparent 30%,rgba(21,14,8,.96) 90%,#150e08)}
+    .hero .copy{position:absolute;top:20%;left:0;right:0;text-align:center;padding:0 200px}
+    .h2{font-family:'Cormorant Garamond',serif;font-size:54px;font-weight:600;line-height:1.06;margin:14px 0 18px;text-wrap:balance}
+    .lead{font-size:17px;line-height:1.65;color:var(--sub);max-width:64ch;margin:0;text-wrap:pretty}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:14px 30px;font-weight:700;font-size:15px;border:1px solid transparent;cursor:pointer}
+    .btn-p{background:var(--acc);color:var(--onacc)}
+    .input{flex:1;background:rgba(127,127,127,.1);border:1px solid var(--line);border-radius:999px;padding:14px 22px;font-size:15px;color:var(--ink);outline:none}.input::placeholder{color:var(--sub)}
+    .sec{padding-top:120px;padding-bottom:80px}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:36px}
+    .tick{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.55;color:var(--sub)}.tick b{color:var(--ink)}
+    .foot{display:flex;align-items:center;gap:24px;padding:28px 0;border-top:1px solid var(--line);font-size:13px;color:var(--sub)}
+    .foot .links{margin-left:auto;display:flex;gap:20px}
+    @media (max-width:900px){.g2{grid-template-columns:1fr!important}.hero .copy{padding:0 40px}}
+  </style>
 </head><body>
 
-<nav class="nav"><div class="wrap"><div class="mark"><img src="assets/brand/familyos-logo-painted.png" alt="FamilyOS" style="height:38px">FamilyOS</div><div class="links"><a href="#does">What it does</a><a href="#shield">The shield</a><a href="#care">Trauma-informed</a><a href="#yours">Your adventure</a><a href="#privacy">Privacy</a><a href="#pricing">Pricing</a><a class="btn btn-p sm" href="#join" style="color:var(--onacc)">Join the beta</a></div></div></nav>
-
-<header class="hero" data-screen-label="Hero">
-  <img class="bg" id="heroBackdrop" src="assets/painted/backdrops/tudor-house-dusk.png" alt="Painted family home at dusk">
+<header class="hero">
+  <img class="bg" src="assets/painted/backdrops/tudor-house-dusk.png" alt="Painted family home at dusk">
   <div class="grade"></div>
-  <img class="fig" id="heroFigL" src="assets/painted/cutouts/ace-asclepius-figure.png" alt="ACE, the family companion" style="left:7%;width:340px">
-  <img class="fig" id="heroFigR" src="assets/painted/cutouts/companions/brandy.png" alt="Brandy the family dog" style="right:8%;width:250px">
   <div class="copy">
-    <div class="eyeb" style="text-shadow:0 2px 12px rgba(0,0,0,.8)">Now in open beta · free during beta</div>
-    <h1 class="h2" id="heroH1" style="font-size:clamp(58px,6.4vw,88px);margin:20px 0 22px;text-shadow:0 4px 24px rgba(0,0,0,.85)">Let the app do the asking.</h1>
-    <p class="lead" id="heroSub" style="font-size:20px;max-width:52ch;margin:0 auto;color:#e9d9b4;text-shadow:0 2px 10px rgba(0,0,0,.7)">FamilyOS runs the daily logistics of your household — the reminders, the follow-through, the allowance — so the friction lands on software instead of on your relationship.</p>
-    <div style="display:flex;gap:14px;justify-content:center;margin-top:34px"><a class="btn btn-p" href="#join" style="color:var(--onacc)">Join early access</a><a class="btn btn-g" href="#does" style="background:rgba(21,14,8,.4);backdrop-filter:blur(4px)">See what it does</a></div>
-    <div style="display:flex;gap:22px;justify-content:center;margin-top:24px;font-size:13px;color:#cbb994;font-weight:600;text-shadow:0 1px 6px rgba(0,0,0,.7)"><span>✓ Free during beta</span><span>✓ No credit card</span><span>✓ Your data stays home</span></div>
+    <h1 class="h2" style="font-size:clamp(58px,6.4vw,88px);margin:20px 0 22px">Let the app do the asking.</h1>
+    <p class="lead" style="font-size:20px;max-width:52ch;margin:0 auto;color:#e9d9b4">FamilyOS carries the routine so you can carry the relationship.</p>
+    <form id="waitlist" class="waitlist-form" style="display:flex;gap:12px;max-width:560px;margin:32px auto 0" onsubmit="submitWaitlist(event)">
+      <input class="input" type="email" name="email" placeholder="you@family.home" required>
+      <button type="submit" class="btn btn-p">Join early access</button>
+    </form>
+    <p style="font-size:13px;color:var(--sub);margin-top:16px">Free during beta · Local-first · Never per kid</p>
   </div>
 </header>
 
-<section class="sec" id="does" style="padding-top:56px"><div class="wrap">
-  <div class="eyeb">What it does</div>
-  <h2 class="h2">A household that runs itself, out loud.</h2>
-  <p class="lead">You describe how your home actually works once. After that FamilyOS carries it: it remembers, it asks, it checks, it pays, and it tells you only what genuinely needs a parent.</p>
-  <div class="g3" style="margin-top:44px">
-    <div class="card fn"><div class="ic">◷</div><h3>Holds the schedule</h3><p>Daily, weekly and every-other-Tuesday routines per person — with the cadence, the reset time and the fair share already worked out.</p></div>
-    <div class="card fn"><div class="ic">◌</div><h3>Makes the ask</h3><p>Reminders come from the app, at the time you chose, in a voice that never sighs. Nobody has to raise their voice to be heard.</p></div>
-    <div class="card fn"><div class="ic">▣</div><h3>Checks the work</h3><p>A kid snaps a photo; the on-device model reads it and gives an honest read. You confirm with one tap, or let it settle itself.</p></div>
-    <div class="card fn"><div class="ic">◆</div><h3>Pays out on time</h3><p>Allowance, screen time, privileges, a trip to the pool — whatever's real in your house. Earned is earned, paid automatically.</p></div>
-    <div class="card fn"><div class="ic">◍</div><h3>Keeps the record</h3><p>Who did what, when, and what it was worth. No more relying on memory, and no more litigating last Thursday.</p></div>
-    <div class="card fn"><div class="ic">♥</div><h3>Escalates to a human</h3><p>If a kid asks for help, gets stuck, or something sounds serious, it stops managing and gets you. That path is free on every plan.</p></div>
+<section class="sec">
+  <div class="wrap">
+    <h2 class="h2">A household that runs itself, out loud.</h2>
+    <p class="lead">You describe how your home works once. After that, FamilyOS remembers, asks, checks, and pays — so the friction lands on software instead of your relationship.</p>
+    <div class="g2" style="margin-top:44px">
+      <div class="card"><h3>Holds the schedule</h3><p>Daily, weekly, and every-other-Tuesday routines — with the cadence and fair share already worked out.</p></div>
+      <div class="card"><h3>Checks the work</h3><p>Photo proof on-device. The AI lives in your house — we can't see your kids' data.</p></div>
+      <div class="card"><h3>Pays out on time</h3><p>Allowance, screen time, privileges — whatever's real in your house. Earned is earned, paid automatically.</p></div>
+      <div class="card"><h3>Built for hard days</h3><p>Low-demand mode: drop everything non-essential. No penalty. No lost points. Because a missed day is just a day.</p></div>
+    </div>
   </div>
-</div></section>
+</section>
 
-<section class="sec" id="shield"><div class="wrap">
-  <div class="eyeb">The shield</div>
-  <h2 class="h2">Put something between the ask and the relationship.</h2>
-  <p class="lead">Most household conflict isn't about the dishes. It's about who had to ask, how many times, and what tone it came out in by the third time. FamilyOS takes that job — so the pressure has somewhere to land that isn't the two of you.</p>
-  <div class="g2" style="margin-top:40px">
-    <div class="card vs" style="border-color:var(--line2)">
-      <div class="vt" style="color:var(--mut)">Without it</div>
-      <div class="ln">The reminder comes from you, and it arrives carrying every other time you've said it.</div>
-      <div class="ln">Following up reads as distrust. Not following up reads as it didn't matter.</div>
-      <div class="ln">Rewards and consequences get renegotiated in the worst possible moment.</div>
-      <div class="ln">You end the day as the enforcer, even on a day that went fine.</div>
-    </div>
-    <div class="card vs" style="border-color:var(--acc);background:radial-gradient(70% 100% at 100% 0%,rgba(232,163,60,.1),transparent),var(--card)">
-      <div class="vt" style="color:var(--accT)">With FamilyOS</div>
-      <div class="ln" style="color:var(--ink)">The reminder comes from the app. It has no memory of yesterday's argument and no edge in its voice.</div>
-      <div class="ln" style="color:var(--ink)">Verification is a photo, not an interrogation.</div>
-      <div class="ln" style="color:var(--ink)">The terms were agreed in a calm moment and don't move when tempers do.</div>
-      <div class="ln" style="color:var(--ink)">You get to be the one who notices the win: "I heard today went great."</div>
-    </div>
-  </div>
-  <div class="card" style="display:grid;grid-template-columns:340px 1fr;gap:44px;padding:44px;align-items:center;margin-top:var(--gap);background:radial-gradient(60% 80% at 20% 50%,rgba(232,163,60,.12),transparent),var(--card)">
-    <div style="text-align:center"><img src="assets/painted/cutouts/ace-asclepius-figure.png" alt="ACE, the family companion" style="height:340px;filter:drop-shadow(0 20px 44px rgba(0,0,0,.55))"><div class="cap" style="margin-top:-6px;background:var(--chipbg);border-color:var(--line);color:var(--sub)">ACE · the family companion</div></div>
-    <div>
-      <div class="eyeb">Meet ACE</div>
-      <p class="lead">When ACE says "time to clean your room," it isn't mom or dad saying it. No tone, no accumulated frustration, no score being settled. Kids can push back at a companion without pushing back at a parent — and because it stays consistent and fair every single time, the pushing back tends to fade.</p>
-      <div class="g2" style="margin-top:24px;gap:16px">
-        <div class="bubble" style="background:rgba(232,163,60,.12);border-color:rgba(232,163,60,.35)"><b>To your kid:</b> "That's your room done — +20 toward the pool trip. Want to leave the trash for after dinner?"</div>
-        <div class="bubble chip"><b>To you:</b> "Room is done and logged. Leo's had a rough afternoon; I've moved the trash to tomorrow."</div>
-      </div>
-      <p style="font-size:13.5px;color:var(--mut);margin:18px 0 0;font-weight:600">ACE only gives, never takes — nothing already earned is ever removed as a punishment.</p>
-    </div>
-  </div>
-</div></section>
-
-<section class="sec" id="care"><div class="wrap">
-  <div class="eyeb" style="color:var(--ok)">Trauma-informed by design</div>
-  <h2 class="h2">Built for kids who've learned to expect the worst.</h2>
-  <p class="lead">Foster and adoptive parents, kinship carers and families raising neurodivergent kids shaped this. If a system is unpredictable, shaming, or punitive, it doesn't work for those kids — so those things aren't options here.</p>
-  <div class="g3" style="margin-top:44px">
-    <div class="card prin"><div class="pl">Predictability</div><h4>The rules don't move.</h4><p>The same ask, at the same time, in the same words. Change is announced in advance, never sprung.</p></div>
-    <div class="card prin"><div class="pl">Never punitive</div><h4>Nothing earned is taken back.</h4><p>There is no mechanic anywhere in FamilyOS that removes stars, levels or progress. Loss isn't a lever we hand you.</p></div>
-    <div class="card prin"><div class="pl">No shame</div><h4>No leaderboards, no comparison.</h4><p>Kids see their own progress and one shared family goal — never a ranking against a sibling.</p></div>
-    <div class="card prin"><div class="pl">Agency</div><h4>Choice wherever it's real.</h4><p>Kids choose their order, their pace, their look, and can say "not today" without it becoming a confrontation.</p></div>
-    <div class="card prin"><div class="pl">Hard days</div><h4>Low-demand mode.</h4><p>Dysregulated day? Drop to the two things that truly matter. Streaks pause instead of breaking.</p></div>
-    <div class="card prin"><div class="pl">Repair</div><h4>A missed day just ends.</h4><p>Nothing accumulates into a debt or a lecture. Tomorrow opens clean, every time.</p></div>
-  </div>
-  <div class="chip" style="margin-top:var(--gap);padding:20px 26px;display:flex;gap:14px;align-items:flex-start">
-    <span style="color:var(--accT);font-size:18px">ⓘ</span>
-    <p style="font-size:14px;line-height:1.6;color:var(--sub);margin:0;max-width:88ch">FamilyOS isn't therapy and it isn't a treatment plan. It's household software built so that following the daily routine never costs a child their sense of safety — and so a caregiver is always one tap away, on every plan, free.</p>
-  </div>
-</div></section>
-
-<section class="sec" id="yours"><div class="wrap">
-  <div style="display:grid;grid-template-columns:1fr 560px;gap:56px;align-items:center" class="g2">
-    <div>
-      <div class="eyeb">Your adventure</div>
-      <h2 class="h2" style="font-size:46px">Your family's story, in your family's words.</h2>
-      <p class="lead">A story is optional scaffolding, not the product. Turn it all the way up for a seven-year-old, turn it all the way off for a fifteen-year-old, and rename anything that doesn't sound like your house.</p>
-      <div style="display:grid;gap:14px;margin-top:26px">
-        <div class="tick"><span class="dot">✎</span><span><b>Write your own.</b> Describe the world your kid is actually into — the Custom Adventure Engine builds the language around your real routines.</span></div>
-        <div class="tick"><span class="dot">◑</span><span><b>Or none at all.</b> Plain mode: real names, real times, no characters. Same schedule, same payouts.</span></div>
-        <div class="tick"><span class="dot">⇄</span><span><b>Per person, not per household.</b> One kid can be deep in a story while their sibling gets a clean checklist.</span></div>
-        <div class="tick"><span class="dot">◈</span><span><b>Rewards you actually give.</b> Screen time, allowance, a later bedtime Friday, choosing dinner — you define what things are worth.</span></div>
-      </div>
-      <p style="font-size:13.5px;color:var(--mut);margin:20px 0 0;font-weight:600">Ten ready-made worlds ship with it, if you'd rather just pick one.</p>
-    </div>
-    <div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px">
-        <span class="chip" style="padding:8px 14px;font-size:13px;font-weight:600">Plain checklist</span><span class="chip" style="padding:8px 14px;font-size:13px;font-weight:600">Castle &amp; keep</span><span class="chip" style="padding:8px 14px;font-size:13px;font-weight:600">Space crew</span><span class="chip" style="padding:8px 14px;font-size:13px;font-weight:600">Team season</span><span class="chip" style="padding:8px 14px;font-size:13px;font-weight:600">Dig site</span><span class="chip" style="padding:8px 14px;font-size:13px;font-weight:600">Reef</span><span class="chip" style="padding:8px 14px;font-size:13px;font-weight:600">Kitchen crew</span><span class="chip" style="padding:8px 14px;font-size:13px;font-weight:600">Garden</span><span class="chip" style="padding:8px 14px;font-size:13px;font-weight:600">Band tour</span><span class="chip" style="padding:8px 14px;font-size:13px;font-weight:600">+ write your own</span>
-      </div>
-      <div class="g2" style="gap:12px">
-        <img src="assets/painted/themes/rpg-crystals.png" alt="Castle world" style="width:100%;height:120px;object-fit:cover;border-radius:12px;border:1px solid var(--line)">
-        <img src="assets/painted/themes/space-ranger.png" alt="Space world" style="width:100%;height:120px;object-fit:cover;border-radius:12px;border:1px solid var(--line)">
-        <img src="assets/painted/themes/dino-explorer.png" alt="Dig site world" style="width:100%;height:120px;object-fit:cover;border-radius:12px;border:1px solid var(--line)">
-        <img src="assets/painted/themes/reef-diver.png" alt="Reef world" style="width:100%;height:120px;object-fit:cover;border-radius:12px;border:1px solid var(--line)">
-      </div>
-      <div class="card" style="margin-top:14px;padding:18px 20px">
-        <div style="font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:10px">Same chore, three settings</div>
-        <div style="display:grid;gap:8px;font-size:14.5px;color:var(--sub)"><div><b style="color:var(--ink)">Plain:</b> Tidy your room · 7:30pm · $1.00</div><div><b style="color:var(--ink)">Light:</b> Room reset · 7:30pm · 20 pts</div><div><b style="color:var(--ink)">Full:</b> Clear the keep's east wing · dusk · 20 ⭐</div></div>
+<section class="sec">
+  <div class="wrap">
+    <h2 class="h2">Put something between the ask and the relationship.</h2>
+    <p class="lead">Most conflict isn't about the dishes. It's about who had to ask, how many times, and what tone it came out in by the third time. FamilyOS takes that job.</p>
+    <div class="card" style="margin-top:40px;padding:44px;display:grid;grid-template-columns:340px 1fr;gap:44px;align-items:center">
+      <div style="text-align:center"><img src="assets/painted/cutouts/ace-asclepius-figure.png" alt="ACE, the family companion" style="height:340px"><div class="cap" style="margin-top:-6px;background:var(--chipbg);border-color:var(--line);color:var(--sub)">ACE · the family companion</div></div>
+      <div>
+        <p class="lead">When ACE says "time to clean your room," it isn't mom or dad saying it. No tone, no accumulated frustration. Kids can push back at a companion without pushing back at a parent.</p>
+        <div class="g2" style="margin-top:24px;gap:16px">
+          <div class="bubble" style="background:rgba(232,163,60,.12);border-color:rgba(232,163,60,.35)"><b>To your kid:</b> "That's your room done — +20 toward the pool trip. Want to leave the trash for after dinner?"</div>
+          <div class="bubble chip"><b>To you:</b> "Room is done and logged. Leo's had a rough afternoon; I've moved the trash to tomorrow."</div>
+        </div>
       </div>
     </div>
   </div>
-</div></section>
+</section>
 
-<section class="sec" id="parents"><div class="wrap">
-  <div class="eyeb" style="color:var(--ok)">For parents</div>
-  <h2 class="h2">One calm place, not another feed.</h2>
-  <div style="display:grid;grid-template-columns:1fr 420px;gap:28px;margin-top:36px;align-items:start" class="g2">
-    <div class="card" style="padding:26px;display:grid;gap:14px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <span class="chip" style="padding:7px 16px;font-size:12.5px;font-weight:700;background:rgba(232,163,60,.16);border-color:rgba(232,163,60,.4)">Overview</span><span class="chip" style="padding:7px 16px;font-size:12.5px;font-weight:700;color:var(--mut)">Needs you · 2</span><span class="chip" style="padding:7px 16px;font-size:12.5px;font-weight:700;color:var(--mut)">Rewards</span><span class="chip" style="padding:7px 16px;font-size:12.5px;font-weight:700;color:var(--mut)">Safety</span></div>
-      <div class="chip qrow"><div class="ph">photo</div><div style="flex:1"><div style="font-weight:700;font-size:14px">Leo · Empty the dishwasher</div><div style="font-size:12px;color:var(--ok);font-weight:600">On-device check: looks done</div></div><span class="btn btn-p sm">Confirm</span><span class="btn btn-g sm">View</span></div>
-      <div class="chip qrow"><div class="ph">photo</div><div style="flex:1"><div style="font-weight:700;font-size:14px">Max · Feed Brandy</div><div style="font-size:12px;color:var(--gold);font-weight:600">On-device check: can't tell · your call</div></div><span class="btn btn-p sm">Confirm</span><span class="btn btn-g sm">View</span></div>
-      <div class="chip qrow" style="border-color:rgba(163,196,126,.4)"><div class="ph" style="background:rgba(163,196,126,.14)">note</div><div style="flex:1"><div style="font-weight:700;font-size:14px">Emma · asked to talk to a grown-up</div><div style="font-size:12px;color:var(--ok);font-weight:600">Escalated to you · 4:12pm · nothing else was shown to her</div></div><span class="btn btn-p sm">Open</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--mut);font-weight:600;padding:4px 2px"><span>This week: 23 routines done · 4 rewards paid · 1 low-demand day</span><span style="color:var(--ok)">● AI running locally</span></div>
-    </div>
-    <div style="display:grid;gap:14px">
-      <div class="tick"><span class="dot">1</span><span><b>A queue, not a chase.</b> The only things surfaced are the ones a parent actually has to decide.</span></div>
-      <div class="tick"><span class="dot">2</span><span><b>Allowance on autopilot.</b> Payouts happen on the terms you set, so you're not refereeing money.</span></div>
-      <div class="tick"><span class="dot">3</span><span><b>Two parents, one story.</b> Both caregivers see the same record — including across two households.</span></div>
-      <div class="tick"><span class="dot">4</span><span><b>Safety is never paywalled.</b> A kid can always reach a grown-up, on every plan, forever.</span></div>
-    </div>
-  </div>
-</div></section>
-
-<section class="sec"><div class="wrap">
-  <div class="card" style="position:relative;height:500px;border-radius:24px;overflow:hidden">
-    <img src="assets/painted/backdrops/tudor-house.png" alt="Family home scene on the kiosk display" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
-    <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(21,14,8,.2),transparent 35%,rgba(21,14,8,.9) 85%)"></div>
-    <img src="assets/painted/cutouts/companions/brandy.png" alt="Brandy the family dog" style="position:absolute;right:56px;bottom:36px;width:200px;filter:drop-shadow(0 10px 24px rgba(0,0,0,.5))">
-    <div style="position:absolute;left:48px;bottom:44px;max-width:660px">
-      <div class="cap">The family display</div>
-      <div class="h2" style="font-size:42px;margin:14px 0 10px">The day, on the wall, for everyone.</div>
-      <div style="font-size:15px;line-height:1.6;color:#e9d9b4;text-shadow:0 1px 8px rgba(0,0,0,.6)">A kiosk tablet, a spare monitor, or the living-room TV — so what's left today is a fact in the room, not something a parent has to announce. One shared goal, no per-kid scoreboard.</div>
-    </div>
-  </div>
-</div></section>
-
-<section class="sec" id="privacy"><div class="wrap">
-  <div class="g2" style="align-items:center;grid-template-columns:1fr 480px">
-    <div>
-      <div class="eyeb" style="color:var(--ok)">Privacy, by architecture</div>
-      <h2 class="h2" style="font-size:46px">The AI lives in your house. Literally.</h2>
-      <p class="lead">FamilyOS is local-first: the model that reads your kids' photos runs on hardware in your home. Pictures of your children's bedrooms never touch a cloud, an ad network, or anyone's training set.</p>
-      <div style="display:grid;gap:14px;margin-top:26px">
-        <div class="tick"><span class="dot" style="color:var(--ok)">✓</span><span><b>Runs fully offline.</b> No cloud account required — that's how the product works, not an upgrade you buy.</span></div>
-        <div class="tick"><span class="dot" style="color:var(--ok)">✓</span><span><b>Yours to take.</b> Full data export, any time — and for 30 days after you leave.</span></div>
-        <div class="tick"><span class="dot" style="color:var(--ok)">✓</span><span><b>No per-child pricing.</b> We don't monetize how many kids you have. One flat family rate.</span></div>
+<section class="sec">
+  <div class="wrap">
+    <h2 class="h2">The AI lives in your house. Literally.</h2>
+    <p class="lead">Local-first. Your data stays on your device. We can't see it, sell it, or train on it.</p>
+    <div class="g2" style="margin-top:44px">
+      <div>
+        <div class="tick"><span class="dot">✓</span><span><b>Runs fully offline.</b> No cloud account required.</span></div>
+        <div class="tick"><span class="dot">✓</span><span><b>Yours to take.</b> Full data export, any time.</span></div>
+        <div class="tick"><span class="dot">✓</span><span><b>No per-child pricing.</b> One flat family rate.</span></div>
+      </div>
+      <div class="card" style="padding:34px">
+        <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:30px;margin:12px 0 4px">FamilyOS Hub</div>
+        <div style="font-family:monospace;font-size:12.5px;color:var(--sub)">INTEL N100 · 16GB RAM · 256GB NVME · PRE-LOADED</div>
+        <div style="margin:20px 0;height:120px;border-radius:12px;background:repeating-linear-gradient(45deg,rgba(232,163,60,.14) 0 8px,rgba(232,163,60,.05) 8px 16px)"></div>
+        <div style="display:flex;align-items:baseline;gap:12px"><span style="font-size:34px;font-weight:800">$399</span><span style="font-size:13px;color:var(--sub)">includes 6 months · or $16.63/mo × 24</span></div>
+        <p style="font-size:13.5px;color:var(--sub);line-height:1.55;margin:12px 0 0">Silent, always-on, plugged in behind the router. Or skip it — the same software runs on any modern computer.</p>
       </div>
     </div>
-    <div class="card" style="padding:34px">
-      <div class="eyeb" style="font-size:11px">First-party hardware</div>
-      <div style="font-family:var(--df);font-weight:600;font-size:30px;margin:12px 0 4px">FamilyOS Hub</div>
-      <div style="font-family:var(--mono);font-size:12.5px;color:var(--mut);letter-spacing:.03em">INTEL N100 · 16GB RAM · 256GB NVME · PRE-LOADED</div>
-      <div style="margin:20px 0;height:120px;border-radius:12px;background:repeating-linear-gradient(45deg,rgba(232,163,60,.14) 0 8px,rgba(232,163,60,.05) 8px 16px);display:grid;place-items:center;font:600 11px/1.4 var(--mono);color:var(--mut);text-align:center">hub product photo<br>(drop in render)</div>
-      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-size:34px;font-weight:800">$399</span><span style="font-size:13px;color:var(--mut)">includes 6 months · or $16.63/mo × 24 at 0% APR</span></div>
-      <p style="font-size:13.5px;color:var(--sub);line-height:1.55;margin:12px 0 0">Silent, always-on, plugged in behind the router. Or skip it — the same software runs on any modern computer you already own.</p>
-    </div>
   </div>
-</div></section>
+</section>
 
-<section class="sec" id="pricing"><div class="wrap">
-  <div class="eyeb">Pricing</div>
-  <h2 class="h2">One plan. Flat family rate, never per child.</h2>
-  <p class="lead">There are no tiers to compare and nothing gated behind a bigger number. Every household gets the whole product — every world, the Custom Adventure Engine, offline operation, all of it — for the same price whether you're two people or seven.</p>
-  <div class="card" style="display:flex;align-items:center;gap:20px;padding:20px 28px;margin:32px 0;border-color:rgba(232,163,60,.5);background:rgba(232,163,60,.08)">
-    <span style="font-size:24px">✦</span>
-    <div style="flex:1"><b>FamilyOS is free during the open beta.</b> <span style="color:var(--sub)">Beta families keep a discounted first year when we hit GA. Hardware ships now with 30-day returns.</span></div>
-    <a class="btn btn-p sm" href="#join" style="color:var(--onacc)">Join the beta</a>
-  </div>
-  <div class="g2">
-    <div class="card tier hot" style="padding:38px">
-      <div class="ribbon">The whole thing</div>
-      <div class="tn">FamilyOS</div>
-      <div class="tp">$19.99<span>/mo</span></div>
-      <div class="ta">or $199/yr — about 17% off</div>
-      <p style="min-height:0">Everything included. No member limits, no feature gates, no add-ons to work out.</p>
-      <ul>
+<section class="sec">
+  <div class="wrap">
+    <h2 class="h2">One plan. Flat family rate.</h2>
+    <p class="lead">$19.99/mo. Your whole household. Never per kid. Free during beta.</p>
+    <div class="card" style="margin-top:40px;padding:38px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:600;margin:10px 0">$19.99<span style="font-size:15px;color:var(--sub)">/mo</span></div>
+      <div style="font-size:13px;color:var(--accT);font-weight:600;margin-top:4px">or $199/yr — about 17% off</div>
+      <p style="font-size:14.5px;line-height:1.6;color:var(--sub);margin:14px 0 0">Everything included. No member limits, no feature gates, no add-ons.</p>
+      <ul style="margin:14px 0 0;padding:14px 0 0;border-top:1px solid var(--line);list-style:none;display:grid;gap:8px;font-size:13px;color:var(--sub)">
         <li>Flat family rate, never per child</li>
-        <li>Every built-in world plus the Custom Adventure Engine</li>
         <li>Runs fully offline on hardware you own</li>
         <li>14-day free trial — no card until day 14</li>
-        <li>Cancel anytime; your data exports for 30 days after</li>
       </ul>
       <a class="btn btn-p" href="#join" style="margin-top:24px;color:var(--onacc)">Join the beta — free right now</a>
     </div>
-    <div class="card" style="padding:38px;display:flex;flex-direction:column">
-      <div class="eyeb" style="font-size:11px">Hardware, only if you want it</div>
-      <div style="font-family:var(--df);font-weight:600;font-size:32px;margin:12px 0 4px">FamilyOS Hub · $399</div>
-      <div class="ta" style="font-size:13px;color:var(--accT);font-weight:600">Includes 6 months of FamilyOS · or $16.63/mo × 24 at 0% APR</div>
-      <p style="font-size:14px;line-height:1.6;color:var(--sub);margin:16px 0 0">The dedicated appliance: silent, always-on, plugged in behind the router, with the display mode and voice server already set up. It's the no-decisions option — not a requirement.</p>
-      <div style="display:grid;gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line2)">
-        <div style="display:flex;justify-content:space-between;font-size:14.5px"><span style="color:var(--sub)">Kiosk tablet · 8″</span><b>$99</b></div>
-        <div style="display:flex;justify-content:space-between;font-size:14.5px"><span style="color:var(--sub)">Kiosk tablet · 10″</span><b>$129</b></div>
-      </div>
-      <p style="font-size:13.5px;color:var(--mut);margin:20px 0 0;line-height:1.6;font-weight:600">Or buy nothing — the same software runs on any modern computer you already own, and any tablet or old monitor can be the family display.</p>
-    </div>
   </div>
-  <p style="font-size:13px;color:var(--mut);margin:22px 0 0;line-height:1.7">14-day free trial — no card until day 14, and you're never auto-charged into a plan you didn't pick. Annual billing saves about 17%. Cancel anytime, effective at the end of your billing period. Hardware carries a 30-day return window. <b style="color:var(--sub)">The escalation path — a kid can always reach a grown-up — is free and never a paid feature.</b></p>
-</div></section>
+</section>
 
-<section class="sec"><div class="wrap">
-  <div class="g3">
-    <div class="card quote"><div class="qt">"I haven't asked about chores in six weeks. The app asks — and I get to be the one who says well done."</div><div class="who">Rachel M. · beta family, 2 kids</div></div>
-    <div class="card quote"><div class="qt">"Our son came to us at nine. Predictable and never punitive isn't a nice-to-have for him — it's the only thing that works."</div><div class="who">Devon P. · adoptive parent, 3 kids</div></div>
-    <div class="card quote"><div class="qt">"We turned the whole story off. It's a plain list with real times, and it still ended the daily standoff."</div><div class="who">Sam &amp; Jordan T. · beta family, 4 kids</div></div>
+<section class="sec" style="padding-bottom:0">
+  <div class="wrap" style="text-align:center;padding-bottom:120px">
+    <img src="assets/brand/familyos-logo-painted.png" alt="FamilyOS" style="height:76px">
+    <h2 class="h2" style="font-size:56px;margin-top:24px">You've been the reminder long enough.</h2>
+    <p class="lead" style="margin:0 auto;max-width:54ch">Join the open beta. Free on every plan, about ten minutes to set up, and tonight's routine can be the app's job instead of yours.</p>
+    <form id="waitlist-bottom" class="waitlist-form" style="display:flex;gap:12px;max-width:560px;margin:32px auto 0" onsubmit="submitWaitlist(event)">
+      <input class="input" type="email" name="email" placeholder="you@family.home" required>
+      <button type="submit" class="btn btn-p">Join early access</button>
+    </form>
   </div>
-</div></section>
+</section>
 
-<section class="sec"><div class="wrap">
-  <div class="eyeb">FAQ</div>
-  <h2 class="h2" style="font-size:42px">Fair questions.</h2>
-  <div style="margin-top:24px;max-width:900px">
-    <details class="faq" open><summary>My kid isn't into games. Is this still for us?</summary><p>Yes. The story layer is optional and per person — plain mode is real names, real times, real amounts, no characters. The scheduling, verification, payouts and escalation all work identically with it switched off.</p></details>
-    <details class="faq"><summary>Isn't this just bribing my kids?</summary><p>It's the allowance and privileges you were already giving, made predictable and visible. Nothing is ever taken away as a punishment, and there's no mechanic for withholding what a kid already earned — so it doesn't run on fear or leverage.</p></details>
-    <details class="faq"><summary>What does "trauma-informed" mean here, concretely?</summary><p>Six things we won't build: unpredictable rules, loss of earned progress, sibling leaderboards, shame-based nudges, accumulating debt for missed days, and a paywall between a child and a caregiver. Plus low-demand mode for dysregulated days. It isn't therapy — it's software that avoids the patterns that make routines unsafe for a kid.</p></details>
-    <details class="faq"><summary>Does the AI see photos of my kids?</summary><p>Yes — on your hardware, in your house. Photos are checked by a model running on the Hub or your own computer. Images never leave your home network, and nothing is used for training.</p></details>
-    <details class="faq"><summary>Does it work for neurodivergent kids?</summary><p>That's much of who it was built with. Fixed cadences, one visible next step, no time pressure on a task once started, low-demand days, and language you control word-for-word so a routine reads the way your kid needs it to.</p></details>
-    <details class="faq"><summary>What do I need to run it?</summary><p>Either the $399 FamilyOS Hub — which includes six months of FamilyOS and arrives ready to plug in — or any reasonably modern computer you already own. Same software either way; the Hub just adds always-on display mode and a voice server.</p></details>
-    <details class="faq"><summary>What ages does it work for?</summary><p>Built for kids 6–15, and it grows down as well as up: a six-year-old gets pictures and a companion, a fifteen-year-old gets a clean list and their allowance balance. Adults can be on it too.</p></details>
-    <details class="faq"><summary>Is it priced per child?</summary><p>Never. One flat rate for the whole household — $19.99/mo or $199/yr — no matter how many people are on it. There are no tiers, no member limits, and nothing to upgrade to.</p></details>
-    <details class="faq"><summary>What happens when the beta ends?</summary><p>Beta is free. At GA you choose monthly or annual, with a discounted first year as a beta family, and there's a 14-day trial before anything is charged. Hardware bought during beta carries a 30-day return window.</p></details>
-    <details class="faq"><summary>Can I leave?</summary><p>Anytime, effective at the end of your billing period. Your family's data is exportable for 30 days after — it's yours, not ours.</p></details>
-  </div>
-</div></section>
+<div class="wrap"><div class="foot"><span>© 2026 FamilyOS · Let the app do the asking.</span><div class="links"><a>Privacy</a><a>Terms</a><a>Contact</a></div></div></div>
 
-<section class="sec" id="join" style="padding-bottom:0"><div class="wrap" style="text-align:center;padding-bottom:120px">
-  <img src="assets/brand/familyos-logo-painted.png" alt="FamilyOS" style="height:76px">
-  <h2 class="h2" style="font-size:56px;margin-top:24px">You've been the reminder long enough.</h2>
-  <p class="lead" style="margin:0 auto;max-width:54ch">Join the open beta. Free on every plan, about ten minutes to set up, and tonight's routine can be the app's job instead of yours.</p>
-  <div style="display:flex;gap:12px;max-width:560px;margin:32px auto 0"><input class="input" type="email" placeholder="you@family.home"><span class="btn btn-p">Join early access</span></div>
-  <div style="font-size:13px;color:var(--mut);margin-top:16px;font-weight:600">Free during beta · No credit card · Cancel anytime</div>
-</div></section>
-<div class="wrap"><div class="foot"><span>© 2026 FamilyOS · Let the app do the asking.</span><div class="links"><a>Privacy</a><a>Terms</a><a>Contact</a><a>Press kit</a></div></div></div>
+<script>
+  function submitWaitlist(event) {
+    event.preventDefault();
+    const form = event.target;
+    const email = form.email.value;
+    const data = { email };
+
+    fetch('/api/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(response => {
+      if (response.ok) {
+        form.innerHTML = '<div class="btn btn-p" style="margin:0 auto">Thanks! We\'ll be in touch.</div>';
+      } else {
+        form.innerHTML = '<div class="btn btn-g" style="margin:0 auto">Something went wrong. Try again?</div>';
+      }
+    })
+    .catch(() => {
+      form.innerHTML = '<div class="btn btn-g" style="margin:0 auto">Something went wrong. Try again?</div>';
+    });
+  }
+</script>
 
 </body></html>
