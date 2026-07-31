@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap">
   <style>
     :root{--pg:#150e08;--ink:#f6e7c6;--sub:#cbb994;--acc:#f4c95d;--accT:#ffe08a;--onacc:#1c1206;--line:rgba(184,145,47,.4);--card:rgba(48,33,16,.5);--chipbg:rgba(232,163,60,.07)}
-    body{margin:0;background:var(--pg);color:var(--ink);font-family:'Outfit',sans-serif}
+    body{margin:0;background:var(--pg);color:var(--ink);font-family:'Outfit',sans-serif;overflow-x:hidden}
     .wrap{max-width:1240px;margin:0 auto;padding:0 40px}
     .hero{position:relative;height:100vh;overflow:hidden}
     .hero .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -48,13 +48,9 @@
   <img class="bg" src="assets/painted/backdrops/tudor-house-dusk.png" alt="Painted family home at dusk">
   <div class="grade"></div>
   <div class="copy">
-    <h1 class="h2" style="font-size:clamp(58px,6.4vw,88px);margin:20px 0 22px">Let the app do the asking.</h1>
-    <p class="lead" style="font-size:20px;max-width:52ch;margin:0 auto;color:#e9d9b4">FamilyOS carries the routine so you can carry the relationship.</p>
-    <form id="waitlist" class="waitlist-form" style="display:flex;gap:12px;max-width:560px;margin:32px auto 0" onsubmit="submitWaitlist(event)">
-      <input class="input" type="email" name="email" placeholder="you@family.home" required>
-      <button type="submit" class="btn btn-p">Join early access</button>
-    </form>
-    <p style="font-size:13px;color:var(--sub);margin-top:16px">Free during beta · Local-first · Never per kid</p>
+    <h1 class="h2" style="font-size: clamp(58px, 6.4vw, 88px); margin: 20px 0 22px;">Let the app do the asking.</h1>
+    <p class="lead" style="font-size: 20px; max-width: 52ch; margin: 0 auto; color: #e9d9b4;">FamilyOS carries the routine so you can carry the relationship.</p>
+    <p style="font-size: 13px; color: var(--sub); margin-top: 16px;">Free during beta · Local-first · Never per kid</p>
   </div>
 </header>
 
