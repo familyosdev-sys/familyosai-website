@@ -12,6 +12,9 @@
   <meta property="og:url" content="https://familyosai.com/">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FamilyOS — let the app do the asking">
+  <meta name="twitter:description" content="A household that runs itself — without anyone raising their voice. Local-first, privacy-by-design, flat family rate.">
+  <meta name="twitter:image" content="https://familyosai.com/assets/brand/og-card.png">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap">
   <style>
@@ -32,6 +35,7 @@
     .g2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
     .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:36px}
     .tick{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.55;color:var(--sub)}.tick b{color:var(--ink)}
+    .btn-g{background:rgba(127,127,127,.15);color:var(--ink);border:1px solid var(--line)}
     .foot{display:flex;align-items:center;gap:24px;padding:28px 0;border-top:1px solid var(--line);font-size:13px;color:var(--sub)}
     .foot .links{margin-left:auto;display:flex;gap:20px}
     @media (max-width:900px){.g2{grid-template-columns:1fr!important}.hero .copy{padding:0 40px}}
@@ -41,6 +45,9 @@
       .h2 {font-size:36px!important}
       .lead {font-size:16px!important}
       .waitlist-form {flex-direction:column}
+      .sec {padding-top:60px!important;padding-bottom:60px!important}
+      .card {padding:20px!important}
+      .g2, .g3 {gap:12px!important}
     }
   </style>
 
@@ -71,11 +78,11 @@
   <div class="wrap">
     <h2 class="h2">Put something between the ask and the relationship.</h2>
     <p class="lead">Most conflict isn't about the dishes. It's about who had to ask, how many times, and what tone it came out in by the third time. FamilyOS takes that job.</p>
-    <div class="card" style="margin-top:40px;padding:44px;display:grid;grid-template-columns:340px 1fr;gap:44px;align-items:center">
-      <div style="text-align:center"><img src="assets/painted/cutouts/ace-asclepius-figure.png" alt="ACE, the family companion" style="height:340px"><div class="cap" style="margin-top:-6px;background:var(--chipbg);border-color:var(--line);color:var(--sub)">ACE · the family companion</div></div>
+    <div class="card" style="margin-top:40px;padding:24px;display:grid;grid-template-columns:1fr;gap:24px;align-items:center">
+      <div style="text-align:center"><img src="assets/painted/cutouts/ace-asclepius-figure.png" alt="ACE, the family companion" style="height:500px;max-width:100%"><div class="cap" style="margin-top:-6px;background:var(--chipbg);border-color:var(--line);color:var(--sub)">ACE · the family companion</div></div>
       <div>
         <p class="lead">When ACE says "time to clean your room," it isn't mom or dad saying it. No tone, no accumulated frustration. Kids can push back at a companion without pushing back at a parent.</p>
-        <div class="g2" style="margin-top:24px;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
           <div class="bubble" style="background:rgba(232,163,60,.12);border-color:rgba(232,163,60,.35)"><b>To your kid:</b> "That's your room done — +20 toward the pool trip. Want to leave the trash for after dinner?"</div>
           <div class="bubble chip"><b>To you:</b> "Room is done and logged. Leo's had a rough afternoon; I've moved the trash to tomorrow."</div>
         </div>
@@ -123,7 +130,7 @@
   </div>
 </section>
 
-<section class="sec" style="padding-bottom:0">
+<section class="sec" id="join" style="padding-bottom:0">
   <div class="wrap" style="text-align:center;padding-bottom:120px">
     <img src="assets/brand/familyos-logo-painted.png" alt="FamilyOS" style="height:76px">
     <h2 class="h2" style="font-size:56px;margin-top:24px">You've been the reminder long enough.</h2>
@@ -132,10 +139,8 @@
       <input class="input" type="email" name="email" placeholder="you@family.home" required>
       <button type="submit" class="btn btn-p">Join early access</button>
     </form>
-  <form id="waitlist" class="waitlist-form" style="display: flex; gap: 12px; max-width: 560px; margin: 32px auto 0; flex-wrap: wrap;" onsubmit="submitWaitlist(event)">
-    <input class="input" type="email" name="email" placeholder="you@family.home" required style="flex: 1; min-width: 200px; box-sizing: border-box;">
-    <button type="submit" class="btn btn-p" style="white-space: nowrap;">Join early access</button>
-  </form>
+  </div>
+</section>
 
   <script>
     function submitWaitlist(event) {
@@ -166,5 +171,9 @@
       });
     }
   </script>
+
+<footer class="wrap" style="text-align:center;padding:40px 0;border-top:1px solid var(--line);font-size:13px;color:var(--sub)">
+  <p style="margin:0">Asclepius Family OS Inc. — Burlington, NJ</p>
+</footer>
 
 </body></html>
