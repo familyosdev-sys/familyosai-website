@@ -1,0 +1,4 @@
+.wrangler/
+**/__pycache__/
+*.pyc
+deploy/assets/social/shorts/media/

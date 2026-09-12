@@ -1,0 +1,7 @@
+file '/home/chris/Desktop/website/FamilyOS Design System/deploy/assets/social/shorts/media/videos/familyos_explainer/480p15/Scene1_Title.mp4'
+file '/home/chris/Desktop/website/FamilyOS Design System/deploy/assets/social/shorts/media/videos/familyos_explainer/480p15/Scene2_TheProblem.mp4'
+file '/home/chris/Desktop/website/FamilyOS Design System/deploy/assets/social/shorts/media/videos/familyos_explainer/480p15/Scene3_TheSolution.mp4'
+file '/home/chris/Desktop/website/FamilyOS Design System/deploy/assets/social/shorts/media/videos/familyos_explainer/480p15/Scene4_TraumaInformed.mp4'
+file '/home/chris/Desktop/website/FamilyOS Design System/deploy/assets/social/shorts/media/videos/familyos_explainer/480p15/Scene5_Privacy.mp4'
+file '/home/chris/Desktop/website/FamilyOS Design System/deploy/assets/social/shorts/media/videos/familyos_explainer/480p15/Scene6_Pricing.mp4'
+file '/home/chris/Desktop/website/FamilyOS Design System/deploy/assets/social/shorts/media/videos/familyos_explainer/480p15/Scene7_CTA.mp4'
