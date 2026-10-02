@@ -163,8 +163,8 @@ class Scene5_Privacy(Scene):
     def construct(self):
         self.camera.background_color = BG
         
-        header = Text("The AI lives in your house.", font_size=40, color=CREAM, font=MONO, weight=BOLD)
-        header2 = Text("Literally.", font_size=44, color=GOLD, font=MONO, weight=BOLD)
+        header = Text("The AI server sits in your home.", font_size=36, color=CREAM, font=MONO, weight=BOLD)
+        header2 = Text("If you run one.", font_size=34, color=GOLD, font=MONO, weight=BOLD)
         header.move_to(UP * 2.0)
         header2.move_to(UP * 1.0)
         
@@ -177,10 +177,11 @@ class Scene5_Privacy(Scene):
         self.play(Create(line), run_time=0.5)
         
         points = [
-            Text("Local-first.", font_size=28, color=CREAM, font=MONO),
-            Text("Your data stays on", font_size=24, color=TAUPE, font=MONO),
-            Text("the device in your house.", font_size=24, color=TAUPE, font=MONO),
-            Text("We literally cannot see it.", font_size=28, color=GOLD, font=MONO, weight=BOLD),
+            Text("Chore records, proof photos and chat history", font_size=22, color=TAUPE, font=MONO),
+            Text("live on your own hardware — and keep working", font_size=22, color=TAUPE, font=MONO),
+            Text("with no AI server reachable at all.", font_size=22, color=TAUPE, font=MONO),
+            Text("Chat and photo checks use your server,", font_size=22, color=GOLD, font=MONO, weight=BOLD),
+            Text("or the relay if you have none.", font_size=22, color=GOLD, font=MONO, weight=BOLD),
         ]
         
         group = VGroup(*points).arrange(DOWN, buff=0.3)
