@@ -23,7 +23,7 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     reporting a false clean.
   * ``--all`` — ``--url`` and ``--media``.
 
-Three facts a reader of this file should not have to rediscover:
+Four facts a reader of this file should not have to rediscover:
 
   * The apex body is request-shape-dependent: Cloudflare appends a
     ``static.cloudflareinsights.com`` beacon after ``</body></html>`` unless the
@@ -47,34 +47,46 @@ Three facts a reader of this file should not have to rediscover:
     when every non-apex path did, so a green here cannot quietly mean less than
     it reads as. (dana, AMS #2703; verified live here.)
   * The residue registry is NOT a list of dead paths, and the discriminator is
-    ZONE vs ORIGIN on a PLAIN GET — not a cache-buster. That distinction decides
-    what a red means here, so it is written down rather than inferred. Measured
-    2026-10-02 06:17-06:45 EDT from three egresses (dana AMS #2763; lizzie
-    #2778/#2801; lex #2793/#2797; re-measured here on RecRoomRig), plain GET at
-    the apex zone vs plain GET at the Pages origin (familyosai-cma.pages.dev):
-      - 5 of 15 are served at the ZONE and 404 at the ORIGIN — the stale-zone
-        signature: familyos-explainer.mp4 (696,581 B, main's blob), familyos_explainer.py
-        (9,251 B, main's blob), concat.txt, short1-reminder-treadmill.mp4,
-        familyos-logo-painted.png. These are real served residue.
-      - 4 are 200 at BOTH with matching digests — /deploy/, /README.md,
-        /.gitignore, brand/og-card.png. Live, NOT stale.
-      - 6 are 404 at BOTH — short2-6, walkthrough.
-    Do NOT use "200 plain / 404 cache-busted" as the test: any query string
-    404s on EVERY static path at both hosts, including a fully live asset like
-    brand/og-card.png, so that leg classifies live files as purged. It is how a
-    still-served banned file passes a purge-acceptance check. The decisive read
-    is zone-plain vs origin-plain.
-    Two corrections of my own, kept visible because both were load-bearing:
-    my replies first said 5/10 and then 6/9 of the registry were served; both
-    were artifacts of reading the ZONE alone, where a plain 200 cannot tell a
-    stale-zone copy from a live-at-both one. 5 stale / 4 live-both / 6 dead is
-    the split that reproduces, and it is per HOST, not per path shape.
+    the LAYER, on a plain GET: apex-zone vs Pages-origin
+    (familyosai-cma.pages.dev). Written down because it decides what a red
+    means. Measured 2026-10-02 06:17-06:45 EDT from four egresses (dana AMS
+    #2763/#2811/#2812; lizzie #2778/#2801; lex #2793/#2797; re-measured here on
+    RecRoomRig):
+      - 5 of 15: zone 200 / origin 404 -> zone cache residue, purgeable. These
+        are the real served residue: familyos-explainer.mp4 (696,581 B, main's
+        blob), familyos_explainer.py (9,251 B, main's blob, carries the banned
+        sentence below), concat.txt, short1-reminder-treadmill.mp4,
+        familyos-logo-painted.png.
+      - 4 of 15: zone 200 / origin 200, equal digests -> the deployment holds
+        it. A purge can NEVER discharge these: /deploy/, /README.md,
+        /.gitignore, brand/og-card.png.
+      - 6 of 15: 404 at both -> short2-6, walkthrough.
+    A zone-only count reads 6 both-shapes-404 / 9 plain-200, which is
+    reproducible and agrees with dana — but it CONFLATES the 5 stale with the 4
+    the deployment holds, so it cannot tell a live file from a stale one. That
+    is why the header records the layer split, not the zone count. My own first
+    number, 5/10, was wrong on both halves and was mine.
+    Do NOT use "200 plain / 404 cache-busted" as the purge test: a query string
+    is a ROUTE CHANGE at the origin, not a cache-buster. /deploy/, /README.md,
+    /.gitignore and a fully live brand/og-card.png all 404 under any query
+    string AT THE ORIGIN, with no cache-control and no Age. So that leg
+    classifies live files as purged, which is how a still-served banned file
+    passes a purge-acceptance check. The one path several of us argued about —
+    short2-when-then.mp4 — is 404 on both hosts under every shape and every
+    query string; my earlier "200 on the third busted variant" is withdrawn.
     Consequence for this guard: the wire leg exits 1 today on
-    familyos_explainer.py (200, 9,251 B, "lives in your house" at line 166;
-    main's blob, so the fix is a zone purge or PR #2's deploy, both Chris-gated)
-    and on familyos-explainer.mp4 in --media. Trimming the registry cannot
-    discharge that while the zone still serves it. (dana #2763; lizzie
-    #2801/#2803; lex #2793.)
+    familyos_explainer.py (200, 9,251 B, "lives in your house" at line 166) and
+    on familyos-explainer.mp4 in --media. Both are Chris-gated (a zone purge or
+    PR #2's deploy). Trimming the registry cannot discharge them.
+    (dana #2763/#2811; lizzie #2778/#2801/#2803; lex #2793.)  * Read the served apex against ``origin/main``, never the local ``main``. In
+    this worktree the local ``main`` ref sat at 3087f2d (deploy/index.html
+    12,398 B, blob d5173b13) while ``origin/main`` was 565e022 (13,225 B, blob
+    a0f6d8a8) — the blob the zone actually serves. Comparing the wire to the
+    stale local ref produced a false "the live page is not main's page"
+    conclusion, which flips the answer to whether a purge is safe. Same class as
+    the stale-branch failures this repo has already hit; fetch before you
+    compare. (dana, AMS #2810; re-measured here.)
+
 
 Exit codes: 0 clean, 1 banned claim found, 2 the guard could not run.
 """
