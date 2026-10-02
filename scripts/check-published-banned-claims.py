@@ -257,6 +257,18 @@ Four facts a reader of this file should not have to rediscover:
     over the guard-bearing wire refs; da732d5 belongs in the present/absent
     population, and a reader who checks the one ref that differs must not
     conclude the falsifier fails in general. (Re-verified at this egress.)
+    DOC-ONLY ENDS AT ``34f777b`` — the boundary this falsifier is quoted
+    against. The doc-only provenance everyone has been carrying holds
+    THROUGH ``34f777b`` and not one tip further: ``86714e1`` is the first
+    CODE commit on this branch (the live-line label fix executes), so the
+    falsifier moves BY DESIGN — ``f2a57831809c0819`` / 68,217 B ->
+    ``99dfd01865786346`` / 68,445 B, unparse ``59692f6e04581133`` ->
+    ``eaa1b300786c2768`` — and that commit's content is proven by the DIFF
+    (+40/-8, one file), never by the invariant. A verifier who carries "this
+    branch is doc-only" one tip further reads ``99dfd018`` as non-prose
+    leaking into a doc commit. Both values re-derived at this egress on
+    ``git show`` from the pushed refs, not relayed. (dana AMS #3282 item 1,
+    #3283 item 2.)
 
 
   * Do NOT pin a digest — or a LENGTH, or a BODY — of a 403 challenge body.
