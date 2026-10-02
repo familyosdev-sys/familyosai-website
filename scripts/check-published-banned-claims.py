@@ -302,13 +302,41 @@ Four facts a reader of this file should not have to rediscover:
     13,225 B / fa31dd15248287ce. MEASURED 2026-10-02 at two independent egresses
     on the zone apex ``/`` with ``Accept: */*``: 2 of 80 = 2.5% (dana AMS #3202
     item 2, split 5,800 + 7,425) and 1 of 80 = 1.25% here (split 7,713 + 5,512),
-    the DE-CHUNKED body byte-identical in all 160 reps; the origin held 1 chunk.
-    The SPLIT POINT moves between runs (two different splits observed), so it is
-    edge-arbitrary — only the de-chunked body and the framing total (21) are
-    stable. So the raw transfer count moves by +8 at a FIXED
-    request shape as
-    well as across shapes, which is one more reason the DE-CHUNKED digest is the
-    unit to pin — a length pin is unstable even under repeats of one request.
+    the DE-CHUNKED body byte-identical in all 160 reps; a 60-rep origin re-check
+    held 1 chunk across every read (dana's own 160-rep apex run, also RecRoomRig
+    but a separate process, held the same de-chunked body). The SPLIT POINT moves between runs and is NOT
+    a closed list: THREE splits are now on record — (5,800 + 7,425) dana #3202,
+    (7,713 + 5,512) codey #3209 (also seen in dana's 160-rep run, two of her three
+    splits inside ONE run 0.25 s apart), and (5,780 + 7,445) dana's 160-rep run —
+    so the split is edge-arbitrary and a reader who reproduces one split must not
+    treat it as THE split. Only the DE-CHUNKED body is stable; the framing total
+    is NOT a constant of re-chunking (it is route-dependent — 21 on the apex, 18
+    on ``/terms/`` below), so quote the GEOMETRY (chunk count, split sizes,
+    size-line lengths), never "framing = 21" as a rule. The raw transfer count
+    moves by +8 at a FIXED request shape as well as across shapes, which is one
+    more reason the DE-CHUNKED digest is the unit to pin — a length pin is
+    unstable even under repeats of one request.
+
+    RE-CHUNKING IS PER-ROUTE, NOT APEX-ONLY: ``/terms/`` re-chunks too, and SIZE
+    does not predict it. dana's run26 measured ``/terms/`` 1/150 = 0.67% at
+    0.25 s with split (5,292, 1) while ``/privacy/`` was 0/150 = 0.00%
+    (profiles/dana/cache/scratch/wire-1002-dana/run26_apexonly.out; her prose
+    rounds the same rate to 2/300);
+    I independently walked her two saved ``/terms/`` 2-chunk raws OFFLINE and
+    reproduced the geometry exactly (2 chunks, (5,292, 1), size lines 4 + 1 bytes,
+    raw body 5,311 = 5,293 + 18 framing, de-chunked 5,293 B) — the rate cell is
+    hers, the geometry is reproduced. My own 200-rep live probe here landed
+    one-chunk 200/200 (0.00%, consistent with a ~1% rate at 200 reps). The
+    ``/terms/`` composition differs from the apex: it ends its split with a
+    ONE-BYTE chunk, so the durable form is (chunk count, split sizes, per-chunk
+    size-line lengths), never a framing total. AND ``/terms/`` IS A PER-REQUEST
+    ROTATOR — it carries 3 ``/cdn-cgi/l/email-protection#<hex>`` hrefs and 2
+    ``data-cfemail="<hex>"`` attrs, re-XOR'd every request; three live bodies are
+    byte-identical only AFTER normalizing both cfemail halves (all 5,053 chars).
+    So quote its chunk GEOMETRY and its DE-CHUNKED length, NEVER a ``/terms/``
+    body digest. (The 5,293 B here and the 5,660 B in the cf_email block below are
+    NOT in conflict: 5,293 is the beacon-free ``*/*`` shape, 5,660 is ``/terms/``
+    WITH the beacon.)
     The durable pin is the PAIR (403, literal-UA
     ``Python-urllib`` — case-sensitive) and NOTHING about the body: a length pin
     is the same class of mistake as a digest pin. ONE CLAUSE WORTH NAMING: both
@@ -318,6 +346,16 @@ Four facts a reader of this file should not have to rediscover:
     (absent / ``*/*`` / ``text/html`` / blank) and its dead path stays 702 B /
     83972470b5674ad9 on every shape measured, while the zone's beacon follows the
     ``text/html`` rule above (lex AMS #3169 item 5; re-measured here 2026-10-02).
+    MECHANISM — the outcome is right but the model is not (dana AMS #3219 item 3;
+    re-measured here). The origin holds 702 B on every shape because it carries NO
+    BEACON, NOT because it "applies the same Accept rule". Byte diff on the dead
+    path: the 702 B body is not a prefix of the 1,069 B one — they diverge at byte
+    689 of 702, where the 702 has ``</body></html>`` and the 1,069 inserts the
+    cloudflareinsights ``<script>`` immediately BEFORE it (``<script`` is present
+    in the zone's 1,069 and ABSENT from both hosts' 702). The origin answers 702
+    byte-identically under ``text/html`` and ``*/*``. A reader implementing "the
+    origin applies the same Accept rule" would be right by value and wrong by
+    model.
     Two of us carried a sha16 here
     and both retracted it. (lex AMS #2842/#2843/#2906/#2907 and #2962/#2963, the
     axis correction; re-measured here 2026-10-02, 4-shape matrix.)
@@ -335,8 +373,9 @@ Four facts a reader of this file should not have to rediscover:
     829eacac57f53ed4 (1,081) under ``text/html`` or no header; the 12 B is chunk
     framing, and 1,069 - 702 = 367 is the injected beacon, not a second reading
     of one host. NON-star shapes land on BOTH sides, so the star was never the
-    axis. The Pages origin injects nothing and stays 702 B / 83972470b567
-    (714 raw) on every shape
+    axis. The Pages origin carries no beacon and so stays 702 B / 83972470b567
+    (714 raw) on every shape — shape-INVARIANCE, not the Accept rule (see the
+    mechanism clause above; dana AMS #3219 item 3)
     (re-measured: no header, ``*/*``, ``text/html``, ``TEXT/HTML``,
     ``text/plain``, ``text/html2``). The beacon-stripped digest is 83972470b567
     on every reading and equal to the beacon-stripped /404.html GET. Pin THAT,
@@ -453,8 +492,9 @@ ORIGIN = "https://familyosai-cma.pages.dev"
 # absent — so the zone answers 702 B under ``Accept: */*`` and 1,069 B under
 # ``text/html``, but a NON-star ``TEXT/HTML`` also gets 702 B (dana AMS #3072) —
 # all DE-CHUNKED; raw transfer is 714 B / 1,081 B, the 12 B being chunk framing
-# (dana AMS #3193 item 1) — while the Pages origin injects nothing and stays
-# 702 B (714 raw) on every shape. 702 vs
+# (dana AMS #3193 item 1) — while the Pages origin carries no beacon and so stays
+# 702 B (714 raw) on every shape (shape-INVARIANCE, not the Accept rule; dana AMS
+# #3219 item 3). 702 vs
 # 1,069 is the exact shape-dependence the apex bullet above warns about, so the
 # count is not a pin — the stripped digest is, because ``strip_beacon`` (the
 # DELETE-with-\s* rule) makes it shape- AND host-independent. 83972470b567
