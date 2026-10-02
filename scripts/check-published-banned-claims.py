@@ -23,7 +23,7 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     reporting a false clean.
   * ``--all`` — ``--url`` and ``--media``.
 
-Two facts a reader of this file should not have to rediscover:
+Three facts a reader of this file should not have to rediscover:
 
   * The apex body is request-shape-dependent: Cloudflare appends a
     ``static.cloudflareinsights.com`` beacon after ``</body></html>`` unless the
@@ -46,6 +46,23 @@ Two facts a reader of this file should not have to rediscover:
     apex pages. ``scan_url`` now prints how many paths 404-skipped and warns
     when every non-apex path did, so a green here cannot quietly mean less than
     it reads as. (dana, AMS #2703; verified live here.)
+  * The residue registry is NOT a list of dead paths, and a red from the wire
+    leg means "the zone is still serving a stale copy" — not "the registry
+    points at 404s". That is a deliberate reading, not an accident of the
+    probe. Measured 2026-10-02 06:17-06:35 EDT from two independent egresses
+    (dana, AMS #2763; re-measured here on RecRoomRig twice, with an ordering
+    control), three reads per path (plain, cache-busted, plain again): 6 of the
+    15 registry paths 404 in EVERY shape, while 9 answer 200 to a plain GET and
+    404 the instant any query string is present (702 B, sha12 83972470b567).
+    An earlier read here said 5/10; that was a probe-sequence artifact, it does
+    not reproduce, and this header carries the number that does. A served
+    object with a long s-maxage is not an edge hiccup, and /deploy/ answers the
+    apex body itself (13,225 B, fa31dd15248287ce). So trimming the registry
+    cannot discharge the red while the plain read still serves, and the guard
+    names the serving rather than the entry. The one plain-200 registry TEXT
+    path, familyos_explainer.py (9,251 B), carries the banned sentence at line
+    166 today — that finding is the signal, and it is what makes ``--all`` exit
+    1 on an unmerged tree. (dana #2763; lizzie #2728/#2749.)
 
 Exit codes: 0 clean, 1 banned claim found, 2 the guard could not run.
 """
@@ -152,9 +169,34 @@ ACCEPT = "*/*"
 # compared or scanned so one client shape cannot look like a content change.
 BEACON_RE = re.compile(r"<script[^>]*cloudflareinsights[^>]*>.*?</script>\s*", re.S)
 
+# Cloudflare Email Address Obfuscation rewrites every ``/cdn-cgi/l/email-protection``
+# href with a PER-REQUEST XOR key, so a page carrying ``data-cfemail`` spans has no
+# reproducible raw body digest even at a fixed length. Measured: three identical
+# plain GETs of /privacy/ gave three different sha16 at 5,954 B (4 spans), and
+# /terms/ likewise at 5,660 B (2 spans), first divergence inside that href. The
+# apex has zero such spans, which is exactly why its digest (fa31dd15248287ce) is
+# stable. Normalize the encoded payload before digesting so a digest here means
+# content, not key material. (dana, AMS #2724/#2725/#2726 — verified live.)
+# Both halves of the rewrite are per-request: the href payload AND the
+# ``data-cfemail`` attribute on the span carry different hex on each request.
+# Clearing only the href left the span different, so two requests of the same
+# unchanged page still digested differently — the self-test caught exactly that.
+CF_EMAIL_RE = re.compile(r'(?<=/cdn-cgi/l/email-protection#)[0-9a-fA-F]+')
+CF_EMAIL_SPAN_RE = re.compile(r'(data-cfemail=")[0-9a-fA-F]*')
+
 
 def strip_beacon(html: str) -> str:
     return BEACON_RE.sub("", html)
+
+
+def normalize_request_scoped(html: str) -> str:
+    """Remove per-request variance that is not content.
+
+    Today only the cf_email XOR payload, and it only affects non-apex pages; the
+    apex is unchanged by this (zero spans), so a digest pinned for ``/`` keeps
+    meaning the same bytes.
+    """
+    return CF_EMAIL_SPAN_RE.sub(r"\1", CF_EMAIL_RE.sub("", html))
 
 
 def sha12(text: str) -> str:
@@ -325,7 +367,8 @@ def shape_findings(failures: list[str]) -> list[str]:
     except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError) as exc:
         failures.append(f"{url}: request-shape comparison could not run — {exc}")
         return []
-    a, b = sha12(strip_beacon(star)), sha12(strip_beacon(none))
+    a, b = (sha12(normalize_request_scoped(strip_beacon(star))),
+            sha12(normalize_request_scoped(strip_beacon(none))))
     # len() on the decoded str is CHARACTERS. Label it as such: the two
     # shapes differ because the beacon is stripped, and a bare "B" here
     # invited the reading that the byte count itself had moved.
