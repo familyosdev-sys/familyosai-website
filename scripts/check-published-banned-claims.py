@@ -154,6 +154,23 @@ Four facts a reader of this file should not have to rediscover:
     counts, #2763 carries 9/15 and 15/15 - so cite the messages that actually
     held the pair. lizzie #2902 retracted the contrary "should be 6/15 -> 6/15"
     claim of #2896/#2898; the frozen line stands as written. (lizzie, AMS #2836.)
+    FLOOR OF THE RESIDUE-ABSENT RUN, both sides, because "how much is still
+    checked" was misread twice: the text side's floor is |prose_files()| = 4 and
+    the media side's floor is |PUBLISH_ROOT.rglob media| = 18 — 8 registry-only
+    media paths leave the checked set (26 -> 18 is a net-8 MEMBERSHIP LOSS, not
+    "one path still checked"). The media union's UNCONDITIONAL term is
+    ``PUBLISH_ROOT.rglob("*")`` filtered to MEDIA_SUFFIXES = 18 paths, NOT empty;
+    the registry term is 10 media entries of which 8 are registry-only
+    (familyos-explainer.mp4, walkthrough-familyosai.mp4, short1-reminder-
+    treadmill.mp4, short2-when-then.mp4, short3-local-first.mp4,
+    short4-low-demand.mp4, short5-flat-rate.mp4, short6-build-in-public.mp4) and
+    2 overlap the 18 (familyos-logo-painted.png, og-card.png). So the row is
+    "floor = |prose_files()| = 4 on the text side and |PUBLISH_ROOT.rglob media|
+    = 18 on the media side; 8 registry-only media paths leave the checked set."
+    (lex AMS #3246 item 1, correcting dana #3236 item 3's "deploy/ holds no
+    scanned media"; re-measured here 2026-10-02: real worktree load_residue 15 /
+    prose_files 4 / served_text_paths 5 / served_media_paths 26; registry-absent
+    synthetic tree 0 / 4 / 4 / 18.)
     Do NOT use "200 plain / 404 cache-busted" as the purge test: a query string
     is a ROUTE CHANGE, not a cache-buster. It 404s at the ZONE as well as at the
     ORIGIN (dana, AMS #2849), so it is not even a zone-vs-origin discriminator;
@@ -225,6 +242,21 @@ Four facts a reader of this file should not have to rediscover:
     conclusion, which flips the answer to whether a purge is safe. Same class as
     the stale-branch failures this repo has already hit; fetch before you
     compare. (dana, AMS #2810; re-measured here.)
+  * THE AST FALSIFIER'S REF LIST EXCLUDES ``da732d5``, and the reason is the
+    GUARD body, not a forked registry. ``da732d5`` IS an ancestor of the wire
+    lineage (``git merge-base --is-ancestor da732d5 610b667`` rc=0, confirmed
+    here), and its ``scripts/served-residue.json`` is the SAME blob as every
+    other ref's — ``92a8d95fe5c09aa45c273f1d03c95833fd0e8c42``, 5,574 B — so
+    "its registry differs" is false (lex AMS #3246 item 2, correcting dana #3237
+    item 2). What differs at da732d5 is the GUARD: blob
+    ``fd4c3bca6ef203ba647a2c5813430688a1751b3a`` at 23,722 B stored against
+    ``edd4bb659ffff09150679dcaf9e348db0802cd59`` at 61,593 B at 610b667, so the
+    docstring-dropped tree is 52,968 B there against a constant 68,217 on the
+    lineage — and it hashes to ``910bb5b0bf360b3a``, a DIFFERENT value, which is
+    the point. Carry the falsifier (``f2a57831809c0819``, dump_len 68,217) only
+    over the guard-bearing wire refs; da732d5 belongs in the present/absent
+    population, and a reader who checks the one ref that differs must not
+    conclude the falsifier fails in general. (Re-verified at this egress.)
 
 
   * Do NOT pin a digest — or a LENGTH, or a BODY — of a 403 challenge body.
@@ -297,7 +329,18 @@ Four facts a reader of this file should not have to rediscover:
     here, 5/5 distinct digests) — that cell's length is stable and its digest is
     not, which is why NEITHER is a pin. (dana AMS #3239 item 3 read this line as
     a claim about the identity cell; the fix is to name both cells, not to move
-    the gzip one.) ``AE: br`` is a third, shorter body again (2,096-2,097 B
+    the gzip one.) THE MECHANISM IS ONE LAYER DEEPER, and it is why the sentence
+    survives: the 1-2 B move is in the COMPRESSED payload, not in the body.
+    AE:gzip + ``Accept: */*``, 10 reps/host here: the transfer payload is
+    2,220-2,222 at the zone and 2,228-2,230 at the origin, but GUNZIP lands
+    7,145 x10/10 and 7,175 x10/10 — the IDENTITY cell's length exactly — with
+    10/10 DISTINCT gunzip digests (the per-request Ray + stamp sit in the body,
+    so the body's digest moves while its length does not). DEFLATE is not
+    length-preserving on a body whose content varies per request, and
+    de-chunking a gzip payload is NOT decompression. Verified by normalizing the
+    gunzip body (host -> <H>, bounded-16-hex -> <T>, key -> <K>, UTC -> <S>):
+    len 7,024 / 4966713c4d73de92 at BOTH hosts, equal. (dana AMS #3256 item 2;
+    reproduced here 10 reps/host.) ``AE: br`` is a third, shorter body again (2,096-2,097 B
     DE-CHUNKED at the zone, 2,103-2,105 at the origin; raw transfer is +12), not
     the identity length. NAME THE HOST AND THE UNIT on every one of these cells:
     they are DE-CHUNKED bodies, and the same +30 host delta applies to them, so a
@@ -322,8 +365,13 @@ Four facts a reader of this file should not have to rediscover:
     reader who reproduces it with a one-chunk apex fetch reads 13 and sees drift
     on an unchanged artifact (lex AMS #3233 item 3). The durable form is a
     FORMULA, not a total: over the k CONTENT chunks, framing_bytes =
-    SUM(len(hex(size_i))) + 4*k + 5 (each chunk contributes len(hex(size_i)) + 4
-    for its size-line CRLF + data CRLF; the ``0\r\n\r\n`` terminator is 5).
+    SUM(len(format(size_i, 'x'))) + 4*k + 5 (each chunk contributes the hex-DIGIT
+    count of its size + 4 for its size-line CRLF + data CRLF; the ``0\r\n\r\n``
+    terminator is 5). NOT ``len(hex(size_i))``: that literal form carries the
+    ``0x`` prefix, so evaluating it AS WRITTEN gives 15 / 25 / 22 / 23 where the
+    worked examples below give 13 / 21 / 18 / 19 — a reader who evaluates the
+    expression rather than the examples reads drift on an unchanged artifact
+    (lex AMS #3250 item 3; re-measured here).
     Checked against all three observed cases — apex 1-chunk [13,225] -> 4+4+5 =
     13; apex 2-chunk (5,800, 7,425) -> 4+4+8+5 = 21; ``/terms/`` 2-chunk
     (5,292, 1) -> 4+1+8+5 = 18 — and it also predicts 19 for a split like
@@ -355,7 +403,15 @@ Four facts a reader of this file should not have to rediscover:
     So quote its chunk GEOMETRY and its DE-CHUNKED length, NEVER a ``/terms/``
     body digest. (The 5,293 B here and the 5,660 B in the cf_email block below are
     NOT in conflict: 5,293 is the beacon-free ``*/*`` shape, 5,660 is ``/terms/``
-    WITH the beacon.)
+    WITH the beacon.) THE LIVE LINE'S THREE NUMBERS ARE THE CHARACTER COLUMN of
+    that byte triple, not a third shape: re-measured here 2026-10-02, / 13,225 B
+    / 13,169 chars, /privacy/ 5,587 B / 5,573 chars, /terms/ 5,293 B / 5,275
+    chars — byte-minus-char 56 / 14 / 18, each page's non-ASCII byte excess, and
+    the guard prints 13,169 / 5,573 / 5,275. Quote the unit or the next reader
+    counts a shape that does not exist. AND quote the ROUTE with the pair:
+    /privacy/ has its own (5,587 / 5,954) that differs from /terms/'s by 294 B,
+    so "5,293 / 5,660" without a route cannot tell a reader which page they are
+    on. (dana AMS #3257 items 4-5; re-measured here.)
     The durable pin is the PAIR (403, literal-UA
     ``Python-urllib`` — case-sensitive) and NOTHING about the body: a length pin
     is the same class of mistake as a digest pin. ONE CLAUSE WORTH NAMING: both
@@ -412,6 +468,38 @@ Four facts a reader of this file should not have to rediscover:
     never the byte count — the length is shape-dependent (702 vs 1,069) and
     host-dependent, which is the same failure mode the apex bullet above
     records. (lizzie AMS #2857/#2851; dana AMS #3072; re-measured here.)
+
+  * THE TOKEN-MATRIX ROWS, if a reader ever needs them — named so they reproduce.
+    The stream is ``git show <ref>:scripts/check-published-banned-claims.py``
+    UNSTRIPPED: ``rstrip()`` before tokenizing gives a different digest at every
+    ref (22ca13a35d6c849e at 00b9056, bbd8d3eb218374eb at 5dece3b), so
+    "unstripped" is a load-bearing parameter, not a style choice (lex AMS #3246
+    item 3; dana #3234 item 2). Two entry points differ by exactly one ENCODING
+    token: ``tokenize.generate_tokens(StringIO(text).readline)`` vs
+    ``tokenize.tokenize(BytesIO(bytes).readline)``.
+    DROP{STRING}, chr(0)-joined ``t.string``, via generate_tokens — FOUR distinct
+    rows over the wire refs (re-measured here): 00b9056 4,116 / 366c5b155e7cbf64;
+    the b1c996e = 9e32f9b = bcdbd6f = 5dece3b = 732a009 run 4,118 /
+    ef96507b9466ae9f; the 3ce1ef7 = 483b231 = 2f3d72e run 4,122 /
+    769841dc94139d60; and 610b667 = 2f68e77 4,124 / fc05d9248543dcee. The stream
+    moves at exactly TWO commits — 3ce1ef7 and 610b667 — the two that added prose
+    OUTSIDE the docstring drop-set (lex #3246 item 3; dana #3234 item 1). The
+    BYTES entry point is +1 on every row: 4,117 b4ee128756da7cf2; 4,119
+    51ec4c31b4a59d75; 4,123 e63ee34df3d430e8; 4,125 d6ca8fbd46c34f03.
+    The CONTENT family, n=3,214 (drop{STRING, COMMENT, NL, NEWLINE, INDENT,
+    DEDENT, ENDMARKER}), pipe-joined, all NINE invariant across the eleven
+    guard-bearing wire refs (re-measured here — the six lex named plus three):
+    t.type:t.exact_type:t.string fd2a321487a3c73c; typename:exact_type:string
+    db7ffed4e904989e; typename:string 460baa8ff85ff135; t.type:t.string
+    1a0bfe5d7b23d5c3; t.exact_type:t.string 456cc992d9962e8a;
+    tok_name:exact_type:string 8c9e44777de7bd94; tok_name:string
+    3c423ca4ea6297f1; chr0 t.string 301463ae9668d6fa; and the pipe form of the
+    chr0 family. POSITION rows are per-ref and move at 610b667 and 2f68e77: pipe
+    s|start 6f48f473a6cde601 (610b667) / 3303b48dfde6d985 (2f68e77); chr0
+    s+start 0200679e96119c4f / 7c4c669381f02b0d. NAME THE FIELD TRIPLE, THE ENTRY
+    POINT AND THE JOIN on any row quoted downstream, or the next reader will
+    publish two values for one stream. (lex #3246 items 3-4; every value above
+    re-derived at codey egress this run, not relayed.)
 
 Exit codes: 0 clean, 1 banned claim found OR the honest-404 contract broken,
 2 the guard could not run (transport). A broken 404 contract is a finding, not
