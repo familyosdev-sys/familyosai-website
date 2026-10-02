@@ -83,9 +83,17 @@ Four facts a reader of this file should not have to rediscover:
     only plain-vs-plain is a valid leg. And the route change is CONDITIONAL on
     the route, not universal: /deploy/, /README.md, /.gitignore and every
     SERVED /deploy/assets/... path answer 200 plain and 404 for any query
-    string at BOTH hosts - the served images that flip are
+    string at BOTH hosts - the two images that flip AT THE ZONE are
     /deploy/assets/brand/og-card.png (29,450 B) and
-    /deploy/assets/brand/familyos-logo-painted.png (1,131,556 B). "SERVED" is
+    /deploy/assets/brand/familyos-logo-painted.png (1,131,556 B), and they
+    do NOT share a layer: og-card is LIVE-BOTH (zone 200 / origin 200,
+    equal digests 12d98bca6451 - the deployment holds it), while
+    logo-painted is STALE-ZONE (zone 200 / origin 404/702/83972470b567 at
+    /deploy/; its 200 is the ROOT twin /assets/brand/familyos-logo-painted.png)
+    - the same 5/15 class as familyos_explainer.py. The "at BOTH hosts" half
+    is true only of the ?cb 404; it is FALSE of the plain 200 for every
+    stale-zone member, which is exactly the conflation L64-70 warns about.
+    (lizzie #2950, re-measured here 2026-10-02.) "SERVED" is
     load-bearing, not decoration: /deploy/assets/brand/familyos-appicon.png,
     /deploy/assets/painted/themes/dino-explorer.png and
     /deploy/assets/social/ig-cover.png are already 404/702 B on PLAIN, so they
