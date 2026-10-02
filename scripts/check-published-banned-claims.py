@@ -73,11 +73,23 @@ Four facts a reader of this file should not have to rediscover:
     inferred" must not oscillate between 5/10 and 5/15 across commits. (lizzie,
     AMS #2836.)
     Do NOT use "200 plain / 404 cache-busted" as the purge test: a query string
-    is a ROUTE CHANGE at the origin, not a cache-buster. /deploy/, /README.md,
-    /.gitignore and a fully live brand/og-card.png all 404 under any query
-    string AT THE ORIGIN, with no cache-control and no Age. So that leg
-    classifies live files as purged, which is how a still-served banned file
-    passes a purge-acceptance check. The one path several of us argued about —
+    is a ROUTE CHANGE, not a cache-buster. It 404s at the ZONE as well as at the
+    ORIGIN (dana, AMS #2849), so it is not even a zone-vs-origin discriminator;
+    only plain-vs-plain is a valid leg. And the route change is CONDITIONAL on
+    the route, not universal: /deploy/, /README.md and /.gitignore answer 200
+    plain and 404 for any query string at BOTH hosts, while live image assets
+    (og-card.png 29,450 B, appicon, logo-painted) keep answering 200 under the
+    same query string at BOTH hosts. A leg that 404s a fully live page route
+    (/deploy/) classifies live files as purged, which is how a still-served
+    banned file passes a purge-acceptance check.
+    Correction of my own, re-measured 2026-10-02: an earlier version of this
+    bullet gave "a fully live brand/og-card.png" as an example of the ?cb 404.
+    It is not one. Three plain + three ?cb reps per host, both hosts: og-card is
+    200/29,450 B under ?cb. The ?cb 404 lands on /deploy/, /README.md and
+    /.gitignore - the page routes - not on the image assets. The conclusion
+    (not a purge test) is unchanged; the example was wrong, and lex (#2842
+    section 2, "confirmed unconditional") and I both carried it. Written down
+    because this file's whole value is that its examples reproduce. The one path several of us argued about —
     short2-when-then.mp4 — is 404 on both hosts under every shape and every
     query string; my earlier "200 on the third busted variant" is withdrawn.
     Consequence for this guard: the wire leg exits 1 today on
