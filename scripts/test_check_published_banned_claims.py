@@ -123,6 +123,60 @@ def main() -> int:
     finally:
         g.RESIDUE_FILE = orig
 
+    print("5. an unreadable frame is NOT a clean frame, and callers cannot share a temp dir")
+    # Regression pin for dana's AMS #2685 defect. _frames_and_ocr used to extract into a
+    # hard-coded /tmp/banned-claims-frames and unlink its *.jpg at entry, so a second
+    # caller (the self-test is one — it calls the real scan_media()) killed the first
+    # caller's frames mid-flight; tesseract then failed by path, returned empty stdout,
+    # and 9 banned frames scored as 0 with err=None. Both halves are pinned here:
+    src = (HERE / "check-published-banned-claims.py").read_text()
+    check("each call gets its own tempfile.mkdtemp (no shared /tmp path)",
+          'tempfile.mkdtemp(prefix="banned-claims-")' in src)
+    check("no code still extracts into the shared /tmp/banned-claims-frames",
+          'tmp = pathlib.Path("/tmp/banned-claims-frames")' not in src)
+
+    png = sorted(g.PUBLISH_ROOT.rglob("*.png"))
+    if not png:
+        check("a local media file exists to exercise the OCR path", False, "no PNG under deploy/")
+    else:
+        blob = png[0].read_bytes()
+        tools = tuple(g.shutil.which(x) for x in ("ffmpeg", "ffprobe", "tesseract"))
+        seen: list[str] = []
+        real_run = g.subprocess.run
+
+        def spy(cmd, *a, **k):
+            if str(cmd[0]).endswith("ffmpeg") and "-i" in cmd:
+                seen.append(str(pathlib.Path(cmd[cmd.index("-i") + 1]).parent))
+            return real_run(cmd, *a, **k)
+
+        g.subprocess.run = spy
+        try:
+            g._frames_and_ocr(blob, ".png", tools)
+            g._frames_and_ocr(blob, ".png", tools)
+        finally:
+            g.subprocess.run = real_run
+        check("two calls do not share a frame directory",
+              len(seen) == 2 and seen[0] != seen[1], f"{seen}")
+
+        def unlinker(cmd, *a, **k):
+            if str(cmd[0]).endswith("tesseract"):
+                pathlib.Path(cmd[1]).unlink(missing_ok=True)   # the exact mid-flight unlink
+            return real_run(cmd, *a, **k)
+
+        real_fetch = g.fetch
+        g.fetch = lambda path, *a, **k: blob
+        g.subprocess.run = unlinker
+        try:
+            problems, _transport = g.scan_media()
+        finally:
+            g.subprocess.run = real_run
+            g.fetch = real_fetch
+        check("an unreadable frame becomes a NOT CHECKED finding (guard exits 1), never clean",
+              any("could not be read" in p for p in problems),
+              f"{len(problems)} problems")
+        check("no unreadable frame was scored clean",
+              not any("frame(s), clean" in p for p in problems))
+
     print(f"\n{CHECKS - len(FAILS)}/{CHECKS} checks passed")
     if FAILS:
         print("FAILED: " + "; ".join(FAILS), file=sys.stderr)

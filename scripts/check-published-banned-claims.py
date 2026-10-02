@@ -27,10 +27,16 @@ Two facts a reader of this file should not have to rediscover:
 
   * The apex body is request-shape-dependent: Cloudflare appends a
     ``static.cloudflareinsights.com`` beacon after ``</body></html>`` unless the
-    client sends ``Accept: */*``, so the same page is 13,225 B with the star
-    Accept and 13,592 B without. The live check strips the beacon before
-    comparing and asserts both shapes agree, instead of pinning a digest that
-    only reproduces for one client shape.
+    client sends ``Accept: */*``, so the same page is larger without the star
+    Accept. The live check strips the beacon before comparing and asserts both
+    shapes agree, instead of pinning a digest that only reproduces for one
+    client shape.
+
+    Pin the beacon-stripped DIGEST, never the byte count. The count is
+    client- and RUM-dependent and has moved under a held digest: star-Accept
+    13,225 B (dana #2609) -> 13,169 B (#2641), no-Accept 13,592 B -> 13,536 B.
+    The stripped digests agreed throughout (fa31dd15248287ce on 2026-10-02),
+    which is the fact worth pinning. (lizzie, AMS #2645; dana, AMS #2647.)
   * The publish root is currently the REPO ROOT, not ``deploy/`` — that is why
     ``/deploy/index.html`` and ``/README.md`` answer at all. Every tree file is
     therefore checked at ``/`` + its path from the repo root, which is exactly
@@ -48,6 +54,7 @@ import pathlib
 import re
 import shutil
 import subprocess
+import tempfile
 import sys
 import urllib.error
 import urllib.request
@@ -312,12 +319,25 @@ def fetch_no_accept(path: str, timeout: int = 25) -> bytes:
         return r.read()
 
 
-def _frames_and_ocr(data: bytes, suffix: str, tmp: pathlib.Path,
-                    tools: tuple[str, str, str]) -> tuple[dict[str, list[str]], int, str | None]:
-    """OCR one media blob. Returns ({phrase: [frames]}, nframes, error-or-None)."""
+def _frames_and_ocr(data: bytes, suffix: str,
+                    tools: tuple[str, str, str]) -> tuple[dict[str, list[str]], int, int, str | None]:
+    """OCR one media blob. Returns ({phrase: [frames]}, nframes, unreadable, error).
+
+    Every call gets its OWN temp directory (tempfile.mkdtemp). It used to share a
+    hard-coded /tmp/banned-claims-frames and delete its *.jpg at entry, so two
+    callers on one host — and the self-test is one, since it calls the real
+    scan_media() — killed each other's frames mid-flight. A deleted file still
+    lists in glob(), but tesseract opens it BY PATH, fails, returns empty stdout,
+    and the frame scored as CLEAN. Measured: 9 banned frames -> 0, err=None.
+    A guard whose whole reason to exist is "the tree scan was green while the
+    wire served banned pixels" must not have a race that turns red into green.
+
+    A frame whose OCR fails is now counted in `unreadable`, never in `hits`, and
+    the caller turns a non-zero count into a NOT CHECKED finding. An unreadable
+    frame is not a clean frame.
+    """
     ffmpeg, _ffprobe, tesseract = tools
-    for old in tmp.glob("*.jpg"):
-        old.unlink()
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="banned-claims-"))
     src = tmp / f"src{suffix or '.bin'}"
     src.write_bytes(data)
     if suffix.lower() in {".mp4", ".mov", ".webm"}:
@@ -333,19 +353,28 @@ def _frames_and_ocr(data: bytes, suffix: str, tmp: pathlib.Path,
                "-vf", "scale=1100:-1", "-q:v", "4", str(tmp / "f_0001.jpg")]
     r = subprocess.run(cmd, check=False, capture_output=True, text=True)
     if r.returncode != 0:
-        return {}, 0, f"ffmpeg failed ({r.returncode}): {r.stderr.strip()[:160]}"
+        shutil.rmtree(tmp, ignore_errors=True)
+        return {}, 0, 0, f"ffmpeg failed ({r.returncode}): {r.stderr.strip()[:160]}"
     frames = sorted(tmp.glob("*.jpg"))
     if not frames:
-        return {}, 0, "0 frames extracted"
+        shutil.rmtree(tmp, ignore_errors=True)
+        return {}, 0, 0, "0 frames extracted"
     hits: dict[str, list[str]] = {}
+    unreadable = 0
     for fr in frames:
         rr = subprocess.run([tesseract, str(fr), "-", "--psm", "6"],
                             capture_output=True, text=True)
+        if rr.returncode != 0:
+            # Unlinked mid-flight, or tesseract genuinely failed. Either way the
+            # frame was NOT read, so it cannot score as clean.
+            unreadable += 1
+            continue
         low = " ".join(rr.stdout.split()).lower()
         for phrase, _why in BANNED:
             if phrase in low:
                 hits.setdefault(phrase, []).append(fr.name)
-    return hits, len(frames), None
+    shutil.rmtree(tmp, ignore_errors=True)
+    return hits, len(frames), unreadable, None
 
 
 def scan_media() -> tuple[list[str], list[str]]:
@@ -362,14 +391,21 @@ def scan_media() -> tuple[list[str], list[str]]:
     tools = (ffmpeg, ffprobe, tesseract)
     problems: list[str] = []
     transport: list[str] = []
-    tmp = pathlib.Path("/tmp/banned-claims-frames")
-    tmp.mkdir(parents=True, exist_ok=True)
 
-    def report(label: str, hits: dict[str, list[str]], nframes: int, note: str) -> None:
+    def report(label: str, hits: dict[str, list[str]], nframes: int, unreadable: int,
+               note: str) -> None:
         for phrase, where in hits.items():
             problems.append(f"{label}: on-screen caption {phrase!r} in {len(where)} frame(s) "
                             f"({', '.join(where[:5])}) — {dict(BANNED)[phrase]}")
-        print(f"[media] {label}: {nframes} frame(s), {'BANNED TEXT' if hits else 'clean'}{note}")
+        # An unreadable frame is a NOT CHECKED finding, not a clean one: if OCR
+        # could not read a frame, the phrase could be sitting in it unseen.
+        if unreadable:
+            problems.append(f"{label}: NOT CHECKED — {unreadable} of {nframes} frame(s) could not "
+                            f"be read (tesseract failed); those frames were NOT cleared")
+        tail = "clean" if not hits else "BANNED TEXT"
+        if unreadable:
+            tail += f", {unreadable} frame(s) UNREADABLE — not cleared"
+        print(f"[media] {label}: {nframes} frame(s), {tail}{note}")
 
     # Leg 1 — the working tree. Catches a bad render BEFORE it is published.
     local = [p for p in PUBLISH_ROOT.rglob("*")
@@ -380,12 +416,12 @@ def scan_media() -> tuple[list[str], list[str]]:
     for p in local:
         rel = str(p.relative_to(ROOT))
         data = p.read_bytes()
-        hits, nframes, err = _frames_and_ocr(data, p.suffix, tmp, tools)
+        hits, nframes, unreadable, err = _frames_and_ocr(data, p.suffix, tools)
         if err:
             problems.append(f"{rel}: NOT CHECKED — {err}")
             print(f"[media] {rel}: NOT CHECKED — {err}")
             continue
-        report(rel, hits, nframes, "")
+        report(rel, hits, nframes, unreadable, "")
 
     # Leg 2 — the wire. Catches a stale zone entry the tree cannot see at all.
     for path in served_media_paths():
@@ -401,12 +437,12 @@ def scan_media() -> tuple[list[str], list[str]]:
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             transport.append(f"{url}: could not fetch — {exc}")
             continue
-        hits, nframes, err = _frames_and_ocr(data, pathlib.PurePosixPath(path).suffix, tmp, tools)
+        hits, nframes, unreadable, err = _frames_and_ocr(data, pathlib.PurePosixPath(path).suffix, tools)
         if err:
             problems.append(f"{url}: NOT CHECKED — {err}")
             print(f"[media] {url}: NOT CHECKED — {err}")
             continue
-        report(url, hits, nframes, f" — {len(data)} bytes served")
+        report(url, hits, nframes, unreadable, f" — {len(data)} bytes served")
 
     if transport:
         print("\n[media] media URLs that could not be fetched (treat as unrun, not clean):")
@@ -421,6 +457,13 @@ def main() -> int:
     ap.add_argument("--url", action="store_true", help="also fetch and scan the live wire (apex + served text)")
     ap.add_argument("--media", action="store_true", help="also OCR rendered media, tree and wire (needs ffmpeg+tesseract)")
     ap.add_argument("--all", action="store_true", help="--url and --media together")
+    # The module docstring has always advertised ``--tree (default)``, but
+    # argparse defined only --url/--media/--all, so the documented flag exited 2
+    # with "unrecognized arguments". Bare invocation did scan the tree, so only
+    # the doc/CLI pairing was wrong (dana, AMS #2685). Accept it explicitly.
+    ap.add_argument("--tree", action="store_true",
+                    help="scan the working tree only — the default; accepted so the flag the "
+                         "docstring advertises actually exists")
     args = ap.parse_args()
 
     problems, warnings = scan_tree()
