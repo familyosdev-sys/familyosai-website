@@ -271,13 +271,20 @@ def scan_url() -> tuple[list[str], list[str]]:
     """
     findings: list[str] = []
     failures: list[str] = []
+    skipped: list[str] = []
     for path in APEX_PATHS + [p for p in served_text_paths() if p not in APEX_PATHS]:
         url = APEX + path
         try:
             body = fetch(path).decode("utf-8", "replace")
         except urllib.error.HTTPError as exc:
             if exc.code == 404:
-                continue          # not served at all — nothing to read
+                # Not served at all — nothing to read. Counted, not silent: the
+                # tree-derived paths are built from the repo root, so when the
+                # publish root is deploy/ every one of them 404s and the wire
+                # leg's non-apex coverage is ZERO while --all still prints a
+                # clean line. A caller must be able to see that.
+                skipped.append(path)
+                continue
             failures.append(f"{url}: HTTP {exc.code}")
             continue
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
@@ -285,6 +292,15 @@ def scan_url() -> tuple[list[str], list[str]]:
             continue
         print(f"[live] {url}: {len(body)} bytes")
         findings += scan_text(url, strip_beacon(body))
+    if skipped:
+        print(f"[live] {len(skipped)} wire text path(s) answered 404 and were "
+              f"skipped, not checked: {', '.join(skipped)}")
+        if len(skipped) == len([p for p in served_text_paths() if p not in APEX_PATHS]):
+            print("[live] WARNING — every non-apex text path 404'd, so this run's "
+                  "wire text coverage is the three apex pages only. If the publish "
+                  "root has moved (e.g. repo root -> deploy/), the tree-derived "
+                  "paths no longer address what is served and this must be fixed "
+                  "before a green here means what it reads as.")
     findings += shape_findings(failures)
     return findings, failures
 
@@ -305,7 +321,10 @@ def shape_findings(failures: list[str]) -> list[str]:
         failures.append(f"{url}: request-shape comparison could not run — {exc}")
         return []
     a, b = sha12(strip_beacon(star)), sha12(strip_beacon(none))
-    print(f"[live] {url}: shape */*={len(star)}B/{a}  no-accept={len(none)}B/{b}")
+    # len() on the decoded str is CHARACTERS. Label it as such: the two
+    # shapes differ because the beacon is stripped, and a bare "B" here
+    # invited the reading that the byte count itself had moved.
+    print(f"[live] {url}: shape */*={len(star)} chars/{a}  no-accept={len(none)} chars/{b}")
     if a != b:
         return [f"{url}: body differs by request shape beyond the analytics beacon "
                 f"(beacon-stripped {a} vs {b}) — a pinned digest is not reproducible"]
