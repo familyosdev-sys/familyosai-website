@@ -23,6 +23,21 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     reporting a false clean.
   * ``--all`` — ``--url`` and ``--media``.
 
+    SCOPE OF ``--url`` AND ``--media``, written down because it has already
+    hidden a live banned copy: the wire legs probe the APEX and the Pages-origin
+    pair only. They do NOT enumerate unrelated deployment hostnames, and any
+    other alias on the same Pages project answers every path from its own
+    deployment - so it can serve the retracted landing while this guard reads
+    green. Measured 2026-10-02 (dana, AMS #2958): two live aliases,
+    30c37e93.familyosai-cma.pages.dev (body sha256 6deb8617...) and
+    664dd4da.familyosai-cma.pages.dev (e0f6297e...), each served the retracted
+    landing at /, /robots.txt, /privacy/, /terms/ and /404.html AND served the
+    banned explainer at the BARE path /assets/social/shorts/familyos_explainer.py
+    (200 / 9,251 B / 339f229565545cf7 / "lives in your house"). Neither alias is
+    in served-residue.json. Deliberately NOT added as registry entries: an
+    unrelated-host allowlist would just hide the next alias the same way. A
+    green ``--url`` means the apex and the origin are clean, nothing more.
+
 Four facts a reader of this file should not have to rediscover:
 
   * The apex body is request-shape-dependent: Cloudflare appends a
