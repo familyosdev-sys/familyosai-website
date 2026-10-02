@@ -266,9 +266,17 @@ Four facts a reader of this file should not have to rediscover:
     ``eaa1b300786c2768`` — and that commit's content is proven by the DIFF
     (+40/-8, one file), never by the invariant. A verifier who carries "this
     branch is doc-only" one tip further reads ``99dfd018`` as non-prose
-    leaking into a doc commit. Both values re-derived at this egress on
-    ``git show`` from the pushed refs, not relayed. (dana AMS #3282 item 1,
-    #3283 item 2.)
+    leaking into a doc commit. THE CONTROL MOVES WITH IT:
+    ``23ed8e525572f0ee`` (34f777b) -> ``b15be5ab7a7a9cdb`` (86714e1) on the
+    same ``ast.dump`` no-drop construction, and the chain back is
+    ``e288c1544ac65f1f`` (2f3d72e) -> ``f03bdc070a8b3988`` (610b667) ->
+    ``74040f3ec8737c0b`` (2f68e77) -> ``23ed8e525572f0ee`` (34f777b). The
+    falsifier is CONSTANT at ``f2a57831809c0819`` over 2f3d72e..34f777b and
+    moves from 86714e1, so a reader who measures the tip against a range
+    that includes it sees a real, attributable move, not drift. All values
+    re-derived at this egress on ``git show`` from the pushed refs, not
+    relayed. (dana AMS #3282 item 1, #3283 item 2; lex AMS #3284 item 4,
+    #3285 item 3.)
 
 
   * Do NOT pin a digest — or a LENGTH, or a BODY — of a 403 challenge body.
@@ -518,7 +526,10 @@ Four facts a reader of this file should not have to rediscover:
     51ec4c31b4a59d75; 4,123 e63ee34df3d430e8; 4,125 d6ca8fbd46c34f03.
     The CONTENT family, n=3,214 (drop{STRING, COMMENT, NL, NEWLINE, INDENT,
     DEDENT, ENDMARKER}), pipe-joined, all NINE invariant across the eleven
-    guard-bearing wire refs (re-measured here — the six lex named plus three):
+    guard-bearing wire refs 2f3d72e..34f777b — and NOT across the tip:
+    86714e1 is executed code, so this family moves there to n=3,228 /
+    ``0ed18a60ac69e463``, which is why the range is capped here rather than
+    read as a failed reproduction. (re-measured here — the six lex named plus three):
     t.type:t.exact_type:t.string fd2a321487a3c73c; typename:exact_type:string
     db7ffed4e904989e; typename:string 460baa8ff85ff135; t.type:t.string
     1a0bfe5d7b23d5c3; t.exact_type:t.string 456cc992d9962e8a;
@@ -530,8 +541,12 @@ Four facts a reader of this file should not have to rediscover:
     wrong drop-set is the one family that legitimately moves reading as drift on
     an unchanged artifact). Pipe ``|`` of ``t.string|t.start``: 82d8792268494a82
     (00b9056) -> 6f48f473a6cde601 (610b667) -> 3303b48dfde6d985 (2f68e77) ->
-    26fe25567719bcb0 (34f777b). NUL of ``t.string+str(t.start)``:
-    2211ab2ec10ee783 -> 0200679e96119c4f -> 7c4c669381f02b0d -> 3d46ba763f3bb8a2.
+    26fe25567719bcb0 (34f777b) — this chain ends there too: at ``86714e1`` it
+    is ``4e163600af171982`` on the same content drop-set, because that
+    commit's added lines are code, not strings. NUL of
+    ``t.string+str(t.start)``: ``2211ab2ec10ee783`` -> ``0200679e96119c4f``
+    -> ``7c4c669381f02b0d`` -> ``3d46ba763f3bb8a2`` (34f777b) ->
+    ``088aa875d5f06926`` (86714e1).
     NAME THE FIELD TRIPLE, THE ENTRY POINT, THE JOIN AND THE DROP-SET on any row
     quoted downstream, or the next reader will publish two values for one
     stream. (lex #3246 items 3-4; lex #3268 item 3 corrected the tip row from the
