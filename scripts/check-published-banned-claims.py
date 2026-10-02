@@ -515,18 +515,33 @@ Four facts a reader of this file should not have to rediscover:
     item 3; dana #3234 item 2). Two entry points differ by exactly one ENCODING
     token: ``tokenize.generate_tokens(StringIO(text).readline)`` vs
     ``tokenize.tokenize(BytesIO(bytes).readline)``.
-    DROP{STRING}, chr(0)-joined ``t.string``, via generate_tokens — FOUR distinct
-    rows over the wire refs (re-measured here): 00b9056 4,116 / 366c5b155e7cbf64;
-    the b1c996e = 9e32f9b = bcdbd6f = 5dece3b = 732a009 run 4,118 /
-    ef96507b9466ae9f; the 3ce1ef7 = 483b231 = 2f3d72e run 4,122 /
-    769841dc94139d60; and 610b667 = 2f68e77 4,124 / fc05d9248543dcee. The stream
-    moves at exactly TWO commits — 3ce1ef7 and 610b667 — the two that added prose
-    OUTSIDE the docstring drop-set (lex #3246 item 3; dana #3234 item 1). The
+    DROP{STRING}, chr(0)-joined ``t.string``, via generate_tokens — SEVEN distinct
+    rows over the nineteen-ref run 8d09932..34f777b (re-measured here; the two
+    lower rows sit BELOW the span this block used to name): 8d09932 = a05c939 =
+    31d61f9 = 40792ac = a7c316c 4,096 / a6fc1b43a7c71122; the 03f4e1c = bc5a044
+    run 4,106 / 60fa87da1e0b3250; 00b9056 4,116 / 366c5b155e7cbf64; the b1c996e =
+    9e32f9b = bcdbd6f = 5dece3b = 732a009 run 4,118 / ef96507b9466ae9f; the
+    3ce1ef7 = 483b231 = 2f3d72e run 4,122 / 769841dc94139d60; the 610b667 =
+    2f68e77 = 34f777b run 4,124 / fc05d9248543dcee; and 4,151 / d326552caabcdd12
+    at ``86714e1``/``cf19993``/``c72c3c7`` — a NEW row, not the 4,124 one and not a
+    drop-set disagreement: a new ``print()`` is an f-string, so tokenize emits its
+    segments as FSTRING_START / FSTRING_MIDDLE / FSTRING_END, which are not STRING
+    tokens and so land in the KEPT stream (all 64 drop-subsets x 2 entry points
+    fail to reproduce 4,124 at 86714e1). The stream moves at SIX commits — 03f4e1c,
+    00b9056, b1c996e, 3ce1ef7, 610b667 and 86714e1. "Exactly TWO" held only over
+    the truncated span it was measured on, and b1c996e's +1 COMMENT is exactly the
+    prose OUTSIDE a docstring that the causal clause describes — so name the RUN,
+    never a count (dana #3308/#3309/#3310/#3311 item 4; lex #3312 item 4). The
     BYTES entry point is +1 on every row: 4,117 b4ee128756da7cf2; 4,119
-    51ec4c31b4a59d75; 4,123 e63ee34df3d430e8; 4,125 d6ca8fbd46c34f03.
+    51ec4c31b4a59d75; 4,123 e63ee34df3d430e8; 4,125 d6ca8fbd46c34f03; and 4,152
+    / 99e62a576e2c9ac1 at 86714e1 (the same +1 on the new row; the two lower rows
+    are 4,097 847918448f8f4f4e and 4,107 ab9409b5632d5fe0).
     The CONTENT family, n=3,214 (drop{STRING, COMMENT, NL, NEWLINE, INDENT,
-    DEDENT, ENDMARKER}), pipe-joined, all NINE invariant across the eleven
-    guard-bearing wire refs 2f3d72e..34f777b — and NOT across the tip:
+    DEDENT, ENDMARKER}), pipe-joined, all NINE invariant across NINETEEN
+    guard-bearing wire refs, 8d09932..34f777b (8d09932, a05c939, 31d61f9,
+    40792ac, a7c316c, 03f4e1c, bc5a044, 00b9056, b1c996e, 9e32f9b, bcdbd6f,
+    5dece3b, 732a009, 3ce1ef7, 483b231, 2f3d72e, 610b667, 2f68e77, 34f777b) —
+    and NOT across the tip:
     86714e1 is executed code, so this family moves there to n=3,228 /
     ``0ed18a60ac69e463``, which is why the range is capped here rather than
     read as a failed reproduction. (re-measured here — the six lex named plus three):
@@ -537,7 +552,7 @@ Four facts a reader of this file should not have to rediscover:
     3c423ca4ea6297f1; chr0 t.string 301463ae9668d6fa; and the pipe form of the
     chr0 family. POSITION rows are per-ref and move on EVERY doc-only commit,
     not only 610b667/2f68e77 — and over the SAME content drop-set above (so
-    n=3,214, not the drop{STRING} n=4,124: a position row quoted against the
+    n=3,214, not the drop{STRING} n=4,151: a position row quoted against the
     wrong drop-set is the one family that legitimately moves reading as drift on
     an unchanged artifact). Pipe ``|`` of ``t.string|t.start``: 82d8792268494a82
     (00b9056) -> 6f48f473a6cde601 (610b667) -> 3303b48dfde6d985 (2f68e77) ->
@@ -546,7 +561,18 @@ Four facts a reader of this file should not have to rediscover:
     commit's added lines are code, not strings. NUL of
     ``t.string+str(t.start)``: ``2211ab2ec10ee783`` -> ``0200679e96119c4f``
     -> ``7c4c669381f02b0d`` -> ``3d46ba763f3bb8a2`` (34f777b) ->
-    ``088aa875d5f06926`` (86714e1).
+    ``088aa875d5f06926`` (86714e1). The four interior NUL / pipe-position rows
+    above are CARRIED from the lex pair for attribution, not re-derived here —
+    the construction re-derived at this egress is the chr0 form of
+    ``t.string+str(t.start)`` over the SAME content drop-set (34f777b
+    3d46ba763f3bb8a2, 86714e1 088aa875d5f06926, reproducing either way).
+    STORED vs ``len(git show text)`` is a UNIT clause of this same family:
+    ``git cat-file -s`` counts the BLOB's bytes, so it equals the character
+    length only for pure ASCII. At 86714e1 the blob is 72,988 B against a decoded
+    text of 72,710 chars — a 278-byte gap that is the 141 non-ASCII characters'
+    UTF-8 excess, NOT line endings (the blob is LF-only). Read any stored-vs-text
+    pairing here as "equal for ASCII, plus the non-ASCII byte excess otherwise"
+    (dana #3294 item 3).
     NAME THE FIELD TRIPLE, THE ENTRY POINT, THE JOIN AND THE DROP-SET on any row
     quoted downstream, or the next reader will publish two values for one
     stream. (lex #3246 items 3-4; lex #3268 item 3 corrected the tip row from the
