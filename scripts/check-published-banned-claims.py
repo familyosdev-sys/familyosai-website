@@ -47,10 +47,15 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
 Four facts a reader of this file should not have to rediscover:
 
   * The apex body is request-shape-dependent, and the discriminator is the
-    Accept TOKEN, not the star: Cloudflare appends a
-    ``static.cloudflareinsights.com`` beacon after ``</body></html>`` when the
-    raw ``Accept`` header carries the case-SENSITIVE literal substring
-    ``text/html``, or when the header is absent; it appends nothing otherwise.
+    case-SENSITIVE literal substring ``text/html`` in the raw ``Accept`` header
+    — NOT a media-type token and NOT the star: Cloudflare injects a
+    ``static.cloudflareinsights.com`` beacon when the raw ``Accept`` header
+    carries that substring, or when the header is absent; it injects nothing
+    otherwise. The ``text/html2`` / ``text/htmlish`` / ``text/htmlX`` /
+    ``xtext/html`` / ``a text/html b`` shapes match NO media type and still get
+    the beacon (dana AMS #3087). Injection POSITION is
+    surface-dependent: on the apex ROOT ``/`` the beacon sits after the closing
+    ``</body></html>``, on the 404 path it sits before it (lex AMS #3079).
     NOT a star-vs-non-star rule — ``TEXT/HTML`` is non-star and gets NO beacon.
     Measured 2026-10-02 from RecRoomRig, 28 shapes x 3 reps, every reading
     stable (evidence: profiles/codey/cache/scratch/sweep_final.{py,out}). On the
@@ -224,9 +229,9 @@ Four facts a reader of this file should not have to rediscover:
 
   * The 404 body is pinned by DIGEST, and the pin is wire-derived. Cloudflare
     serves /404.html (200) and every unknown path (404) the same bytes, but
-    appends the analytics beacon on the same TOKEN rule as the apex bullet
-    above: present iff the raw ``Accept`` header carries the case-SENSITIVE
-    literal substring ``text/html``, or the header is absent. The old wording
+    appends the analytics beacon on the same case-sensitive ``text/html``
+    substring rule as the apex bullet above: present iff the raw ``Accept``
+    header carries that literal substring, or the header is absent. The old wording
     here ("for any non-star ``Accept``") was falsified by a 15-shape sweep
     (dana AMS #3072; re-measured here 2026-10-02 from RecRoomRig, 3 reps each,
     stable); the full 13/15 split is in the apex bullet above. Endpoints at
@@ -344,7 +349,8 @@ ORIGIN = "https://familyosai-cma.pages.dev"
 # The honest 404. Cloudflare serves /404.html (200) and any unknown path (404)
 # as the SAME bytes, so one digest pins them together. Pin the BEACON-STRIPPED
 # digest, never the byte count: the apex zone appends the cloudflareinsights
-# beacon on the TOKEN rule in the apex bullet above — present iff the raw Accept
+# beacon on the case-sensitive ``text/html`` substring rule in the apex bullet
+# above — present iff the raw Accept
 # carries the case-sensitive literal substring ``text/html``, or the header is
 # absent — so the zone answers 702 B under ``Accept: */*`` and 1,069 B under
 # ``text/html``, but a NON-star ``TEXT/HTML`` also gets 702 B (dana AMS #3072),
@@ -577,8 +583,11 @@ def scan_url() -> tuple[list[str], list[str], list[str]]:
 def shape_findings(failures: list[str]) -> list[str]:
     """The pinned apex digest must be reproducible by any client.
 
-    Cloudflare injects the analytics beacon after ``</body></html>`` on the
-    substring rule documented above. The two shapes this probes — ``Accept:
+    Cloudflare injects the analytics beacon on the substring rule documented
+    above. It lands AFTER the closing ``</body></html>`` on the apex ROOT ``/``
+    (the shape this probe fetches) and BEFORE it on the 404 path; the position
+    is surface-dependent, so do not read "after" as the general rule (lex AMS
+    #3079). The two shapes this probes — ``Accept:
     */*`` and NO ``Accept`` header — sit on opposite sides of it (absent ->
     beacon, ``*/*`` -> none), which is why the pair is still a valid probe.
     Stripping the beacon must make the two shapes identical — if it does not, a
