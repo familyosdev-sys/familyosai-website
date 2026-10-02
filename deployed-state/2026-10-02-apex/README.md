@@ -3,12 +3,18 @@
 > **MERGE ORDER MATTERS — do not merge this while the Pages publish root is the
 > repository root.** The Pages project `familyosai` currently publishes from the
 > repo root, so anything committed here becomes web-servable at
-> `familyosai.com/<path>`. This record deliberately contains the retracted claims
+> familyosai.com/<path>. This record deliberately contains the retracted claims
 > the live site still serves (`Runs fully offline` twice in `apex-root.html`), so
 > merging it *before* the output directory is switched to `deploy/` would put
 > banned claim text back on our own apex under `/deployed-state/...`. It is inert
 > (and correct) after the redeploy, because `deploy/` is then the only published
 > directory. Merge with, or after, the #195 redeploy — never before it.
+>
+> **On public exposure:** this repository is public, so these bytes are also
+> readable on GitHub. That adds no marginal exposure — the identical bytes are
+> already served publicly at `familyosai.com/` today, which is the very reason the
+> record exists. They are a dated forensic capture explicitly labelled as
+> superseded, not a published claim about the product.
 
 **Why this exists.** AMS task #195 step 1: before the stale apex build is replaced,
 capture the bytes that are *actually being served* so the broken state is on the
@@ -39,11 +45,17 @@ no cache-busters. Read-only; nothing was deployed, purged, or changed.
    retracted claim `Runs fully offline` twice, plus `lives in your house` and
    `on-device` — three phrases the repo's own claims guard
    (`tests/website-claims.test.ts`) bans.
-2. **The served root matches no branch tip.** Its bytes are byte-identical to
-   `deploy/index.html` as it stood *before* commit `565e022`
-   ("strike the banned privacy claims from the published copy", merged 2026-09-28).
-   That is why the live site still shows the retracted claims a month after the fix
-   landed on `main`: `main` was never redeployed.
+2. **The served root matches no branch tip — it is blob `d5173b13`.** For the
+   record, precisely: the served 12,398 B root is byte-identical to
+   `deploy/index.html` at commit `3087f2d` and to the copy in the stash commit
+   `351e831` (Chris's stash index "On main: stale index.html privacy-copy draft",
+   2026-10-01 02:12) — i.e. the pre-`565e022` build. It is *not* on `origin/main`
+   (`origin/main:deploy/index.html` is blob `a0f6d8a8` = 13,225 B =
+   sha256 `fa31dd15…90b8`). The earlier note in #195 that the served bytes "match
+   no git blob" was true only of the two commits compared at the time; the blob
+   does exist, just not on `main`. Why it matters is unchanged: the live site
+   still shows the retracted claims a month after the fix landed on `main`,
+   because `main` was never republished.
 3. **The homepage is visibly broken today, not merely stale.** It references
    relative assets — `assets/brand/familyos-logo-painted.png`,
    `assets/painted/backdrops/tudor-house-dusk.png`,
