@@ -401,7 +401,25 @@ Four facts a reader of this file should not have to rediscover:
     ``data-cfemail="<hex>"`` attrs, re-XOR'd every request; three live bodies are
     byte-identical only AFTER normalizing both cfemail halves (all 5,053 chars).
     So quote its chunk GEOMETRY and its DE-CHUNKED length, NEVER a ``/terms/``
-    body digest. (The 5,293 B here and the 5,660 B in the cf_email block below are
+    body digest. ROUTE- AND SHAPE-LABELLED VALUES, sha16 of the normalizer on
+    the UNSTRIPPED body (both cfemail halves cleared, beacon left in, so the row
+    is shape-specific by construction): /terms/ */* 5,293 B -> e564e3c3de6b0ecc,
+    no-Accept ``|`` text/html 5,660 B -> d245f5e80549a03d; /privacy/ */* 5,587 B
+    -> f664342b6e27532a, no-Accept ``|`` text/html 5,954 B -> bc862798cb70001e.
+    The BEACON-STRIPPED order is shape-INVARIANT at f664342b6e27532a (/privacy/)
+    and e564e3c3de6b0ecc (/terms/) — which is exactly why a shape-specific value
+    must name its shape. (lex #3268 item 5a; /terms/ no-Accept had zero bus rows
+    before today; every value re-derived at codey egress this run.) THE ROTATOR
+    AND THE BEACON ARE THE SAME HOST-SCOPING CLAUSE: the Pages alias (ORIGIN)
+    returns one byte-identical body under every shape for /privacy/ (4,870 B) and
+    /terms/ (4,862 B) — cf-cache-status absent — so request-scoped cfemail
+    rewriting is ZONE-ONLY, and the alias's shorter /privacy/ is NOT a stale
+    copy. Measured by DECODING the cfemail and stripping the beacon here, the two
+    hosts are TEXT-equal — /terms/ 3,256 chars both, /privacy/ 3,256 vs 3,257,
+    the single char being one ASCII space before a period inside the zone-only
+    obfuscated mailto anchor, not content. (lex #3268 item 5b, qualified: the
+    host-equality holds at the TEXT level, not the canonicalised-byte level.)
+    (The 5,293 B here and the 5,660 B in the cf_email block below are
     NOT in conflict: 5,293 is the beacon-free ``*/*`` shape, 5,660 is ``/terms/``
     WITH the beacon.) THE LIVE LINE'S THREE NUMBERS ARE THE CHARACTER COLUMN of
     that byte triple, not a third shape: re-measured here 2026-10-02, / 13,225 B
@@ -494,12 +512,19 @@ Four facts a reader of this file should not have to rediscover:
     1a0bfe5d7b23d5c3; t.exact_type:t.string 456cc992d9962e8a;
     tok_name:exact_type:string 8c9e44777de7bd94; tok_name:string
     3c423ca4ea6297f1; chr0 t.string 301463ae9668d6fa; and the pipe form of the
-    chr0 family. POSITION rows are per-ref and move at 610b667 and 2f68e77: pipe
-    s|start 6f48f473a6cde601 (610b667) / 3303b48dfde6d985 (2f68e77); chr0
-    s+start 0200679e96119c4f / 7c4c669381f02b0d. NAME THE FIELD TRIPLE, THE ENTRY
-    POINT AND THE JOIN on any row quoted downstream, or the next reader will
-    publish two values for one stream. (lex #3246 items 3-4; every value above
-    re-derived at codey egress this run, not relayed.)
+    chr0 family. POSITION rows are per-ref and move on EVERY doc-only commit,
+    not only 610b667/2f68e77 — and over the SAME content drop-set above (so
+    n=3,214, not the drop{STRING} n=4,124: a position row quoted against the
+    wrong drop-set is the one family that legitimately moves reading as drift on
+    an unchanged artifact). Pipe ``|`` of ``t.string|t.start``: 82d8792268494a82
+    (00b9056) -> 6f48f473a6cde601 (610b667) -> 3303b48dfde6d985 (2f68e77) ->
+    26fe25567719bcb0 (34f777b). NUL of ``t.string+str(t.start)``:
+    2211ab2ec10ee783 -> 0200679e96119c4f -> 7c4c669381f02b0d -> 3d46ba763f3bb8a2.
+    NAME THE FIELD TRIPLE, THE ENTRY POINT, THE JOIN AND THE DROP-SET on any row
+    quoted downstream, or the next reader will publish two values for one
+    stream. (lex #3246 items 3-4; lex #3268 item 3 corrected the tip row from the
+    stale 2f68e77 pair to the 34f777b pair above; every value re-derived at codey
+    egress this run, not relayed.)
 
 Exit codes: 0 clean, 1 banned claim found OR the honest-404 contract broken,
 2 the guard could not run (transport). A broken 404 contract is a finding, not
@@ -818,7 +843,14 @@ def scan_url() -> tuple[list[str], list[str], list[str]]:
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             failures.append(f"{url}: could not fetch — {exc}")
             continue
-        print(f"[live] {url}: {len(body)} bytes")
+        # len() on the decoded str is CHARACTERS, and this line used to say
+        # "bytes" over it. Every neighbouring column reports BYTES, so a reader
+        # comparing 13,169 here against the 13,225 B de-chunked body reads a
+        # 56 B drift on an unchanged page — the same char-vs-byte failure the
+        # framing-formula clause above closes, one line away. Print both, with
+        # each unit named, so no reader has to guess which column moved.
+        print(f"[live] {url}: {len(body)} chars "
+              f"({len(body.encode('utf-8'))} bytes)")
         findings += scan_text(url, strip_beacon(body))
     if skipped:
         print(f"[live] {len(skipped)} wire text path(s) answered 404 and were "
