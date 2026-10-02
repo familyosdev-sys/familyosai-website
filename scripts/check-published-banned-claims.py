@@ -126,7 +126,21 @@ Four facts a reader of this file should not have to rediscover:
     of us carried a sha16 here and both retracted it. (lex AMS #2842/#2843,
     re-measured here 2026-10-02.)
 
-Exit codes: 0 clean, 1 banned claim found, 2 the guard could not run.
+  * The 404 body is pinned by DIGEST, and the pin is wire-derived. Cloudflare
+    serves /404.html (200) and every unknown path (404) the same bytes, but
+    appends the analytics beacon for any non-star ``Accept`` — so the served
+    404 is 702 B with ``Accept: */*`` and 1,069 B without, on the apex zone
+    while the Pages origin injects nothing and stays 702 B on every shape.
+    Measured 2026-10-02 from RecRoomRig (4 dead paths x 4 request shapes x both
+    hosts, re-run of lizzie's AMS #2857): the beacon-stripped digest is
+    83972470b567 on all 32 readings and equal to the beacon-stripped /404.html
+    GET. Pin THAT, never the byte count — the length is shape-dependent (702 vs
+    1,069) and host-dependent, which is the same failure mode the apex bullet
+    above records. (lizzie AMS #2857/#2851; re-measured here.)
+
+Exit codes: 0 clean, 1 banned claim found OR the honest-404 contract broken,
+2 the guard could not run (transport). A broken 404 contract is a finding, not
+a transport blip: it removes the guard's ability to trust a 404 skip.
 """
 
 from __future__ import annotations
@@ -218,6 +232,39 @@ SCAN_SUFFIXES = {".html", ".htm", ".md", ".txt", ".js", ".css", ".json", ".py"}
 MEDIA_SUFFIXES = {".mp4", ".mov", ".webm", ".png", ".jpg", ".jpeg"}
 
 APEX = "https://familyosai.com"
+# The Pages ORIGIN behind the apex zone. The 404 pin reads BOTH layers, because
+# "200 plain at the zone" cannot separate a stale zone copy from a live file and
+# the origin is the layer a purge exposes (dana AMS #2849). Same reason the
+# residue registry's discriminator is the layer, not the zone count.
+ORIGIN = "https://familyosai-cma.pages.dev"
+
+# The honest 404. Cloudflare serves /404.html (200) and any unknown path (404)
+# as the SAME bytes, so one digest pins them together. Pin the BEACON-STRIPPED
+# digest, never the byte count: with ``Accept: */*`` the apex zone answers 702 B,
+# but any other Accept gets the 366 B cloudflareinsights beacon appended (+1
+# trailing newline = 367 B) for 1,069 B, while the Pages origin injects nothing
+# and stays 702 B on every shape. 702 vs 1,069 is the exact shape-dependence the
+# apex bullet above warns about, so the count is not a pin — the stripped digest
+# is, because ``strip_beacon`` (the DELETE-with-\s* rule) makes it shape- AND
+# host-independent. 83972470b567 measured 2026-10-02 (lizzie AMS #2857;
+# re-measured here over 4 dead paths x 4 shapes x both hosts). Do NOT re-pin a
+# 404 body that also carries a cf_email span: the XOR key makes that digest
+# per-request, which is why this pin is asserted only after ``strip_beacon`` and
+# the served body is asserted cf-span-free (``normalize_request_scoped`` is a
+# no-op on it) before the digest means content.
+NOT_FOUND_PATH = "/404.html"
+# A true ``sha256_12`` (12 hex chars — the units lizzie carried on the bus and
+# the ones this repo's carried records use). NOTE: ``sha12()`` below is a
+# misnomer — it returns SIXTEEN hex chars, so the pin is compared against the
+# 12-char PREFIX of the digest, never the whole return value. Carrying the
+# function's name as if it were its units is the same class of error the apex
+# bullet above documents for ``len()`` (characters, not bytes).
+NOT_FOUND_STRIPPED_SHA12 = "83972470b567"
+NOT_FOUND_STRIPPED_PREFIX = len(NOT_FOUND_STRIPPED_SHA12)
+# A path that answers nothing. Distinct from NOT_FOUND_PATH so the assertion
+# proves *mapping*, not just that one file is served: the unknown path must
+# answer 404 with the 404 body, and /404.html itself must answer 200.
+NOT_FOUND_DEAD_PATH = "/__guard-no-such-path__"
 APEX_PATHS = ["/", "/privacy/", "/terms/"]
 
 # Cloudflare serves the apex through bot protection and answers the default
@@ -370,8 +417,8 @@ def fetch(path: str, base: str = APEX, timeout: int = 25) -> bytes:
         return r.read()
 
 
-def scan_url() -> tuple[list[str], list[str]]:
-    """Returns (claim_findings, transport_failures).
+def scan_url() -> tuple[list[str], list[str], list[str]]:
+    """Returns (claim_findings, transport_failures, contract_failures).
 
     A network failure is NOT a claim finding and must not be reported as one —
     "the guard could not reach the site" and "the site says something false" are
@@ -410,8 +457,13 @@ def scan_url() -> tuple[list[str], list[str]]:
                   "root has moved (e.g. repo root -> deploy/), the tree-derived "
                   "paths no longer address what is served and this must be fixed "
                   "before a green here means what it reads as.")
+    # The honest-404 contract, asserted on the wire. It gets its OWN channel:
+    # a wrong 404 body is the guard losing its "not served" reading (a finding,
+    # exit 1), not a transport blip and not a banned claim on a page. Keeping the
+    # three apart is the whole point of scan_url's split return.
+    contract = not_found_findings()
     findings += shape_findings(failures)
-    return findings, failures
+    return findings, failures, contract
 
 
 def shape_findings(failures: list[str]) -> list[str]:
@@ -439,6 +491,90 @@ def shape_findings(failures: list[str]) -> list[str]:
         return [f"{url}: body differs by request shape beyond the analytics beacon "
                 f"(beacon-stripped {a} vs {b}) — a pinned digest is not reproducible"]
     return []
+
+
+def _fetch_status(path: str, base: str = APEX, timeout: int = 25) -> tuple[int, bytes]:
+    """Return ``(status, body)``. Unlike ``fetch``, a 404 is a READING here, not
+    an exception: the honest-404 contract is *about* the body of a 404, so a
+    dead path that answers 404 must yield its bytes rather than raise. Transport
+    failures still propagate to the caller, which reports them as transport."""
+    req = urllib.request.Request(base + path, headers={"User-Agent": UA, "Accept": ACCEPT})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.status, r.read()
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.read()
+
+
+def not_found_findings() -> list[str]:
+    """Pin the honest-404 body: a content contract, not a furniture file.
+
+    ``deploy/404.html`` is tracked on ``main`` but NOT on this branch or
+    ``origin/main`` (PR #1 removed it — ``git diff --name-status main origin/main``
+    shows ``D deploy/404.html``), so there is no tree file to read here and a
+    tree-digest pin would be a pin of nothing. The served bytes ARE ``main``'s,
+    byte-identical (702 B, verified here), so the wire is the honest source.
+
+    Three readings, each requiring its own status AND agreeing on the
+    beacon-stripped digest:
+      * the apex ZONE unknown path — must answer 404 with the 404 body;
+      * the apex ZONE ``/404.html`` — must answer 200 with the same body;
+      * the Pages ORIGIN (``familyosai-cma.pages.dev``) unknown path — must
+        answer 404 with the same body. This is the layer discriminator: the
+        origin injects no beacon, so it is what a purge would expose, and a pin
+        that holds only at the zone is a pin of the beacon-injecting layer.
+    A status that is merely present is not the contract — ``/404.html`` must be
+    200 and a dead path must be 404; a soft-200 catch-all or a hard-500 both
+    make the guard's own "not served" reading untrustworthy.
+    """
+    failures: list[str] = []
+    readings = (
+        ("zone", NOT_FOUND_DEAD_PATH, APEX, 404),
+        ("canonical", NOT_FOUND_PATH, APEX, 200),
+        ("origin", NOT_FOUND_DEAD_PATH, ORIGIN, 404),
+    )
+
+    def pin(blob: bytes, label: str) -> str:
+        text = blob.decode("utf-8", "replace")
+        if normalize_request_scoped(text) != text:
+            failures.append(f"{label}: 404 body carries a cf_email span, whose XOR "
+                            "key is per-request — no digest here is reproducible")
+            return ""
+        stripped = strip_beacon(text)
+        digest = sha12(stripped)
+        prefix = digest[:NOT_FOUND_STRIPPED_PREFIX]
+        print(f"[live] {label}: {len(stripped.encode())} B beacon-stripped/"
+              f"{prefix} ({len(blob)} B raw, sha16 {digest})")
+        if prefix != NOT_FOUND_STRIPPED_SHA12:
+            failures.append(f"{label}: 404 body digest {prefix} != pinned "
+                            f"{NOT_FOUND_STRIPPED_SHA12} "
+                            f"(beacon-stripped {len(stripped.encode())} B, sha16 {digest})")
+        return prefix
+
+    digests: dict[str, str] = {}
+    for label, path, base, want in readings:
+        try:
+            status, blob = _fetch_status(path, base)
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            failures.append(f"{base}{path}: could not fetch — {exc} "
+                            "— the 404 pin could not read this layer")
+            continue
+        if status != want:
+            failures.append(f"{base}{path}: HTTP {status}, expected {want} — "
+                            "the guard cannot trust its own not-served reading "
+                            "while the 404 contract is broken")
+            continue
+        digests[label] = pin(blob, f"{base}{path} ({status})")
+
+    zone, canon, origin = (digests.get("zone"), digests.get("canonical"),
+                           digests.get("origin"))
+    if zone and canon and zone != canon:
+        failures.append(f"{APEX}{NOT_FOUND_DEAD_PATH} (404) body does not equal the "
+                        f"/404.html GET (200) — {zone} vs {canon}")
+    if zone and origin and zone != origin:
+        failures.append(f"404 page is layer-dependent: zone {zone} vs origin "
+                        f"{origin} — a purge would change what a dead path answers")
+    return failures
 
 
 def fetch_no_accept(path: str, timeout: int = 25) -> bytes:
@@ -597,8 +733,9 @@ def main() -> int:
 
     problems, warnings = scan_tree()
     transport: list[str] = []
+    contract: list[str] = []
     if args.url or args.all:
-        found, transport = scan_url()
+        found, transport, contract = scan_url()
         problems += found
     if args.media or args.all:
         media_problems, media_transport = scan_media()
@@ -611,6 +748,21 @@ def main() -> int:
               "publishes the repo root, so these are live at familyosai.com today:\n")
         for w in warnings:
             print(f"  ! {w}")
+
+    # A broken 404 contract is a FINDING, not a transport blip: it is the guard
+    # losing the ability to trust its own "404 = not served" reading. Reporting it
+    # as "endpoint(s) unreachable" made a red 404 look like a network problem
+    # (measured 2026-10-02: exit 2, "3 endpoint(s) unreachable"). It exits 1.
+    if contract:
+        print(f"\nFAIL — {len(contract)} honest-404 contract failure(s):\n", file=sys.stderr)
+        for c in contract:
+            print(f"  - {c}", file=sys.stderr)
+        print("\nA dead path must answer 404 with the /404.html body, and /404.html itself\n"
+              "must answer 200. If that contract is broken, a 404 can be a soft-200\n"
+              "catch-all or a wrong page, and every 404-skipped path below is NOT a skip.\n"
+              "Fix the 404 route/body before reading this run as clean.", file=sys.stderr)
+        if not transport:
+            return 1
 
     if transport:
         print(f"\nCOULD NOT RUN — {len(transport)} endpoint(s) unreachable:\n", file=sys.stderr)

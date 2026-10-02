@@ -197,6 +197,141 @@ def main() -> int:
         check("no unreadable frame was scored clean",
               not any("frame(s), clean" in p for p in problems))
 
+    print("6. the honest-404 body is pinned by a beacon-stripped digest (lizzie AMS #2857)")
+    # The 404 page is the same bytes at 200 (/404.html) and at any unknown path
+    # (404) once the beacon is stripped, so ONE fixture pins both shapes. The pin
+    # must be a DIGEST, never a count: the apex zone answers 702 B under
+    # ``Accept: */*`` and 1,069 B under any other shape (the 366 B beacon + one
+    # trailing newline), while the origin stays 702 B - the count is not a pin.
+    check("NOT_FOUND_STRIPPED_SHA12 is a true sha256_12 (exactly 12 hex chars)",
+          isinstance(g.NOT_FOUND_STRIPPED_SHA12, str)
+          and len(g.NOT_FOUND_STRIPPED_SHA12) == 12
+          and all(c in "0123456789abcdef" for c in g.NOT_FOUND_STRIPPED_SHA12),
+          repr(g.NOT_FOUND_STRIPPED_SHA12))
+    # sha12() is a misnomer: it returns 16 hex chars. Carrying lizzie's 12-char
+    # value as if it were the whole return value gave a false red on the live
+    # wire (2026-10-02: "digest 83972470b5674ad9 != pinned 83972470b567"). The
+    # pin is a PREFIX compare; the units are asserted here so a reader cannot
+    # re-make the mistake.
+    check("sha12() really returns 16 hex chars (name != units)",
+          len(g.sha12("x")) == 16, f"{len(g.sha12('x'))}")
+    check("NOT_FOUND_STRIPPED_PREFIX matches the carried 12-char units",
+          g.NOT_FOUND_STRIPPED_PREFIX == 12)
+    check("the dead path is an absolute path, distinct from the canonical 404 path",
+          g.NOT_FOUND_DEAD_PATH.startswith("/")
+          and g.NOT_FOUND_DEAD_PATH != g.NOT_FOUND_PATH)
+    check("the origin host is pinned (the layer a purge exposes)",
+          g.ORIGIN.startswith("https://") and g.ORIGIN != g.APEX, g.ORIGIN)
+
+    page404 = ('<!doctype html><html lang="en"><body><h1>404</h1>'
+               '<p>That page does not exist.</p></body></html>')
+    beacon = ('<script defer src="https://static.cloudflareinsights.com/beacon.min.js"'
+              ' data-cf-beacon=\'{"token":"x"}\'></script>\n')
+    check("404 page + injected beacon strips to the bare page's digest",
+          g.sha12(g.strip_beacon(page404 + beacon)) == g.sha12(g.strip_beacon(page404)))
+
+    fix12 = g.sha12(g.strip_beacon(page404))[:12]
+    orig_pin, orig_status = g.NOT_FOUND_STRIPPED_SHA12, g._fetch_status
+
+    # _fetch_status must return the body of a 404 rather than raise: the contract
+    # is *about* a 404 body, so a raiser cannot read it. Also prove all THREE
+    # readings are taken - zone dead path, zone /404.html, origin dead path. A
+    # pin of one layer passes while the layer a purge exposes serves something
+    # else, which is the conflation the residue registry's layer discriminator
+    # exists to avoid.
+    STATUS = {(g.APEX, g.NOT_FOUND_DEAD_PATH): 404,
+              (g.APEX, g.NOT_FOUND_PATH): 200,
+              (g.ORIGIN, g.NOT_FOUND_DEAD_PATH): 404}
+    seen: list[tuple[str, str]] = []
+
+    def spy(path, base=None, **k):
+        key = (base or g.APEX, path)
+        seen.append(key)
+        return STATUS.get(key, 200), page404.encode()
+
+    g.NOT_FOUND_STRIPPED_SHA12 = fix12
+    g._fetch_status = spy
+    try:
+        fails = g.not_found_findings()
+    finally:
+        g._fetch_status = orig_status
+    check("the 404 pin reads the zone dead path, the zone /404.html AND the origin",
+          (g.APEX, g.NOT_FOUND_DEAD_PATH) in seen
+          and (g.APEX, g.NOT_FOUND_PATH) in seen
+          and (g.ORIGIN, g.NOT_FOUND_DEAD_PATH) in seen, f"{seen}")
+    check("a matching body + matching statuses yields no 404 failure", fails == [], f"{fails}")
+
+    # A pin that cannot go red is not a pin. Change the body and it must fall.
+    g._fetch_status = lambda path, base=None, **k: (404, (page404 + "<p>changed</p>").encode())
+    try:
+        fails = g.not_found_findings()
+    finally:
+        g._fetch_status = orig_status
+    check("a changed 404 body appends a failure",
+          any("404 body digest" in f for f in fails), f"{fails}")
+
+    # The units bug: the same bytes must NOT fail against the 12-char pin (i.e.
+    # the compare is a prefix, not whole-return-value equality).
+    def all_ok(path, base=None, **k):
+        return STATUS.get((base or g.APEX, path), 200), page404.encode()
+
+    g._fetch_status = all_ok
+    try:
+        fails = g.not_found_findings()
+    finally:
+        g._fetch_status = orig_status
+    check("a 16-char digest matches the 12-char pin by prefix (units bug pinned)",
+          fails == [], f"{fails}")
+
+    # The status is part of the contract. A soft-200 catch-all (dead path
+    # answering 200) or a hard-500 must fail even when the bytes are identical:
+    # the guard's whole "404 = not served" skip logic depends on it.
+    g._fetch_status = lambda path, base=None, **k: (200, page404.encode())
+    try:
+        fails = g.not_found_findings()
+    finally:
+        g._fetch_status = orig_status
+    check("a dead path answering 200 (soft-200 catch-all) appends a failure",
+          any("expected 404" in f for f in fails), f"{fails}")
+
+    # A cf_email span carries a per-request XOR key, so the body has NO
+    # reproducible digest even at fixed length. The pin must refuse to read it
+    # rather than pin a value that moves every request (the 403-challenge class
+    # already documented in the guard header).
+    g._fetch_status = lambda path, base=None, **k: (
+        404, (page404 + '<a href="/cdn-cgi/l/email-protection#aabbcc">x</a>').encode())
+    try:
+        fails = g.not_found_findings()
+    finally:
+        g._fetch_status = orig_status
+    check("a 404 body carrying a cf_email span is refused, not pinned",
+          any("cf_email span" in f for f in fails), f"{fails}")
+
+    # Zone and origin must serve the SAME 404 page. If they diverge, a purge
+    # changes what a dead path answers and the pin is a pin of one layer only.
+    def by_host(path, base=None, **k):
+        body = page404 if (base or g.APEX) == g.APEX else page404 + "<p>origin</p>"
+        return STATUS.get((base or g.APEX, path), 200), body.encode()
+
+    g._fetch_status = by_host
+    try:
+        fails = g.not_found_findings()
+    finally:
+        g._fetch_status = orig_status
+        g.NOT_FOUND_STRIPPED_SHA12 = orig_pin
+    check("a 404 page that differs by layer appends a failure",
+          any("layer-dependent" in f for f in fails), f"{fails}")
+
+    # The contract channel must be separate from transport: a broken 404 is a
+    # FINDING (exit 1), and scan_url must expose it as a third channel so main()
+    # can report it as one instead of "endpoint(s) unreachable" (exit 2).
+    import inspect
+    sig = inspect.getsource(g.scan_url)
+    check("scan_url returns a third (contract) channel",
+          "claim_findings, transport_failures, contract_failures" in sig)
+    check("main() reports the 404 contract separately from transport",
+          "honest-404 contract failure(s)" in inspect.getsource(g.main))
+
     print(f"\n{CHECKS - len(FAILS)}/{CHECKS} checks passed")
     if FAILS:
         print("FAILED: " + "; ".join(FAILS), file=sys.stderr)
