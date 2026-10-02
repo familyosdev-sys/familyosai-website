@@ -295,7 +295,14 @@ Four facts a reader of this file should not have to rediscover:
     the identity length. NAME THE HOST AND THE UNIT on every one of these cells:
     they are DE-CHUNKED bodies, and the same +30 host delta applies to them, so a
     verifier measuring the zone's raw-transfer row reads 2,109 where the landed
-    number says 2,097 (dana AMS #3192 item 2, #3193 item 1).
+    number says 2,097 (dana AMS #3192 item 2, #3193 item 1). AND "RAW = DE-CHUNKED
+    + 13" IS ONLY USUALLY TRUE: the zone intermittently splits the same landing
+    into TWO chunks — 1 chunk 13,238 raw / 13 framing vs 2 chunks 13,246 raw / 21
+    framing, both de-chunking to the identical 13,225 B / fa31dd15248287ce
+    (measured here 2026-10-02: 3 of 300 reps at one fixed shape; the origin held
+    1 chunk). So the raw transfer count moves by +8 at a FIXED request shape as
+    well as across shapes, which is one more reason the DE-CHUNKED digest is the
+    unit to pin — a length pin is unstable even under repeats of one request.
     The durable pin is the PAIR (403, literal-UA
     ``Python-urllib`` — case-sensitive) and NOTHING about the body: a length pin
     is the same class of mistake as a digest pin. ONE CLAUSE WORTH NAMING: both
