@@ -37,10 +37,15 @@ Two facts a reader of this file should not have to rediscover:
     13,225 B (dana #2609) -> 13,169 B (#2641), no-Accept 13,592 B -> 13,536 B.
     The stripped digests agreed throughout (fa31dd15248287ce on 2026-10-02),
     which is the fact worth pinning. (lizzie, AMS #2645; dana, AMS #2647.)
-  * The publish root is currently the REPO ROOT, not ``deploy/`` — that is why
-    ``/deploy/index.html`` and ``/README.md`` answer at all. Every tree file is
-    therefore checked at ``/`` + its path from the repo root, which is exactly
-    where the zone serves it today.
+  * Every tree file is checked at ``/`` + its path from the repo root. That is
+    a convention, not a fact about the wire, and it has already been wrong once:
+    on 2026-10-02 the publish root moved from the REPO ROOT to ``deploy/``, so
+    ``/deploy/index.html`` and ``/README.md`` stopped answering (404) while
+    ``/`` and ``/privacy/`` stayed 200. The tree-derived paths then addressed
+    nothing that was served, and the wire text leg silently covered only the
+    apex pages. ``scan_url`` now prints how many paths 404-skipped and warns
+    when every non-apex path did, so a green here cannot quietly mean less than
+    it reads as. (dana, AMS #2703; verified live here.)
 
 Exit codes: 0 clean, 1 banned claim found, 2 the guard could not run.
 """
