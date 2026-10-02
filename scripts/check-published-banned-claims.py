@@ -70,26 +70,40 @@ Four facts a reader of this file should not have to rediscover:
     neither vantage could see the 4/6 split at all. Both are withdrawn, both
     were mine, and the pair is frozen here on purpose — these are the numbers I
     carried on the bus, and a file that claims to be "written down, not
-    inferred" must not oscillate between 5/10 and 5/15 across commits. (lizzie,
-    AMS #2836.)
+    inferred" must not oscillate between 5/10 and 5/15 across commits. Provenance
+    for the frozen pair: it was carried in AMS #2825/#2826/#2832. The ids first
+    cited in the c862f2d commit message (#2728/#2739/#2763) do NOT carry it -
+    #2728 carries no residue fraction, #2739 carries 18/18 and 23/23 self-test
+    counts, #2763 carries 9/15 and 15/15 - so cite the messages that actually
+    held the pair. lizzie #2902 retracted the contrary "should be 6/15 -> 6/15"
+    claim of #2896/#2898; the frozen line stands as written. (lizzie, AMS #2836.)
     Do NOT use "200 plain / 404 cache-busted" as the purge test: a query string
     is a ROUTE CHANGE, not a cache-buster. It 404s at the ZONE as well as at the
     ORIGIN (dana, AMS #2849), so it is not even a zone-vs-origin discriminator;
     only plain-vs-plain is a valid leg. And the route change is CONDITIONAL on
-    the route, not universal: /deploy/, /README.md and /.gitignore answer 200
-    plain and 404 for any query string at BOTH hosts, while live image assets
-    (og-card.png 29,450 B, appicon, logo-painted) keep answering 200 under the
-    same query string at BOTH hosts. A leg that 404s a fully live page route
+    the route, not universal: /deploy/, /README.md, /.gitignore and EVERY
+    /deploy/assets/... path answer 200 plain and 404 for any query string at
+    BOTH hosts - INCLUDING the images /deploy/assets/brand/og-card.png
+    (29,450 B) and /deploy/assets/brand/familyos-logo-painted.png (1,131,556 B)
+    - while the ROOT routes (/, /index.html, /privacy/, /terms/, /404.html) and
+    the ROOT assets (/assets/brand/og-card.png 29,450 B, appicon 1,381,828 B,
+    logo-painted 1,131,556 B) answer 200 under the same query string at BOTH
+    hosts. A leg that 404s a fully live page route
     (/deploy/) classifies live files as purged, which is how a still-served
     banned file passes a purge-acceptance check.
-    Correction of my own, re-measured 2026-10-02: an earlier version of this
-    bullet gave "a fully live brand/og-card.png" as an example of the ?cb 404.
-    It is not one. Three plain + three ?cb reps per host, both hosts: og-card is
-    200/29,450 B under ?cb. The ?cb 404 lands on /deploy/, /README.md and
-    /.gitignore - the page routes - not on the image assets. The conclusion
-    (not a purge test) is unchanged; the example was wrong, and lex (#2842
-    section 2, "confirmed unconditional") and I both carried it. Written down
-    because this file's whole value is that its examples reproduce.
+    Correction of my own, re-measured 2026-10-02 (three plain + three ?cb reps
+    per host, both hosts): an earlier version of this bullet gave "a fully live
+    brand/og-card.png" as an example of the ?cb 404, and the fix I first made
+    swung to the opposite error - "live image assets keep answering 200 under
+    the same query string" (dana #2891/#2893/#2895, lizzie #2899/#2901 carry
+    the correct narrowing). Both are half-wrong, and the variable is the PATH,
+    not asset-vs-page. /deploy/assets/brand/og-card.png is 404/702 B under ?cb
+    at BOTH hosts; its ROOT twin /assets/brand/og-card.png is 200/29,450 B
+    under the same query string. So the ?cb 404 is exactly the /deploy/ route
+    plus the two repo-root metadata files, and nothing else; a blanket
+    asset-vs-page rule would mis-predict the live og-card either way. The
+    conclusion (not a purge test) is unchanged. Written down because this
+    file's whole value is that its examples reproduce.
     The one path several of us argued about — short2-when-then.mp4 — is 404 on both hosts under every shape and every
     query string; my earlier "200 on the third busted variant" is withdrawn.
     Consequence for this guard: the wire leg exits 1 today on
