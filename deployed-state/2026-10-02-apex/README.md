@@ -1,5 +1,15 @@
 # Deployed-state record — familyosai.com, captured 2026-10-02
 
+> **MERGE ORDER MATTERS — do not merge this while the Pages publish root is the
+> repository root.** The Pages project `familyosai` currently publishes from the
+> repo root, so anything committed here becomes web-servable at
+> `familyosai.com/<path>`. This record deliberately contains the retracted claims
+> the live site still serves (`Runs fully offline` twice in `apex-root.html`), so
+> merging it *before* the output directory is switched to `deploy/` would put
+> banned claim text back on our own apex under `/deployed-state/...`. It is inert
+> (and correct) after the redeploy, because `deploy/` is then the only published
+> directory. Merge with, or after, the #195 redeploy — never before it.
+
 **Why this exists.** AMS task #195 step 1: before the stale apex build is replaced,
 capture the bytes that are *actually being served* so the broken state is on the
 record. The apex root was published from a tree that exists in no commit, so the
