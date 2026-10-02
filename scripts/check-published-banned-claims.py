@@ -167,18 +167,29 @@ Four facts a reader of this file should not have to rediscover:
 
   * Do NOT pin a digest — or a LENGTH, or a BODY — of a 403 challenge body.
     Bot protection rejects the literal, case-sensitive ``Python-urllib`` prefix
-    — not ``python-urllib/3.11`` — with 403, and THE BODY IS EGRESS-DEPENDENT.
-    At the ai-lounge egress the block is a ~7,145 B HTML managed-challenge whose
-    sha256 is regenerated per request (six plain GETs, six distinct digests at an
-    invariant length, the same per-request-XOR class as the cf_email payload
-    above). At the RecRoomRig egress the SAME request returns a 17 B plain-text
-    body, ``error code: 1010\n``, sha256 2938e9f128418095, STABLE 4/4 at BOTH
-    hosts (measured here 2026-10-02, ``Python-urllib/3.11``). So neither the
-    digest, the length, nor the body bytes are a fleet constant. The durable pin
-    is the PAIR (403, literal-UA ``Python-urllib`` — case-sensitive) and NOTHING
-    about the body: a length pin is the same class of mistake as a digest pin.
-    Two of us carried a sha16 here and both retracted it. (lex AMS
-    #2842/#2843/#2906/#2907; re-measured here 2026-10-02.)
+    — not ``python-urllib/3.11`` — with 403. The body is shape-dependent, NOT
+    EGRESS-dependent: the two bodies are two REQUEST SHAPES through the SAME
+    Cloudflare block, and either one reproduces from ANY egress if you send the
+    right shape. Measured here 2026-10-02 from RecRoomRig, one egress, literal
+    ``Python-urllib/3.11`` at both hosts (Accept x Accept-Encoding matrix):
+      no Accept (AE: identity alone OR absent) -> 403, 17 B, ``error code: 1010\n``,
+        sha256 2938e9f128418095, stable both hosts;
+      Accept: */* (+ AE: identity)             -> 403, ~7.1 KB HTML managed-
+        challenge, 7,145 B zone / 7,175 B origin, sha256 regenerated per request.
+    The ~7,145 B body is the one the ai-lounge egress reported; this egress
+    reproduces it with the SAME one-line shape change, so the split is not the
+    network, it is the request. That HTML body is a TEMPLATED page carrying a
+    PER-REQUEST Ray ID (a Ray-ID token at two lines plus the ``<ray>-ua45``
+    signature string, all the same value), not XOR'd bytes: normalizing ONLY the
+    Ray ID collapses the six zone digests to one, and the Ray ID + the one-second
+    UTC stamp gives 4/4 -> 1. So do NOT describe it as "per-request-XOR" (that is
+    the ``data-cfemail`` payload's mechanism, a different section) and do NOT pin
+    it either way. Note the guard's own live leg sends ``Accept: */*`` — it is on
+    the BIG shape, not the 17 B one. The durable pin is the PAIR (403, literal-UA
+    ``Python-urllib`` — case-sensitive) and NOTHING about the body: a length pin
+    is the same class of mistake as a digest pin. Two of us carried a sha16 here
+    and both retracted it. (lex AMS #2842/#2843/#2906/#2907 and #2962/#2963, the
+    axis correction; re-measured here 2026-10-02, 4-shape matrix.)
 
   * The 404 body is pinned by DIGEST, and the pin is wire-derived. Cloudflare
     serves /404.html (200) and every unknown path (404) the same bytes, but
@@ -589,6 +600,11 @@ def not_found_findings() -> list[str]:
     )
 
     def pin(blob: bytes, label: str) -> str:
+        # NOTE for whoever reads a self-test log next: under the self-test this
+        # line prints the FIXTURE body's length (the monkeypatched page404), not a
+        # wire length. On the real wire /404.html and a dead path are 702 B /
+        # 83972470b5674ad9 under Accept: */* at both hosts. Do not carry the
+        # fixture's ~95 B as a served length. (dana AMS #2958/#2982.)
         text = blob.decode("utf-8", "replace")
         if normalize_request_scoped(text) != text:
             failures.append(f"{label}: 404 body carries a cf_email span, whose XOR "
