@@ -298,9 +298,15 @@ Four facts a reader of this file should not have to rediscover:
     number says 2,097 (dana AMS #3192 item 2, #3193 item 1). AND "RAW = DE-CHUNKED
     + 13" IS ONLY USUALLY TRUE: the zone intermittently splits the same landing
     into TWO chunks — 1 chunk 13,238 raw / 13 framing vs 2 chunks 13,246 raw / 21
-    framing, both de-chunking to the identical 13,225 B / fa31dd15248287ce
-    (measured here 2026-10-02: 3 of 300 reps at one fixed shape; the origin held
-    1 chunk). So the raw transfer count moves by +8 at a FIXED request shape as
+    framing (6-byte size lines; 6+6+5+2+2), both de-chunking to the identical
+    13,225 B / fa31dd15248287ce. MEASURED 2026-10-02 at two independent egresses
+    on the zone apex ``/`` with ``Accept: */*``: 2 of 80 = 2.5% (dana AMS #3202
+    item 2, split 5,800 + 7,425) and 1 of 80 = 1.25% here (split 7,713 + 5,512),
+    the DE-CHUNKED body byte-identical in all 160 reps; the origin held 1 chunk.
+    The SPLIT POINT moves between runs (two different splits observed), so it is
+    edge-arbitrary — only the de-chunked body and the framing total (21) are
+    stable. So the raw transfer count moves by +8 at a FIXED
+    request shape as
     well as across shapes, which is one more reason the DE-CHUNKED digest is the
     unit to pin — a length pin is unstable even under repeats of one request.
     The durable pin is the PAIR (403, literal-UA
