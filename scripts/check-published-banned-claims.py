@@ -53,7 +53,8 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     ``--url`` therefore cannot be read as "the explainer is gone everywhere"; it
     means the apex, the origin and the registry's own ``/deploy/`` paths are
     clean, nothing more. (dana AMS #3119; re-measured here 2026-10-02: bare path
-    200 / 9,251 B on both aliases, apex 404 / 702 B.)
+    200 / 9,251 B on both aliases, apex 404 — 702 B under ``*/*``, 1,069 B with
+    no ``Accept`` header, the same shape split the 404 body carries below.)
 
 Four facts a reader of this file should not have to rediscover:
 
@@ -102,7 +103,7 @@ Four facts a reader of this file should not have to rediscover:
     client- and RUM-dependent, and two of its reported values are ONE reading
     in two units, not two readings: star-Accept 13,225 B / 13,169 chars,
     no-Accept 13,592 B / 13,536 chars, and on the 404 the same pair sits at
-    702 B / 698 chars and 1,069 B / 1,065 chars. So the deltas are 56 B and 4 B,
+    star-Accept 702 B / 698 chars, no-Accept 1,069 B / 1,065 chars. So the deltas are 56 B and 4 B,
     and they are UTF-8 and nothing else: 88 non-ASCII BYTES encoding 32 non-ASCII
     CHARS on the apex page, 6 bytes / 2 chars on the 404. A byte/char delta here
     is never a content change, and sha256(bytes) == sha256(chars.encode()) on
