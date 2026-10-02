@@ -64,8 +64,14 @@ Four facts a reader of this file should not have to rediscover:
     A zone-only count reads 6 both-shapes-404 / 9 plain-200, which is
     reproducible and agrees with dana — but it CONFLATES the 5 stale with the 4
     the deployment holds, so it cannot tell a live file from a stale one. That
-    is why the header records the layer split, not the zone count. My own first
-    number, 5/10, was wrong on both halves and was mine.
+    is why the header records the layer split, not the zone count. My own two
+    served counts, 5/15 and then 6/15, were both ZONE-ONLY reads: a plain 200
+    at the zone cannot separate a stale-zone copy from a live-at-both one, so
+    neither vantage could see the 4/6 split at all. Both are withdrawn, both
+    were mine, and the pair is frozen here on purpose — these are the numbers I
+    carried on the bus, and a file that claims to be "written down, not
+    inferred" must not oscillate between 5/10 and 5/15 across commits. (lizzie,
+    AMS #2836.)
     Do NOT use "200 plain / 404 cache-busted" as the purge test: a query string
     is a ROUTE CHANGE at the origin, not a cache-buster. /deploy/, /README.md,
     /.gitignore and a fully live brand/og-card.png all 404 under any query
@@ -78,7 +84,17 @@ Four facts a reader of this file should not have to rediscover:
     familyos_explainer.py (200, 9,251 B, "lives in your house" at line 166) and
     on familyos-explainer.mp4 in --media. Both are Chris-gated (a zone purge or
     PR #2's deploy). Trimming the registry cannot discharge them.
-    (dana #2763/#2811; lizzie #2778/#2801/#2803; lex #2793.)  * Read the served apex against ``origin/main``, never the local ``main``. In
+      - And the banned bytes are ``origin/main``'s, not just the zone's. The wire
+        familyos_explainer.py is sha256 339f229565545cf7, byte-identical to
+        origin/main's blob 80c97adf (``git cat-file blob | sha256sum``), and the
+        wire explainer.mp4 is sha1 5f364e21e0830807…, identical to origin/main's
+        blob bed05488. So a zone purge removes the SERVED copies without making
+        the claim go away: origin/main still carries the banned render script,
+        and any future publish reproduces it. The durable fix is the merge order
+        (PR #2 -> PR #3); the purge is interim. (dana #2845/#2846/#2849; lex
+        #2842/#2843 — each re-measured here before being written down.)
+    (dana #2763/#2811; lizzie #2778/#2801/#2803; lex #2793.)
+  * Read the served apex against ``origin/main``, never the local ``main``. In
     this worktree the local ``main`` ref sat at 3087f2d (deploy/index.html
     12,398 B, blob d5173b13) while ``origin/main`` was 565e022 (13,225 B, blob
     a0f6d8a8) — the blob the zone actually serves. Comparing the wire to the
@@ -87,6 +103,16 @@ Four facts a reader of this file should not have to rediscover:
     the stale-branch failures this repo has already hit; fetch before you
     compare. (dana, AMS #2810; re-measured here.)
 
+
+  * Do NOT pin a digest of a 403 challenge body. Bot protection rejects the
+    literal, case-sensitive ``Python-urllib`` prefix — not ``python-urllib/3.11``
+    — with 403 and a 7,145 B HTML challenge whose sha256 is regenerated per
+    request: six plain GETs here gave six distinct digests at an invariant
+    length, the same per-request-XOR class as the cf_email payload above. The
+    pin is the pair (403, 7,145 B, HTML challenge) plus the literal-string rule;
+    a digest is not reproducible and belongs nowhere in a carried record. Two
+    of us carried a sha16 here and both retracted it. (lex AMS #2842/#2843,
+    re-measured here 2026-10-02.)
 
 Exit codes: 0 clean, 1 banned claim found, 2 the guard could not run.
 """
