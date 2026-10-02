@@ -561,11 +561,12 @@ Four facts a reader of this file should not have to rediscover:
     commit's added lines are code, not strings. NUL of
     ``t.string+str(t.start)``: ``2211ab2ec10ee783`` -> ``0200679e96119c4f``
     -> ``7c4c669381f02b0d`` -> ``3d46ba763f3bb8a2`` (34f777b) ->
-    ``088aa875d5f06926`` (86714e1). The four interior NUL / pipe-position rows
-    above are CARRIED from the lex pair for attribution, not re-derived here —
-    the construction re-derived at this egress is the chr0 form of
-    ``t.string+str(t.start)`` over the SAME content drop-set (34f777b
-    3d46ba763f3bb8a2, 86714e1 088aa875d5f06926, reproducing either way).
+    ``088aa875d5f06926`` (86714e1). Every NUL and pipe-position row above — the
+    four interior ones AND the tip pair — was re-derived at this egress, not
+    carried: the construction is the chr0 join of ``t.string+str(t.start)`` over
+    the SAME content drop-set the content family uses (34f777b
+    ``3d46ba763f3bb8a2``, 86714e1 ``088aa875d5f06926``; the pipe-position rows
+    reproduce under the ``t.string|t.start`` join the doc names).
     STORED vs ``len(git show text)`` is a UNIT clause of this same family:
     ``git cat-file -s`` counts the BLOB's bytes, so it equals the character
     length only for pure ASCII. At 86714e1 the blob is 72,988 B against a decoded
