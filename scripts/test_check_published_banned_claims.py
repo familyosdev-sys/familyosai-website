@@ -201,8 +201,10 @@ def main() -> int:
     # The 404 page is the same bytes at 200 (/404.html) and at any unknown path
     # (404) once the beacon is stripped, so ONE fixture pins both shapes. The pin
     # must be a DIGEST, never a count: the apex zone answers 702 B under
-    # ``Accept: */*`` and 1,069 B under any other shape (the 366 B beacon + one
-    # trailing newline), while the origin stays 702 B - the count is not a pin.
+    # ``Accept: */*`` (and under the non-star ``TEXT/HTML``) and 1,069 B under
+    # ``text/html`` or no Accept — the axis is the case-sensitive ``text/html``
+    # substring, not the star (dana AMS #3072) — while the origin stays 702 B on
+    # every shape. The count is not a pin.
     check("NOT_FOUND_STRIPPED_SHA12 is a true sha256_12 (exactly 12 hex chars)",
           isinstance(g.NOT_FOUND_STRIPPED_SHA12, str)
           and len(g.NOT_FOUND_STRIPPED_SHA12) == 12

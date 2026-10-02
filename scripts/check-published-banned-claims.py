@@ -46,12 +46,34 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
 
 Four facts a reader of this file should not have to rediscover:
 
-  * The apex body is request-shape-dependent: Cloudflare appends a
-    ``static.cloudflareinsights.com`` beacon after ``</body></html>`` unless the
-    client sends ``Accept: */*``, so the same page is larger without the star
-    Accept. The live check strips the beacon before comparing and asserts both
-    shapes agree, instead of pinning a digest that only reproduces for one
-    client shape.
+  * The apex body is request-shape-dependent, and the discriminator is the
+    Accept TOKEN, not the star: Cloudflare appends a
+    ``static.cloudflareinsights.com`` beacon after ``</body></html>`` when the
+    raw ``Accept`` header carries the case-SENSITIVE literal substring
+    ``text/html``, or when the header is absent; it appends nothing otherwise.
+    NOT a star-vs-non-star rule — ``TEXT/HTML`` is non-star and gets NO beacon.
+    Measured 2026-10-02 from RecRoomRig, 28 shapes x 3 reps, every reading
+    stable (evidence: profiles/codey/cache/scratch/sweep_final.{py,out}). On the
+    apex ROOT ``/`` (13,592 B / sha16 bcaa297f7b8f130e with the beacon, 13,225 B
+    / fa31dd15248287ce without), 13 shapes get the beacon and 15 do not:
+      beacon YES (13) — NO HEADER, ``text/html``, ``text/html2``,
+        ``text/htmlish``, ``text/htmlX``, ``"  text/html  "``, ``xtext/html``,
+        ``text/html``+trailing space, ``a text/html b``, ``text/html,*/*``,
+        ``text/plain,text/html;q=0.1``, ``text/html;q=0.9``, ``text/html;q=0``;
+      beacon NO (15) — ``*/*``, ``*/*;q=0.8``, ``TEXT/HTML``, ``Text/Html``,
+        ``text/HTML``, ``TEXT/HTML;q=0.9``, ``text/plain``, ``text/*``,
+        ``text/htm``, ``tex*/html``, ``text//html``, ``application/json``,
+        ``application/xhtml+xml``, ``image/png``, and a present-but-BLANK
+        ``Accept:``.
+    Both sides carry NON-star shapes (``TEXT/HTML`` no, ``text/html2`` yes), so
+    the star was never the axis. The dead path is the same rule on the 404 body:
+    1,069 B / 829eacac57f53ed4 vs 702 B / 83972470b5674ad9, same shape split.
+    The old "unless the client sends ``Accept: */*``" wording was falsified in
+    both directions (dana AMS #3072, lex AMS #3061). The live check strips the
+    beacon before comparing and asserts the ``*/*`` and no-Accept shapes agree
+    once stripped — still a valid probe under this rule (absent -> beacon,
+    ``*/*`` -> none), though the pair is NOT the general rule — instead of
+    pinning a digest that only reproduces for one client shape.
 
     Pin the beacon-stripped DIGEST, never the byte count. The count is
     client- and RUM-dependent, and two of its reported values are ONE reading
@@ -202,15 +224,22 @@ Four facts a reader of this file should not have to rediscover:
 
   * The 404 body is pinned by DIGEST, and the pin is wire-derived. Cloudflare
     serves /404.html (200) and every unknown path (404) the same bytes, but
-    appends the analytics beacon for any non-star ``Accept`` — so the served
-    404 is 702 B with ``Accept: */*`` and 1,069 B without, on the apex zone
-    while the Pages origin injects nothing and stays 702 B on every shape.
-    Measured 2026-10-02 from RecRoomRig (4 dead paths x 4 request shapes x both
-    hosts, re-run of lizzie's AMS #2857): the beacon-stripped digest is
-    83972470b567 on all 32 readings and equal to the beacon-stripped /404.html
-    GET. Pin THAT, never the byte count — the length is shape-dependent (702 vs
-    1,069) and host-dependent, which is the same failure mode the apex bullet
-    above records. (lizzie AMS #2857/#2851; re-measured here.)
+    appends the analytics beacon on the same TOKEN rule as the apex bullet
+    above: present iff the raw ``Accept`` header carries the case-SENSITIVE
+    literal substring ``text/html``, or the header is absent. The old wording
+    here ("for any non-star ``Accept``") was falsified by a 15-shape sweep
+    (dana AMS #3072; re-measured here 2026-10-02 from RecRoomRig, 3 reps each,
+    stable); the full 13/15 split is in the apex bullet above. Endpoints at
+    the apex zone: 702 B / 83972470b567 under ``*/*`` (and under the non-star
+    ``TEXT/HTML``), 1,069 B / 829eacac57f53ed4 under ``text/html`` or no
+    header. NON-star shapes land on BOTH sides, so the star was never the
+    axis. The Pages origin injects nothing and stays 702 B / 83972470b567 on every shape
+    (re-measured: no header, ``*/*``, ``text/html``, ``TEXT/HTML``,
+    ``text/plain``, ``text/html2``). The beacon-stripped digest is 83972470b567
+    on every reading and equal to the beacon-stripped /404.html GET. Pin THAT,
+    never the byte count — the length is shape-dependent (702 vs 1,069) and
+    host-dependent, which is the same failure mode the apex bullet above
+    records. (lizzie AMS #2857/#2851; dana AMS #3072; re-measured here.)
 
 Exit codes: 0 clean, 1 banned claim found OR the honest-404 contract broken,
 2 the guard could not run (transport). A broken 404 contract is a finding, not
@@ -314,18 +343,22 @@ ORIGIN = "https://familyosai-cma.pages.dev"
 
 # The honest 404. Cloudflare serves /404.html (200) and any unknown path (404)
 # as the SAME bytes, so one digest pins them together. Pin the BEACON-STRIPPED
-# digest, never the byte count: with ``Accept: */*`` the apex zone answers 702 B,
-# but any other Accept gets the 366 B cloudflareinsights beacon appended (+1
-# trailing newline = 367 B) for 1,069 B, while the Pages origin injects nothing
-# and stays 702 B on every shape. 702 vs 1,069 is the exact shape-dependence the
-# apex bullet above warns about, so the count is not a pin — the stripped digest
-# is, because ``strip_beacon`` (the DELETE-with-\s* rule) makes it shape- AND
-# host-independent. 83972470b567 measured 2026-10-02 (lizzie AMS #2857;
-# re-measured here over 4 dead paths x 4 shapes x both hosts). Do NOT re-pin a
-# 404 body that also carries a cf_email span: the XOR key makes that digest
-# per-request, which is why this pin is asserted only after ``strip_beacon`` and
-# the served body is asserted cf-span-free (``normalize_request_scoped`` is a
-# no-op on it) before the digest means content.
+# digest, never the byte count: the apex zone appends the cloudflareinsights
+# beacon on the TOKEN rule in the apex bullet above — present iff the raw Accept
+# carries the case-sensitive literal substring ``text/html``, or the header is
+# absent — so the zone answers 702 B under ``Accept: */*`` and 1,069 B under
+# ``text/html``, but a NON-star ``TEXT/HTML`` also gets 702 B (dana AMS #3072),
+# while the Pages origin injects nothing and stays 702 B on every shape. 702 vs
+# 1,069 is the exact shape-dependence the apex bullet above warns about, so the
+# count is not a pin — the stripped digest is, because ``strip_beacon`` (the
+# DELETE-with-\s* rule) makes it shape- AND host-independent. 83972470b567
+# measured 2026-10-02 (lizzie AMS #2857; re-measured here across both the
+# 4 dead paths x 4 shapes x both hosts matrix and the 15-shape Accept sweep).
+# Do NOT re-pin a 404 body that also carries a cf_email span: the XOR key makes
+# that digest per-request, which is why this pin is asserted only after
+# ``strip_beacon`` and the served body is asserted cf-span-free
+# (``normalize_request_scoped`` is a no-op on it) before the digest means
+# content.
 NOT_FOUND_PATH = "/404.html"
 # A true ``sha256_12`` (12 hex chars — the units lizzie carried on the bus and
 # the ones this repo's carried records use). NOTE: ``sha12()`` below is a
@@ -344,7 +377,8 @@ APEX_PATHS = ["/", "/privacy/", "/terms/"]
 # Cloudflare serves the apex through bot protection and answers the default
 # python-urllib User-Agent with 403. Sending a normal one is not evasion — the
 # guard is asking for the same bytes a browser gets, which is the only input
-# that matters here. Accept: */* is what keeps the beacon out of the body.
+# that matters here. ``Accept: */*`` is one shape that keeps the beacon out of
+# the body — the axis is the ``text/html`` substring rule above, not the star.
 UA = "familyos-claims-guard/1.0 (+https://familyosai.com)"
 ACCEPT = "*/*"
 
@@ -543,10 +577,14 @@ def scan_url() -> tuple[list[str], list[str], list[str]]:
 def shape_findings(failures: list[str]) -> list[str]:
     """The pinned apex digest must be reproducible by any client.
 
-    With ``Accept: */*`` Cloudflare leaves the body alone; without it, it
-    injects the analytics beacon after ``</body></html>``. Stripping the beacon
-    must make the two shapes identical — if it does not, a digest pinned in a
-    ticket is unreproducible and the guard says so instead of pretending.
+    Cloudflare injects the analytics beacon after ``</body></html>`` on the
+    substring rule documented above. The two shapes this probes — ``Accept:
+    */*`` and NO ``Accept`` header — sit on opposite sides of it (absent ->
+    beacon, ``*/*`` -> none), which is why the pair is still a valid probe.
+    Stripping the beacon must make the two shapes identical — if it does not, a
+    digest pinned in a ticket is unreproducible and the guard says so instead of
+    pretending. The pair is NOT the general rule: ``TEXT/HTML`` is a third shape
+    on the no-beacon side (dana AMS #3072).
     """
     url = APEX + "/"
     try:
