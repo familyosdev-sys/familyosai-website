@@ -38,7 +38,10 @@
     .btn-g{background:rgba(127,127,127,.15);color:var(--ink);border:1px solid var(--line)}
     .foot{display:flex;align-items:center;gap:24px;padding:28px 0;border-top:1px solid var(--line);font-size:13px;color:var(--sub)}
     .foot .links{margin-left:auto;display:flex;gap:20px}
-    @media (max-width:900px){.g2{grid-template-columns:1fr!important}.hero .copy{padding:0 40px}}
+    /* Honeypot: off-screen for humans, irresistible to form-filling bots. Not
+     display:none — some crawlers skip hidden fields, which defeats the point. */
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
+  @media (max-width:900px){.g2{grid-template-columns:1fr!important}.hero .copy{padding:0 40px}}
     @media (max-width:600px){
       .input, .btn {width:100%;max-width:100%;box-sizing:border-box}
       .hero .copy {padding:0 20px}
@@ -135,7 +138,8 @@
     <img src="assets/brand/familyos-logo-painted.png" alt="FamilyOS" style="height:76px">
     <h2 class="h2" style="font-size:56px;margin-top:24px">You've been the reminder long enough.</h2>
     <p class="lead" style="margin:0 auto;max-width:54ch">Join the open beta. Free on every plan, about ten minutes to set up, and tonight's routine can be the app's job instead of yours.</p>
-    <form id="waitlist-bottom" class="waitlist-form" style="display:flex;gap:12px;max-width:560px;margin:32px auto 0" onsubmit="submitWaitlist(event)">
+    <form id="waitlist-bottom" class="waitlist-form" style="display:flex;gap:12px;max-width:560px;margin:32px auto 0;position:relative" onsubmit="submitWaitlist(event)">
+      <label class="hp" aria-hidden="true">Company<input class="hp" type="text" name="company" tabindex="-1" autocomplete="off"></label>
       <input class="input" type="email" name="email" placeholder="you@family.home" required>
       <button type="submit" class="btn btn-p">Join early access</button>
     </form>
@@ -148,7 +152,10 @@
       event.preventDefault();
       const form = event.target;
       const email = form.email.value;
-      const data = { email };
+      // The worker treats a filled 'company' as a bot and answers 200 without
+      // storing. Until this line shipped the field was not even rendered, so the
+      // speed bump the worker implements was inactive.
+      const data = { email, company: form.company ? form.company.value : '' };
 
       // Show loading state
       form.querySelector('button').textContent = 'Sending...';

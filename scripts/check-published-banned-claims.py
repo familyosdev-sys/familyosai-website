@@ -6,19 +6,35 @@ in the familyos-app repo), and the 2026-10-02 recurrence was worse than the
 earlier ones: the *page* was fixed and redeployed, and the retracted sentence
 kept being served anyway — painted into a video that nobody re-read.
 
-So this guard has two modes, and you want both in CI:
+So the guard distinguishes *where* it looks, and you want the deepest mode in CI:
 
   * ``--tree`` (default) — text under the publish root. Catches the HTML/copy
     class. Cheap, no network.
-  * ``--url`` — the *live apex*. Catches the other class: the bytes a family
-    actually receives, which is the only thing that was ever wrong on
-    2026-10-02. A guard that only reads the working tree would have been green
-    through the entire incident.
+  * ``--url`` — the live wire: the apex pages **and** every served text path
+    this repo answers at, including the paths in ``scripts/served-residue.json``
+    that the working tree no longer contains. This is the class that was wrong
+    on 2026-10-02, and a tree-only guard was green through the whole incident.
+  * ``--media`` — OCR rendered media. It reads the **served bytes** for every
+    media URL it knows about (the publish root *plus* the residue registry)
+    because the first version read only the tree, printed "no rendered media
+    under deploy/ — nothing to check (good)", and exited 0 while
+    familyosai.com still served the banned video. Needs ffmpeg, ffprobe and
+    tesseract; when they are missing it says so and skips rather than
+    reporting a false clean.
+  * ``--all`` — ``--url`` and ``--media``.
 
-``--media`` additionally OCRs any rendered media it can find in the publish root
-and reports captions carrying a banned fragment. It is opt-in because it needs
-``ffmpeg`` and ``tesseract``; when they are missing it says so and skips rather
-than reporting a false clean.
+Two facts a reader of this file should not have to rediscover:
+
+  * The apex body is request-shape-dependent: Cloudflare appends a
+    ``static.cloudflareinsights.com`` beacon after ``</body></html>`` unless the
+    client sends ``Accept: */*``, so the same page is 13,225 B with the star
+    Accept and 13,592 B without. The live check strips the beacon before
+    comparing and asserts both shapes agree, instead of pinning a digest that
+    only reproduces for one client shape.
+  * The publish root is currently the REPO ROOT, not ``deploy/`` — that is why
+    ``/deploy/index.html`` and ``/README.md`` answer at all. Every tree file is
+    therefore checked at ``/`` + its path from the repo root, which is exactly
+    where the zone serves it today.
 
 Exit codes: 0 clean, 1 banned claim found, 2 the guard could not run.
 """
@@ -26,6 +42,8 @@ Exit codes: 0 clean, 1 banned claim found, 2 the guard could not run.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import pathlib
 import re
 import shutil
@@ -36,6 +54,10 @@ import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PUBLISH_ROOT = ROOT / "deploy"
+
+# Paths the tree no longer contains but the zone may still serve. A tree scan
+# cannot see these by construction; only a fetch can. See the file's own header.
+RESIDUE_FILE = ROOT / "scripts" / "served-residue.json"
 
 # --------------------------------------------------------------------------
 # The banned list. Kept literal and case-insensitive on purpose — a regex here
@@ -93,12 +115,38 @@ BANNED: list[tuple[str, str]] = [
 SKIP_PATHS = {
     "SOCIAL-MEDIA-RENDERS.md",                    # quotes the retracted captions on purpose
     "scripts/check-published-banned-claims.py",   # defines them
+    "scripts/served-residue.json",                # records WHY each stale path is stale (quotes them)
+    "scripts/test_check_published_banned_claims.py",  # pins the matcher; quotes it
 }
 PUBLISHED_PREFIX = "deploy/"
-SCAN_SUFFIXES = {".html", ".htm", ".md", ".txt", ".js", ".css", ".json"}
+# .py is here because the zone SERVES the render scripts: familyos_explainer.py
+# answered 200, 9,251 B and carried "The AI lives in your house." (L166) while
+# the guard's own matcher would have flagged it — only this suffix gate kept
+# ``--all`` green against a live defect. Caught by lizzie, AMS #2603.
+SCAN_SUFFIXES = {".html", ".htm", ".md", ".txt", ".js", ".css", ".json", ".py"}
+MEDIA_SUFFIXES = {".mp4", ".mov", ".webm", ".png", ".jpg", ".jpeg"}
 
 APEX = "https://familyosai.com"
 APEX_PATHS = ["/", "/privacy/", "/terms/"]
+
+# Cloudflare serves the apex through bot protection and answers the default
+# python-urllib User-Agent with 403. Sending a normal one is not evasion — the
+# guard is asking for the same bytes a browser gets, which is the only input
+# that matters here. Accept: */* is what keeps the beacon out of the body.
+UA = "familyos-claims-guard/1.0 (+https://familyosai.com)"
+ACCEPT = "*/*"
+
+# The injected Cloudflare Web Analytics beacon. Stripped before the body is
+# compared or scanned so one client shape cannot look like a content change.
+BEACON_RE = re.compile(r"<script[^>]*cloudflareinsights[^>]*>.*?</script>\s*", re.S)
+
+
+def strip_beacon(html: str) -> str:
+    return BEACON_RE.sub("", html)
+
+
+def sha12(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8", "replace")).hexdigest()[:16]
 
 
 def prose_files() -> list[pathlib.Path]:
@@ -144,11 +192,66 @@ def scan_tree() -> tuple[list[str], list[str]]:
     return failures, warnings
 
 
-# Cloudflare serves the apex through bot protection and answers the default
-# python-urllib User-Agent with 403. Sending a normal one is not evasion — the
-# guard is asking for the same bytes a browser gets, which is the only input
-# that matters here.
-UA = "familyos-claims-guard/1.0 (+https://familyosai.com)"
+# --------------------------------------------------------------------------
+# The wire. Everything below fetches real bytes.
+# --------------------------------------------------------------------------
+
+def _rel(p: pathlib.Path) -> str:
+    """A path for humans to read. Never raises: the guard's diagnostics must not
+    be able to crash it (a registry repointed outside the repo made
+    ``relative_to`` raise, which the self-test caught)."""
+    try:
+        return str(p.relative_to(ROOT))
+    except ValueError:
+        return str(p)
+
+
+def load_residue() -> list[dict]:
+    """Served paths the tree no longer has. Loud when the registry is broken:
+    a silent [] would read as "nothing stale" and is the same class of lie this
+    whole guard exists to prevent."""
+    try:
+        raw = RESIDUE_FILE.read_text()
+    except FileNotFoundError:
+        print(f"[wire] no residue registry at {_rel(RESIDUE_FILE)} — "
+              "served-but-deleted paths are NOT checked this run")
+        return []
+    try:
+        data = json.loads(raw)
+        paths = data.get("paths") or []
+        if not isinstance(paths, list):
+            raise ValueError("'paths' must be a list")
+        return [e for e in paths if isinstance(e, dict) and e.get("path")]
+    except Exception as exc:
+        print(f"[wire] residue registry {_rel(RESIDUE_FILE)} is unreadable ({exc}) — "
+              "served-but-deleted paths are NOT checked this run", file=sys.stderr)
+        return []
+
+
+def served_text_paths() -> list[str]:
+    paths = {"/" + p.relative_to(ROOT).as_posix() for p in prose_files()}
+    for entry in load_residue():
+        p = str(entry["path"])
+        if pathlib.PurePosixPath(p).suffix.lower() in SCAN_SUFFIXES:
+            paths.add(p)
+    return sorted(paths)
+
+
+def served_media_paths() -> list[str]:
+    paths = {"/" + p.relative_to(ROOT).as_posix()
+             for p in PUBLISH_ROOT.rglob("*")
+             if p.is_file() and p.suffix.lower() in MEDIA_SUFFIXES}
+    for entry in load_residue():
+        p = str(entry["path"])
+        if pathlib.PurePosixPath(p).suffix.lower() in MEDIA_SUFFIXES:
+            paths.add(p)
+    return sorted(paths)
+
+
+def fetch(path: str, base: str = APEX, timeout: int = 25) -> bytes:
+    req = urllib.request.Request(base + path, headers={"User-Agent": UA, "Accept": ACCEPT})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read()
 
 
 def scan_url() -> tuple[list[str], list[str]]:
@@ -161,96 +264,162 @@ def scan_url() -> tuple[list[str], list[str]]:
     """
     findings: list[str] = []
     failures: list[str] = []
-    for path in APEX_PATHS:
+    for path in APEX_PATHS + [p for p in served_text_paths() if p not in APEX_PATHS]:
         url = APEX + path
-        req = urllib.request.Request(url, headers={"User-Agent": UA})
         try:
-            with urllib.request.urlopen(req, timeout=20) as r:
-                body = r.read().decode("utf-8", "replace")
+            body = fetch(path).decode("utf-8", "replace")
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                continue          # not served at all — nothing to read
+            failures.append(f"{url}: HTTP {exc.code}")
+            continue
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             failures.append(f"{url}: could not fetch — {exc}")
             continue
-        print(f"[live] {url}: {r.status}, {len(body)} bytes")
-        findings += scan_text(url, body)
+        print(f"[live] {url}: {len(body)} bytes")
+        findings += scan_text(url, strip_beacon(body))
+    findings += shape_findings(failures)
     return findings, failures
 
 
-def scan_media() -> list[str]:
-    """OCR rendered media in the publish root and report banned captions.
+def shape_findings(failures: list[str]) -> list[str]:
+    """The pinned apex digest must be reproducible by any client.
 
-    This is the mode that would have caught 2026-10-02. It is deliberately
-    noisy about what it could not check: a guard that silently skips media
-    reads as green and is worse than no guard.
+    With ``Accept: */*`` Cloudflare leaves the body alone; without it, it
+    injects the analytics beacon after ``</body></html>``. Stripping the beacon
+    must make the two shapes identical — if it does not, a digest pinned in a
+    ticket is unreproducible and the guard says so instead of pretending.
+    """
+    url = APEX + "/"
+    try:
+        star = fetch("/").decode("utf-8", "replace")
+        none = fetch_no_accept("/").decode("utf-8", "replace")
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError) as exc:
+        failures.append(f"{url}: request-shape comparison could not run — {exc}")
+        return []
+    a, b = sha12(strip_beacon(star)), sha12(strip_beacon(none))
+    print(f"[live] {url}: shape */*={len(star)}B/{a}  no-accept={len(none)}B/{b}")
+    if a != b:
+        return [f"{url}: body differs by request shape beyond the analytics beacon "
+                f"(beacon-stripped {a} vs {b}) — a pinned digest is not reproducible"]
+    return []
+
+
+def fetch_no_accept(path: str, timeout: int = 25) -> bytes:
+    """Deliberately omit Accept — the shape a plain client (no star) gets."""
+    req = urllib.request.Request(APEX + path, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read()
+
+
+def _frames_and_ocr(data: bytes, suffix: str, tmp: pathlib.Path,
+                    tools: tuple[str, str, str]) -> tuple[dict[str, list[str]], int, str | None]:
+    """OCR one media blob. Returns ({phrase: [frames]}, nframes, error-or-None)."""
+    ffmpeg, _ffprobe, tesseract = tools
+    for old in tmp.glob("*.jpg"):
+        old.unlink()
+    src = tmp / f"src{suffix or '.bin'}"
+    src.write_bytes(data)
+    if suffix.lower() in {".mp4", ".mov", ".webm"}:
+        # one frame per second: captions in these videos sit for 2-5s, so
+        # per-second sampling cannot step over one.
+        cmd = [ffmpeg, "-v", "error", "-i", str(src), "-vf", "fps=1,scale=1100:-1",
+               "-q:v", "4", str(tmp / "f_%04d.jpg")]
+    else:
+        # stills need -frames:v 1 / -update 1 or ffmpeg refuses the single
+        # fixed output name ("Cannot write more than one file with the same
+        # name") and the frame is silently never produced.
+        cmd = [ffmpeg, "-v", "error", "-i", str(src), "-frames:v", "1", "-update", "1",
+               "-vf", "scale=1100:-1", "-q:v", "4", str(tmp / "f_0001.jpg")]
+    r = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    if r.returncode != 0:
+        return {}, 0, f"ffmpeg failed ({r.returncode}): {r.stderr.strip()[:160]}"
+    frames = sorted(tmp.glob("*.jpg"))
+    if not frames:
+        return {}, 0, "0 frames extracted"
+    hits: dict[str, list[str]] = {}
+    for fr in frames:
+        rr = subprocess.run([tesseract, str(fr), "-", "--psm", "6"],
+                            capture_output=True, text=True)
+        low = " ".join(rr.stdout.split()).lower()
+        for phrase, _why in BANNED:
+            if phrase in low:
+                hits.setdefault(phrase, []).append(fr.name)
+    return hits, len(frames), None
+
+
+def scan_media() -> tuple[list[str], list[str]]:
+    """OCR rendered media, locally and on the wire. Returns (problems, transport).
+
+    It is deliberately noisy about what it could not check: a guard that
+    silently skips media reads as green and is worse than no guard.
     """
     ffmpeg, ffprobe, tesseract = (shutil.which(x) for x in ("ffmpeg", "ffprobe", "tesseract"))
     if not all((ffmpeg, ffprobe, tesseract)):
         print("[media] SKIPPED — need ffmpeg, ffprobe and tesseract on PATH; "
               "this guard did NOT check rendered media.")
-        return []
-    media = [p for p in PUBLISH_ROOT.rglob("*")
-             if p.suffix.lower() in {".mp4", ".mov", ".webm", ".png", ".jpg"}]
-    if not media:
-        print("[media] no rendered media under deploy/ — nothing to check (good)")
-        return []
+        return [], []
+    tools = (ffmpeg, ffprobe, tesseract)
     problems: list[str] = []
-    failures: list[str] = []
+    transport: list[str] = []
     tmp = pathlib.Path("/tmp/banned-claims-frames")
     tmp.mkdir(parents=True, exist_ok=True)
-    for p in media:
-        for old in tmp.glob("*.jpg"):
-            old.unlink()
-        if p.suffix.lower() in {".mp4", ".mov", ".webm"}:
-            # one frame per second: captions in these videos sit for 2-5s, so
-            # per-second sampling cannot step over one.
-            cmd = [ffmpeg, "-v", "error", "-i", str(p), "-vf", "fps=1,scale=1100:-1",
-                   "-q:v", "4", str(tmp / "f_%04d.jpg")]
-        else:
-            # stills need -frames:v 1 / -update 1 or ffmpeg refuses the single
-            # fixed output name ("Cannot write more than one file with the same
-            # name") and the frame is silently never produced.
-            cmd = [ffmpeg, "-v", "error", "-i", str(p), "-frames:v", "1", "-update", "1",
-                   "-vf", "scale=1100:-1", "-q:v", "4", str(tmp / "f_0001.jpg")]
-        r = subprocess.run(cmd, check=False, capture_output=True, text=True)
-        if r.returncode != 0:
-            print(f"[media] {p.relative_to(ROOT)}: ffmpeg failed ({r.returncode}) — "
-                  "NOT CHECKED")
-            failures.append(f"{p.relative_to(ROOT)}: ffmpeg could not extract frames; "
-                            "this media was not checked")
+
+    def report(label: str, hits: dict[str, list[str]], nframes: int, note: str) -> None:
+        for phrase, where in hits.items():
+            problems.append(f"{label}: on-screen caption {phrase!r} in {len(where)} frame(s) "
+                            f"({', '.join(where[:5])}) — {dict(BANNED)[phrase]}")
+        print(f"[media] {label}: {nframes} frame(s), {'BANNED TEXT' if hits else 'clean'}{note}")
+
+    # Leg 1 — the working tree. Catches a bad render BEFORE it is published.
+    local = [p for p in PUBLISH_ROOT.rglob("*")
+             if p.is_file() and p.suffix.lower() in MEDIA_SUFFIXES]
+    if not local:
+        print("[media] no rendered media in the working tree (expected on this branch: "
+              "the outputs were deleted) — so the WIRE below is the whole check")
+    for p in local:
+        rel = str(p.relative_to(ROOT))
+        data = p.read_bytes()
+        hits, nframes, err = _frames_and_ocr(data, p.suffix, tmp, tools)
+        if err:
+            problems.append(f"{rel}: NOT CHECKED — {err}")
+            print(f"[media] {rel}: NOT CHECKED — {err}")
             continue
-        frames = sorted(tmp.glob("*.jpg"))
-        hits: dict[str, list[str]] = {}
-        for fr in frames:
-            r = subprocess.run([tesseract, str(fr), "-", "--psm", "6"],
-                               capture_output=True, text=True)
-            low = " ".join(r.stdout.split()).lower()
-            for phrase, _why in BANNED:
-                if phrase in low:
-                    hits.setdefault(phrase, []).append(fr.name)
-        rel = p.relative_to(ROOT)
-        if hits:
-            for phrase, where in hits.items():
-                why = dict(BANNED)[phrase]
-                problems.append(
-                    f"{rel}: on-screen caption {phrase!r} in {len(where)} frame(s) "
-                    f"({', '.join(where[:5])}) — {why}")
-        if not frames:
-            failures.append(f"{rel}: 0 frames extracted — this media was NOT checked")
-            print(f"[media] {rel}: 0 frames extracted — NOT CHECKED")
-        else:
-            print(f"[media] {rel}: {len(frames)} frame(s), "
-                  f"{'BANNED TEXT' if hits else 'clean'}")
-    if failures:
-        print("\n[media] media that could not be checked (treat as unrun, not clean):")
-        for f in failures:
-            print(f"  ? {f}")
-    return problems
+        report(rel, hits, nframes, "")
+
+    # Leg 2 — the wire. Catches a stale zone entry the tree cannot see at all.
+    for path in served_media_paths():
+        url = APEX + path
+        try:
+            data = fetch(path)
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                print(f"[media] {url}: 404 — not served")
+                continue
+            transport.append(f"{url}: HTTP {exc.code}")
+            continue
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            transport.append(f"{url}: could not fetch — {exc}")
+            continue
+        hits, nframes, err = _frames_and_ocr(data, pathlib.PurePosixPath(path).suffix, tmp, tools)
+        if err:
+            problems.append(f"{url}: NOT CHECKED — {err}")
+            print(f"[media] {url}: NOT CHECKED — {err}")
+            continue
+        report(url, hits, nframes, f" — {len(data)} bytes served")
+
+    if transport:
+        print("\n[media] media URLs that could not be fetched (treat as unrun, not clean):")
+        for t in transport:
+            print(f"  ? {t}")
+    return problems, transport
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--url", action="store_true", help="also fetch and scan the live apex")
-    ap.add_argument("--media", action="store_true", help="also OCR rendered media (needs ffmpeg+tesseract)")
+    ap.add_argument("--url", action="store_true", help="also fetch and scan the live wire (apex + served text)")
+    ap.add_argument("--media", action="store_true", help="also OCR rendered media, tree and wire (needs ffmpeg+tesseract)")
     ap.add_argument("--all", action="store_true", help="--url and --media together")
     args = ap.parse_args()
 
@@ -260,7 +429,9 @@ def main() -> int:
         found, transport = scan_url()
         problems += found
     if args.media or args.all:
-        problems += scan_media()
+        media_problems, media_transport = scan_media()
+        problems += media_problems
+        transport += media_transport
 
     if warnings:
         print(f"\nWARN — {len(warnings)} banned-claim finding(s) OUTSIDE the publish root.\n"
@@ -282,8 +453,9 @@ def main() -> int:
         for p in problems:
             print(f"  - {p}", file=sys.stderr)
         print("\nIf a claim has become TRUE, ship the proof and remove it from BANNED "
-              "in this file AND in familyos-app tests/website-claims.test.ts.",
-              file=sys.stderr)
+              "in this file AND in familyos-app tests/website-claims.test.ts.\n"
+              "If the claim ships in bytes the tree no longer has, the zone still has a\n"
+              "stale copy — purge it (see scripts/served-residue.json), then re-run.", file=sys.stderr)
         return 1
     print("\nOK — no banned claims found.")
     return 0
