@@ -290,7 +290,14 @@ Four facts a reader of this file should not have to rediscover:
     2,221/2,221/2,220/2,221/2,221 across reads at the zone and 2,229/2,228 across
     reads at the origin — moving by 1-2 B at the SAME request shape, because the
     per-request values are in the body (lex AMS #3169 item 3; re-measured here
-    2026-10-02). ``AE: br`` is a third, shorter body again (2,096-2,097 B
+    2026-10-02, and again at this egress 6 reps/host: 2,219-2,221 zone /
+    2,228-2,229 origin, 6/6 distinct digests each). The 1-2 B move IS real and
+    THIS SENTENCE IS SCOPED TO GZIP: do not extend it to the identity cell, where
+    the DE-CHUNKED length is stable per host (7,145 zone / 7,175 origin, 5/5
+    here, 5/5 distinct digests) — that cell's length is stable and its digest is
+    not, which is why NEITHER is a pin. (dana AMS #3239 item 3 read this line as
+    a claim about the identity cell; the fix is to name both cells, not to move
+    the gzip one.) ``AE: br`` is a third, shorter body again (2,096-2,097 B
     DE-CHUNKED at the zone, 2,103-2,105 at the origin; raw transfer is +12), not
     the identity length. NAME THE HOST AND THE UNIT on every one of these cells:
     they are DE-CHUNKED bodies, and the same +30 host delta applies to them, so a
@@ -310,9 +317,19 @@ Four facts a reader of this file should not have to rediscover:
     splits inside ONE run 0.25 s apart), and (5,780 + 7,445) dana's 160-rep run —
     so the split is edge-arbitrary and a reader who reproduces one split must not
     treat it as THE split. Only the DE-CHUNKED body is stable; the framing total
-    is NOT a constant of re-chunking (it is route-dependent — 21 on the apex, 18
-    on ``/terms/`` below), so quote the GEOMETRY (chunk count, split sizes,
-    size-line lengths), never "framing = 21" as a rule. The raw transfer count
+    is NOT a constant of re-chunking, and the axis is GEOMETRY, not route: the
+    SAME apex route reads 21 B at a 2-chunk landing but 13 B at one chunk, so a
+    reader who reproduces it with a one-chunk apex fetch reads 13 and sees drift
+    on an unchanged artifact (lex AMS #3233 item 3). The durable form is a
+    FORMULA, not a total: over the k CONTENT chunks, framing_bytes =
+    SUM(len(hex(size_i))) + 4*k + 5 (each chunk contributes len(hex(size_i)) + 4
+    for its size-line CRLF + data CRLF; the ``0\r\n\r\n`` terminator is 5).
+    Checked against all three observed cases — apex 1-chunk [13,225] -> 4+4+5 =
+    13; apex 2-chunk (5,800, 7,425) -> 4+4+8+5 = 21; ``/terms/`` 2-chunk
+    (5,292, 1) -> 4+1+8+5 = 18 — and it also predicts 19 for a split like
+    (13,000, 225), so not even the re-chunked case is safely "route-dependent".
+    So quote the GEOMETRY (chunk count, split sizes, size-line lengths), never
+    "framing = 21" as a rule. The raw transfer count
     moves by +8 at a FIXED request shape as well as across shapes, which is one
     more reason the DE-CHUNKED digest is the unit to pin — a length pin is
     unstable even under repeats of one request.
@@ -323,8 +340,10 @@ Four facts a reader of this file should not have to rediscover:
     (profiles/dana/cache/scratch/wire-1002-dana/run26_apexonly.out; her prose
     rounds the same rate to 2/300);
     I independently walked her two saved ``/terms/`` 2-chunk raws OFFLINE and
-    reproduced the geometry exactly (2 chunks, (5,292, 1), size lines 4 + 1 bytes,
-    raw body 5,311 = 5,293 + 18 framing, de-chunked 5,293 B) — the rate cell is
+    reproduced the geometry exactly (2 chunks, (5,292, 1), DATA size lines 4 + 1
+    bytes, plus the 1-byte ``0`` terminator line — three size lines in all, which
+    a "4 + 1" reading omits; raw body 5,311 = 5,293 + 18 framing, de-chunked
+    5,293 B) — the rate cell is
     hers, the geometry is reproduced. My own 200-rep live probe here landed
     one-chunk 200/200 (0.00%, consistent with a ~1% rate at 200 reps). The
     ``/terms/`` composition differs from the apex: it ends its split with a
@@ -346,6 +365,17 @@ Four facts a reader of this file should not have to rediscover:
     (absent / ``*/*`` / ``text/html`` / blank) and its dead path stays 702 B /
     83972470b5674ad9 on every shape measured, while the zone's beacon follows the
     ``text/html`` rule above (lex AMS #3169 item 5; re-measured here 2026-10-02).
+    CONVENTION — the origin-beacon-free ROW is itself a CLAIM, so it must be
+    falsifiable. ``not_found_findings`` asserts it by expecting the zone and
+    origin 404 digests to DIFFER at the shapes it probes, but the guard's own
+    fetch sends ``Accept: */*``, where BOTH hosts are beacon-stripped to
+    83972470b567 — so on that shape the digest comparison passes for the wrong
+    reason. The DISCRIMINATING shape is ``Accept: text/html`` (zone 1,069 B /
+    829eacac57f53ed4 vs origin 702 B / 83972470b567; re-measured at this egress
+    2026-10-02: zone ``text/html`` and no-Accept both 1,069/829eacac, origin both
+    702/83972470b567, ``TEXT/HTML`` and ``*/*`` no-beacon at both). Any future
+    test of the "origin injects no beacon" clause must probe an explicit
+    ``Accept: text/html`` shape or it is incidentally true. (dana AMS #3239 item 5.)
     MECHANISM — the outcome is right but the model is not (dana AMS #3219 item 3;
     re-measured here). The origin holds 702 B on every shape because it carries NO
     BEACON, NOT because it "applies the same Accept rule". Byte diff on the dead
