@@ -46,23 +46,35 @@ Three facts a reader of this file should not have to rediscover:
     apex pages. ``scan_url`` now prints how many paths 404-skipped and warns
     when every non-apex path did, so a green here cannot quietly mean less than
     it reads as. (dana, AMS #2703; verified live here.)
-  * The residue registry is NOT a list of dead paths, and a red from the wire
-    leg means "the zone is still serving a stale copy" — not "the registry
-    points at 404s". That is a deliberate reading, not an accident of the
-    probe. Measured 2026-10-02 06:17-06:35 EDT from two independent egresses
-    (dana, AMS #2763; re-measured here on RecRoomRig twice, with an ordering
-    control), three reads per path (plain, cache-busted, plain again): 6 of the
-    15 registry paths 404 in EVERY shape, while 9 answer 200 to a plain GET and
-    404 the instant any query string is present (702 B, sha12 83972470b567).
-    An earlier read here said 5/10; that was a probe-sequence artifact, it does
-    not reproduce, and this header carries the number that does. A served
-    object with a long s-maxage is not an edge hiccup, and /deploy/ answers the
-    apex body itself (13,225 B, fa31dd15248287ce). So trimming the registry
-    cannot discharge the red while the plain read still serves, and the guard
-    names the serving rather than the entry. The one plain-200 registry TEXT
-    path, familyos_explainer.py (9,251 B), carries the banned sentence at line
-    166 today — that finding is the signal, and it is what makes ``--all`` exit
-    1 on an unmerged tree. (dana #2763; lizzie #2728/#2749.)
+  * The residue registry is NOT a list of dead paths, and the discriminator is
+    ZONE vs ORIGIN on a PLAIN GET — not a cache-buster. That distinction decides
+    what a red means here, so it is written down rather than inferred. Measured
+    2026-10-02 06:17-06:45 EDT from three egresses (dana AMS #2763; lizzie
+    #2778/#2801; lex #2793/#2797; re-measured here on RecRoomRig), plain GET at
+    the apex zone vs plain GET at the Pages origin (familyosai-cma.pages.dev):
+      - 5 of 15 are served at the ZONE and 404 at the ORIGIN — the stale-zone
+        signature: familyos-explainer.mp4 (696,581 B, main's blob), familyos_explainer.py
+        (9,251 B, main's blob), concat.txt, short1-reminder-treadmill.mp4,
+        familyos-logo-painted.png. These are real served residue.
+      - 4 are 200 at BOTH with matching digests — /deploy/, /README.md,
+        /.gitignore, brand/og-card.png. Live, NOT stale.
+      - 6 are 404 at BOTH — short2-6, walkthrough.
+    Do NOT use "200 plain / 404 cache-busted" as the test: any query string
+    404s on EVERY static path at both hosts, including a fully live asset like
+    brand/og-card.png, so that leg classifies live files as purged. It is how a
+    still-served banned file passes a purge-acceptance check. The decisive read
+    is zone-plain vs origin-plain.
+    Two corrections of my own, kept visible because both were load-bearing:
+    my replies first said 5/10 and then 6/9 of the registry were served; both
+    were artifacts of reading the ZONE alone, where a plain 200 cannot tell a
+    stale-zone copy from a live-at-both one. 5 stale / 4 live-both / 6 dead is
+    the split that reproduces, and it is per HOST, not per path shape.
+    Consequence for this guard: the wire leg exits 1 today on
+    familyos_explainer.py (200, 9,251 B, "lives in your house" at line 166;
+    main's blob, so the fix is a zone purge or PR #2's deploy, both Chris-gated)
+    and on familyos-explainer.mp4 in --media. Trimming the registry cannot
+    discharge that while the zone still serves it. (dana #2763; lizzie
+    #2801/#2803; lex #2793.)
 
 Exit codes: 0 clean, 1 banned claim found, 2 the guard could not run.
 """
