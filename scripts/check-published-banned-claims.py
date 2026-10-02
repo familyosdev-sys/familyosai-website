@@ -44,18 +44,36 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     unrelated-host allowlist would just hide the next alias the same way. A
     green ``--url`` means the apex and the origin are clean, nothing more.
 
+    THE BARE PATH IS UNCHECKED TOO — one level down and for the same structural
+    reason. ``scan_url`` fetches APEX_PATHS + ``served_text_paths()``, and the
+    residue registry knows only the ``/deploy/assets/...`` spelling, so the
+    aliases' bare ``/assets/social/shorts/familyos_explainer.py`` is never
+    fetched even though the file's own BANNED matcher fires on the bytes it
+    serves (200 / 9,251 B / 339f229565545cf7 — the same banned copy). A green
+    ``--url`` therefore cannot be read as "the explainer is gone everywhere"; it
+    means the apex, the origin and the registry's own ``/deploy/`` paths are
+    clean, nothing more. (dana AMS #3119; re-measured here 2026-10-02: bare path
+    200 / 9,251 B on both aliases, apex 404 / 702 B.)
+
 Four facts a reader of this file should not have to rediscover:
 
   * The apex body is request-shape-dependent, and the discriminator is the
     case-SENSITIVE literal substring ``text/html`` in the raw ``Accept`` header
     — NOT a media-type token and NOT the star: Cloudflare injects a
     ``static.cloudflareinsights.com`` beacon when the raw ``Accept`` header
-    carries that substring, or when the header is absent; it injects nothing
-    otherwise. The ``text/html2`` / ``text/htmlish`` / ``text/htmlX`` /
-    ``xtext/html`` / ``a text/html b`` shapes match NO media type and still get
-    the beacon (dana AMS #3087). Injection POSITION is
+    carries that substring, or when the header is absent — NO HEADER AT ALL; a
+    present-but-empty ``Accept:`` gets NO beacon (see the enumeration below). It
+    injects nothing otherwise. The ``text/html2`` / ``text/htmlish`` /
+    ``text/htmlX`` / ``xtext/html`` / ``a text/html b`` shapes match NO media
+    type and still get the beacon (dana AMS #3087). Injection POSITION is
     surface-dependent: on the apex ROOT ``/`` the beacon sits after the closing
-    ``</body></html>``, on the 404 path it sits before it (lex AMS #3079).
+    ``</body></html>``, on the 404 path it sits before it (lex AMS #3079; dana
+    #3119). The offset-free falsifier for the direction, which is why the scoped
+    sentence is checkable rather than accidental: strip the beacon and ask
+    whether the no-beacon body is a PREFIX of the beacon body. TRUE = pure
+    append after the close tag (apex ``/``: 13,225 == beacon[:13,225]); FALSE =
+    insert before it (404: 702 != beacon[:702]). The close tag moves on an
+    insert, so a prefix can only hold for an append.
     NOT a star-vs-non-star rule — ``TEXT/HTML`` is non-star and gets NO beacon.
     Measured 2026-10-02 from RecRoomRig, 28 shapes x 3 reps, every reading
     stable (evidence: profiles/codey/cache/scratch/sweep_final.{py,out}). On the
@@ -587,8 +605,11 @@ def shape_findings(failures: list[str]) -> list[str]:
     above. It lands AFTER the closing ``</body></html>`` on the apex ROOT ``/``
     (the shape this probe fetches) and BEFORE it on the 404 path; the position
     is surface-dependent, so do not read "after" as the general rule (lex AMS
-    #3079). The two shapes this probes — ``Accept:
-    */*`` and NO ``Accept`` header — sit on opposite sides of it (absent ->
+    #3079). Offset-free check: the no-beacon body is a PREFIX of the beacon
+    body exactly when the beacon is appended (apex ``/``), not when it is
+    inserted before the close tag (404) — see the header bullet. The two shapes
+    this probes — ``Accept: */*`` and NO ``Accept`` header — sit on opposite
+    sides of it (absent ->
     beacon, ``*/*`` -> none), which is why the pair is still a valid probe.
     Stripping the beacon must make the two shapes identical — if it does not, a
     digest pinned in a ticket is unreproducible and the guard says so instead of
