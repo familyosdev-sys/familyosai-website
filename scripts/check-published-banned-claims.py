@@ -27,13 +27,19 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     hidden a live banned copy: the wire legs probe the APEX and the Pages-origin
     pair only. They do NOT enumerate unrelated deployment hostnames, and any
     other alias on the same Pages project answers every path from its own
-    deployment - so it can serve the retracted landing while this guard reads
+    deployment - so it can serve banned-claim HTML while this guard reads
     green. Measured 2026-10-02 (dana, AMS #2958): two live aliases,
     30c37e93.familyosai-cma.pages.dev (body sha256 6deb8617...) and
-    664dd4da.familyosai-cma.pages.dev (e0f6297e...), each served the retracted
+    664dd4da.familyosai-cma.pages.dev (e0f6297e...), each served the old
     landing at /, /robots.txt, /privacy/, /terms/ and /404.html AND served the
     banned explainer at the BARE path /assets/social/shorts/familyos_explainer.py
-    (200 / 9,251 B / 339f229565545cf7 / "lives in your house"). Neither alias is
+    (200 / 9,251 B / 339f229565545cf7 / "lives in your house"). Those aliases
+    are not merely serving a "retracted landing": that retired landing IS
+    banned-claim-serving. Running THIS guard's own BANNED list over the alias
+    root bytes gives 5 occurrences from 3 distinct phrases - "lives in your
+    house" x2, "runs fully offline" x2, "on-device" x1 - the same severity
+    class as the zone's /deploy/ explainer (lizzie, AMS #3013; re-measured
+    here 2026-10-02 against both aliases). Neither alias is
     in served-residue.json. Deliberately NOT added as registry entries: an
     unrelated-host allowlist would just hide the next alias the same way. A
     green ``--url`` means the apex and the origin are clean, nothing more.
@@ -48,10 +54,13 @@ Four facts a reader of this file should not have to rediscover:
     client shape.
 
     Pin the beacon-stripped DIGEST, never the byte count. The count is
-    client- and RUM-dependent and has moved under a held digest: star-Accept
-    13,225 B (dana #2609) -> 13,169 B (#2641), no-Accept 13,592 B -> 13,536 B.
-    The stripped digests agreed throughout (fa31dd15248287ce on 2026-10-02),
-    which is the fact worth pinning. (lizzie, AMS #2645; dana, AMS #2647.)
+    client- and RUM-dependent, and two of its reported values are ONE reading
+    in two units, not two readings: star-Accept 13,225 B / 13,169 chars,
+    no-Accept 13,592 B / 13,536 chars. The 56-count delta is the 32 non-ASCII
+    codepoints on the page, and sha256(bytes) == sha256(chars.encode()) here.
+    The stripped digest fa31dd15248287ce is identical across both units and
+    both shapes, and that is the fact worth pinning. (lizzie, AMS #2645
+    #2646 #3038; dana, AMS #2609 #2641 #2647; re-measured here 2026-10-02.)
   * Every tree file is checked at ``/`` + its path from the repo root. That is
     a convention, not a fact about the wire, and it has already been wrong once:
     on 2026-10-02 the publish root moved from the REPO ROOT to ``deploy/``, so
