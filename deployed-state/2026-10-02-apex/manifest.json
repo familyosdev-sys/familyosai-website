@@ -1,0 +1,68 @@
+[
+  {
+    "file": "apex-root.html",
+    "url": "https://familyosai.com/",
+    "status": 200,
+    "bytes": 12765,
+    "sha256": "721fbae19bd1cb167ccc1f57a736b842bb472b60b975e7075036a61ca546b674",
+    "cf_cache_status": "DYNAMIC",
+    "age": null,
+    "cf_ray": null,
+    "content_type": null
+  },
+  {
+    "file": "apex-deploy-index.html",
+    "url": "https://familyosai.com/deploy/index.html",
+    "status": 200,
+    "bytes": 13592,
+    "sha256": "bcaa297f7b8f130e1644b507c47a2a2dbd46c3dc1e5f1bcd0fd10946dfc7ef41",
+    "cf_cache_status": "DYNAMIC",
+    "age": null,
+    "cf_ray": null,
+    "content_type": null
+  },
+  {
+    "file": "apex-privacy.html",
+    "url": "https://familyosai.com/privacy/",
+    "status": 200,
+    "bytes": 5954,
+    "sha256": "f753f1693473d2d080d30990415ec1eb210c1c3f49a829f2ba75838492316768",
+    "cf_cache_status": "DYNAMIC",
+    "age": null,
+    "cf_ray": null,
+    "content_type": null
+  },
+  {
+    "file": "apex-terms.html",
+    "url": "https://familyosai.com/terms/",
+    "status": 200,
+    "bytes": 5660,
+    "sha256": "6d80b2577f5aa87df5228e980edd5e88781d7a0b77be2ca6fa6bebde11a56700",
+    "cf_cache_status": "DYNAMIC",
+    "age": null,
+    "cf_ray": null,
+    "content_type": null
+  },
+  {
+    "file": "pagesprod-root.html",
+    "url": "https://familyosai-cma.pages.dev/",
+    "status": 200,
+    "bytes": 12398,
+    "sha256": "23b99ee4275a32888fd001ae6f36bd713dd9837f9e6afdff26d0edd4f772eec0",
+    "cf_cache_status": null,
+    "age": null,
+    "cf_ray": null,
+    "content_type": null
+  },
+  {
+    "file": "pagesprod-deploy-index.html",
+    "url": "https://familyosai-cma.pages.dev/deploy/index.html",
+    "status": 200,
+    "bytes": 13225,
+    "sha256": "fa31dd15248287ce38c7336bc2cede9f14e3814c09de7e4195cb6872ada90b8f",
+    "cf_cache_status": null,
+    "age": null,
+    "cf_ray": null,
+    "content_type": null
+  }
+]
