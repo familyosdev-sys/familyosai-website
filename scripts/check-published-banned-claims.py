@@ -102,8 +102,11 @@ Four facts a reader of this file should not have to rediscover:
     Pin the beacon-stripped DIGEST, never the byte count. The count is
     client- and RUM-dependent, and two of its reported values are ONE reading
     in two units, not two readings: star-Accept 13,225 B / 13,169 chars,
-    no-Accept 13,592 B / 13,536 chars, and on the 404 the same pair sits at
-    star-Accept 702 B / 698 chars, no-Accept 1,069 B / 1,065 chars. So the deltas are 56 B and 4 B,
+    no-Accept 13,592 B / 13,536 chars, and on the apex 404 the same pair sits
+    at star-Accept 702 B / 698 chars, no-Accept 1,069 B / 1,065 chars. That
+    404 pair is the APEX's, not a universal: the origin injects nothing and
+    answers its dead path 702 B / 698 chars under no-Accept too (dana AMS
+    #3177). So the deltas are 56 B and 4 B,
     and they are UTF-8 and nothing else: 88 non-ASCII BYTES encoding 32 non-ASCII
     CHARS on the apex page, 6 bytes / 2 chars on the 404. A byte/char delta here
     is never a content change, and sha256(bytes) == sha256(chars.encode()) on
@@ -225,28 +228,64 @@ Four facts a reader of this file should not have to rediscover:
 
 
   * Do NOT pin a digest — or a LENGTH, or a BODY — of a 403 challenge body.
+    SCOPE, because this headline is broader than what is actually asserted two
+    lines below: what must never be pinned is the TEMPLATED managed-challenge
+    page, which carries per-request values (the Ray ID and a one-second UTC
+    stamp) and so has no reproducible digest at ANY length. The 17 B
+    ``error code: 1010`` text IS stable and IS pinned on purpose — the
+    exception is deliberate, not an oversight (dana AMS #3176 item 3).
     Bot protection rejects the literal, case-sensitive ``Python-urllib`` prefix
     — not ``python-urllib/3.11`` — with 403. The body is shape-dependent, NOT
     EGRESS-dependent: the two bodies are two REQUEST SHAPES through the SAME
     Cloudflare block, and either one reproduces from ANY egress if you send the
     right shape. Measured here 2026-10-02 from RecRoomRig, one egress, literal
     ``Python-urllib/3.11`` at both hosts (Accept x Accept-Encoding matrix):
-      no Accept (AE: identity alone OR absent) -> 403, 17 B, ``error code: 1010\n``,
+      no Accept (AE absent, blank or identity) -> 403, 17 B, ``error code: 1010\n``,
         sha256 2938e9f128418095, stable both hosts;
       Accept: */* (+ AE: identity)             -> 403, ~7.1 KB HTML managed-
         challenge, 7,145 B zone / 7,175 B origin, sha256 regenerated per request.
+    THE BIG BODY NEEDS BOTH HEADERS PRESENT AND NON-BLANK — the star alone is
+    NOT enough: ``Accept: */*`` with NO ``Accept-Encoding`` header is the 17 B
+    body, and so is a present-but-BLANK ``Accept`` (``""`` or ``" "``) with any
+    AE. Measured here 2026-10-02 (dana AMS #3176 item 2): the 17 B text is
+    returned iff NOT(non-blank Accept AND non-blank AE), so four of the nine
+    cells reach no body at all. The host delta is explainable too, and it is a
+    like-for-like 30 B, never 43: 7,158 raw / 7,145 de-chunked at the zone vs
+    7,188 raw / 7,175 de-chunked at the origin, so raw-vs-raw and
+    de-chunked-vs-de-chunked are BOTH +30. 30 = 3 x 10, the host literal
+    appearing 3 times in the template where
+    ``len("familyosai-cma.pages.dev") - len("familyosai.com")`` is 10; the count
+    and the delta were both re-measured here (lex AMS #3169 item 4).
     The ~7,145 B body is the one the ai-lounge egress reported; this egress
     reproduces it with the SAME one-line shape change, so the split is not the
     network, it is the request. That HTML body is a TEMPLATED page carrying a
     PER-REQUEST Ray ID (a Ray-ID token at two lines plus the ``<ray>-ua45``
     signature string, all the same value), not XOR'd bytes: normalizing ONLY the
     Ray ID collapses the six zone digests to one, and the Ray ID + the one-second
-    UTC stamp gives 4/4 -> 1. So do NOT describe it as "per-request-XOR" (that is
+    UTC stamp gives 4/4 -> 1 at BOTH hosts. A hex16-only collapse is unstable at
+    the origin for exactly the reason it is unstable at the zone — the UTC stamp
+    is the missing substitution, not a second token at the origin (dana AMS
+    #3176 item 4 raised that asymmetry; re-measured here 2026-10-02, 4 reps per
+    host each forced across a second boundary: hex16-only 4/4 distinct at both,
+    hex16+stamp 4/4 -> 1 at both). So do NOT describe it as "per-request-XOR" (that is
     the ``data-cfemail`` payload's mechanism, a different section) and do NOT pin
     it either way. Note the guard's own live leg sends ``Accept: */*`` — it is on
-    the BIG shape, not the 17 B one. The durable pin is the PAIR (403, literal-UA
+    the BIG shape, not the 17 B one. Do not carry the gzip cells as a length pin
+    either: at ``Accept: */*`` + ``AE: gzip`` the de-chunked body measured
+    2,221/2,221/2,222/2,223 across reads at the zone and 2,228/2,229 at the
+    origin — moving by 1-2 B at the SAME request shape, because the per-request
+    values are in the body (lex AMS #3169 item 3; re-measured here 2026-10-02).
+    ``AE: br`` is a third, shorter body again (2,098 B), not the identity length.
+    The durable pin is the PAIR (403, literal-UA
     ``Python-urllib`` — case-sensitive) and NOTHING about the body: a length pin
-    is the same class of mistake as a digest pin. Two of us carried a sha16 here
+    is the same class of mistake as a digest pin. ONE CLAUSE WORTH NAMING: both
+    layers gate the literal (the origin 403s it too — 17 B no-Accept, 7,175 B
+    under ``*/*``), but only the ZONE shapes the body. The origin's apex ``/`` is
+    13,225 B / fa31dd15248287ce with beacon=0 under ALL FOUR Accept shapes
+    (absent / ``*/*`` / ``text/html`` / blank) and its dead path stays 702 B /
+    83972470b5674ad9 on every shape measured, while the zone's beacon follows the
+    ``text/html`` rule above (lex AMS #3169 item 5; re-measured here 2026-10-02).
+    Two of us carried a sha16 here
     and both retracted it. (lex AMS #2842/#2843/#2906/#2907 and #2962/#2963, the
     axis correction; re-measured here 2026-10-02, 4-shape matrix.)
 
