@@ -262,26 +262,46 @@ Four facts a reader of this file should not have to rediscover:
     PER-REQUEST Ray ID (a Ray-ID token at two lines plus the ``<ray>-ua45``
     signature string, all the same value), not XOR'd bytes: normalizing ONLY the
     Ray ID collapses the six zone digests to one, and the Ray ID + the one-second
-    UTC stamp gives 4/4 -> 1 at BOTH hosts. A hex16-only collapse is unstable at
-    the origin for exactly the reason it is unstable at the zone — the UTC stamp
+    UTC stamp gives 4/4 -> 1 at BOTH hosts. THE STAMP IS THE ``Date`` HEADER, not
+    per-request entropy: in every single response the body's UTC string equals
+    that response's ``Date`` second (6/6 at the zone and 6/6 at the origin,
+    re-measured here 2026-10-02), so it must be normalized as a substitution.
+    A hex16-only collapse is unstable at the origin for exactly the reason it is
+    unstable at the zone — the UTC stamp
     is the missing substitution, not a second token at the origin (dana AMS
     #3176 item 4 raised that asymmetry; re-measured here 2026-10-02, 4 reps per
     host each forced across a second boundary: hex16-only 4/4 distinct at both,
-    hex16+stamp 4/4 -> 1 at both). So do NOT describe it as "per-request-XOR" (that is
-    the ``data-cfemail`` payload's mechanism, a different section) and do NOT pin
-    it either way. Note the guard's own live leg sends ``Accept: */*`` — it is on
-    the BIG shape, not the 17 B one. Do not carry the gzip cells as a length pin
-    either: at ``Accept: */*`` + ``AE: gzip`` the de-chunked body measured
-    2,221/2,221/2,222/2,223 across reads at the zone and 2,228/2,229 at the
-    origin — moving by 1-2 B at the SAME request shape, because the per-request
-    values are in the body (lex AMS #3169 item 3; re-measured here 2026-10-02).
-    ``AE: br`` is a third, shorter body again (2,098 B), not the identity length.
+    hex16+stamp 4/4 -> 1 at both; re-measured again 5 reps/host: 5 distinct vs 1).
+    THE EXACT PAIR, so the constant is reproducible rather than a convention: on
+    the DE-CHUNKED body, substitute every ``\\b[0-9a-f]{16,}\\b`` run with
+    ``<HEX>`` AND every ``\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2} UTC`` with
+    ``<STAMP>``, then sha256: zone c76b17b9d0550013 / origin b812281b7eb06285,
+    5/5 each at this pass (dana AMS #3184 item 4 reports the same pair, 7/7).
+    The QUANTIFIER matters — ``{16}`` instead of ``{16,}`` leaves the 32-hex
+    ``Sparrow-Source-Key`` constant in the body, and the digest stays unstable
+    (measured: 5 distinct at each host, same as Ray-ID-only) — and the two hosts'
+    constants differ BY CONSTRUCTION, since every host literal in the template is
+    10 B longer at the origin, so neither is "the" 403 digest. So do NOT describe
+    it as "per-request-XOR" (that is the ``data-cfemail`` payload's mechanism, a
+    different section) and do NOT pin it either way. Note the guard's own live
+    leg sends ``Accept: */*`` — it is on the BIG shape, not the 17 B one. Do not
+    carry the gzip cells as a length pin
+    either: at ``Accept: */*`` + ``AE: gzip`` the DE-CHUNKED body measured
+    2,221/2,221/2,220/2,221/2,221 across reads at the zone and 2,229/2,228 across
+    reads at the origin — moving by 1-2 B at the SAME request shape, because the
+    per-request values are in the body (lex AMS #3169 item 3; re-measured here
+    2026-10-02). ``AE: br`` is a third, shorter body again (2,096-2,097 B
+    DE-CHUNKED at the zone, 2,103-2,105 at the origin; raw transfer is +12), not
+    the identity length. NAME THE HOST AND THE UNIT on every one of these cells:
+    they are DE-CHUNKED bodies, and the same +30 host delta applies to them, so a
+    verifier measuring the zone's raw-transfer row reads 2,109 where the landed
+    number says 2,097 (dana AMS #3192 item 2, #3193 item 1).
     The durable pin is the PAIR (403, literal-UA
     ``Python-urllib`` — case-sensitive) and NOTHING about the body: a length pin
     is the same class of mistake as a digest pin. ONE CLAUSE WORTH NAMING: both
-    layers gate the literal (the origin 403s it too — 17 B no-Accept, 7,175 B
-    under ``*/*``), but only the ZONE shapes the body. The origin's apex ``/`` is
-    13,225 B / fa31dd15248287ce with beacon=0 under ALL FOUR Accept shapes
+    layers gate the literal (the origin 403s it too — 17 B no-Accept, and 7,175 B
+    de-chunked under ``*/*``), but only the ZONE shapes the body. The origin
+    apex ``/`` is 13,225 B / fa31dd15248287ce with beacon=0 under ALL FOUR shapes
     (absent / ``*/*`` / ``text/html`` / blank) and its dead path stays 702 B /
     83972470b5674ad9 on every shape measured, while the zone's beacon follows the
     ``text/html`` rule above (lex AMS #3169 item 5; re-measured here 2026-10-02).
@@ -297,10 +317,13 @@ Four facts a reader of this file should not have to rediscover:
     here ("for any non-star ``Accept``") was falsified by a 15-shape sweep
     (dana AMS #3072; re-measured here 2026-10-02 from RecRoomRig, 3 reps each,
     stable); the full 13/15 split is in the apex bullet above. Endpoints at
-    the apex zone: 702 B / 83972470b567 under ``*/*`` (and under the non-star
-    ``TEXT/HTML``), 1,069 B / 829eacac57f53ed4 under ``text/html`` or no
-    header. NON-star shapes land on BOTH sides, so the star was never the
-    axis. The Pages origin injects nothing and stays 702 B / 83972470b567 on every shape
+    the apex zone, DE-CHUNKED (raw transfer in parens): 702 B / 83972470b567
+    (714) under ``*/*`` (and under the non-star ``TEXT/HTML``), 1,069 B /
+    829eacac57f53ed4 (1,081) under ``text/html`` or no header; the 12 B is chunk
+    framing, and 1,069 - 702 = 367 is the injected beacon, not a second reading
+    of one host. NON-star shapes land on BOTH sides, so the star was never the
+    axis. The Pages origin injects nothing and stays 702 B / 83972470b567
+    (714 raw) on every shape
     (re-measured: no header, ``*/*``, ``text/html``, ``TEXT/HTML``,
     ``text/plain``, ``text/html2``). The beacon-stripped digest is 83972470b567
     on every reading and equal to the beacon-stripped /404.html GET. Pin THAT,
@@ -415,8 +438,10 @@ ORIGIN = "https://familyosai-cma.pages.dev"
 # above — present iff the raw Accept
 # carries the case-sensitive literal substring ``text/html``, or the header is
 # absent — so the zone answers 702 B under ``Accept: */*`` and 1,069 B under
-# ``text/html``, but a NON-star ``TEXT/HTML`` also gets 702 B (dana AMS #3072),
-# while the Pages origin injects nothing and stays 702 B on every shape. 702 vs
+# ``text/html``, but a NON-star ``TEXT/HTML`` also gets 702 B (dana AMS #3072) —
+# all DE-CHUNKED; raw transfer is 714 B / 1,081 B, the 12 B being chunk framing
+# (dana AMS #3193 item 1) — while the Pages origin injects nothing and stays
+# 702 B (714 raw) on every shape. 702 vs
 # 1,069 is the exact shape-dependence the apex bullet above warns about, so the
 # count is not a pin — the stripped digest is, because ``strip_beacon`` (the
 # DELETE-with-\s* rule) makes it shape- AND host-independent. 83972470b567
