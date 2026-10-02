@@ -101,8 +101,12 @@ Four facts a reader of this file should not have to rediscover:
     Pin the beacon-stripped DIGEST, never the byte count. The count is
     client- and RUM-dependent, and two of its reported values are ONE reading
     in two units, not two readings: star-Accept 13,225 B / 13,169 chars,
-    no-Accept 13,592 B / 13,536 chars. The 56-count delta is the 32 non-ASCII
-    codepoints on the page, and sha256(bytes) == sha256(chars.encode()) here.
+    no-Accept 13,592 B / 13,536 chars, and on the 404 the same pair sits at
+    702 B / 698 chars and 1,069 B / 1,065 chars. So the deltas are 56 B and 4 B,
+    and they are UTF-8 and nothing else: 88 non-ASCII BYTES encoding 32 non-ASCII
+    CHARS on the apex page, 6 bytes / 2 chars on the 404. A byte/char delta here
+    is never a content change, and sha256(bytes) == sha256(chars.encode()) on
+    every one of these bodies (dana AMS #3120; re-measured here 2026-10-02).
     The stripped digest fa31dd15248287ce is identical across both units and
     both shapes, and that is the fact worth pinning. (lizzie, AMS #2645
     #2646 #3038; dana, AMS #2609 #2641 #2647; re-measured here 2026-10-02.)
