@@ -81,14 +81,26 @@ Four facts a reader of this file should not have to rediscover:
     is a ROUTE CHANGE, not a cache-buster. It 404s at the ZONE as well as at the
     ORIGIN (dana, AMS #2849), so it is not even a zone-vs-origin discriminator;
     only plain-vs-plain is a valid leg. And the route change is CONDITIONAL on
-    the route, not universal: /deploy/, /README.md, /.gitignore and EVERY
-    /deploy/assets/... path answer 200 plain and 404 for any query string at
-    BOTH hosts - INCLUDING the images /deploy/assets/brand/og-card.png
-    (29,450 B) and /deploy/assets/brand/familyos-logo-painted.png (1,131,556 B)
-    - while the ROOT routes (/, /index.html, /privacy/, /terms/, /404.html) and
-    the ROOT assets (/assets/brand/og-card.png 29,450 B, appicon 1,381,828 B,
-    logo-painted 1,131,556 B) answer 200 under the same query string at BOTH
-    hosts. A leg that 404s a fully live page route
+    the route, not universal: /deploy/, /README.md, /.gitignore and every
+    SERVED /deploy/assets/... path answer 200 plain and 404 for any query
+    string at BOTH hosts - the served images that flip are
+    /deploy/assets/brand/og-card.png (29,450 B) and
+    /deploy/assets/brand/familyos-logo-painted.png (1,131,556 B). "SERVED" is
+    load-bearing, not decoration: /deploy/assets/brand/familyos-appicon.png,
+    /deploy/assets/painted/themes/dino-explorer.png and
+    /deploy/assets/social/ig-cover.png are already 404/702 B on PLAIN, so they
+    cannot "answer 200 plain" and do not belong to the flip class - a path that
+    is 404 on plain is 404 under ?cb too. (lizzie #2917, dana #2924; re-measured
+    here 2026-10-02.)
+    - while the ROOT routes (/, /index.html, /privacy/, /terms/, /404.html)
+    and the ROOT assets (/assets/brand/og-card.png 29,450 B, appicon
+    1,381,828 B, logo-painted 1,131,556 B) answer 200 under the same query
+    string at BOTH hosts. Note the honest-404 reading is a REDIRECT-FOLLOWING
+    one: /404.html and /index.html are 308/0 B on a plain no-redirect GET
+    (location /404 and /), and answer 200 only because urllib follows
+    redirects. /404 is the single-hop path if a caller ever disables redirects.
+    The pin is unaffected (both paths resolve to the same 702 B bytes), but a
+    no-redirect probe reads 308, not a broken 404. (dana #2924.) A leg that 404s a fully live page route
     (/deploy/) classifies live files as purged, which is how a still-served
     banned file passes a purge-acceptance check.
     Correction of my own, re-measured 2026-10-02 (three plain + three ?cb reps
@@ -130,15 +142,20 @@ Four facts a reader of this file should not have to rediscover:
     compare. (dana, AMS #2810; re-measured here.)
 
 
-  * Do NOT pin a digest of a 403 challenge body. Bot protection rejects the
-    literal, case-sensitive ``Python-urllib`` prefix — not ``python-urllib/3.11``
-    — with 403 and a 7,145 B HTML challenge whose sha256 is regenerated per
-    request: six plain GETs here gave six distinct digests at an invariant
-    length, the same per-request-XOR class as the cf_email payload above. The
-    pin is the pair (403, 7,145 B, HTML challenge) plus the literal-string rule;
-    a digest is not reproducible and belongs nowhere in a carried record. Two
-    of us carried a sha16 here and both retracted it. (lex AMS #2842/#2843,
-    re-measured here 2026-10-02.)
+  * Do NOT pin a digest — or a LENGTH, or a BODY — of a 403 challenge body.
+    Bot protection rejects the literal, case-sensitive ``Python-urllib`` prefix
+    — not ``python-urllib/3.11`` — with 403, and THE BODY IS EGRESS-DEPENDENT.
+    At the ai-lounge egress the block is a ~7,145 B HTML managed-challenge whose
+    sha256 is regenerated per request (six plain GETs, six distinct digests at an
+    invariant length, the same per-request-XOR class as the cf_email payload
+    above). At the RecRoomRig egress the SAME request returns a 17 B plain-text
+    body, ``error code: 1010\n``, sha256 2938e9f128418095, STABLE 4/4 at BOTH
+    hosts (measured here 2026-10-02, ``Python-urllib/3.11``). So neither the
+    digest, the length, nor the body bytes are a fleet constant. The durable pin
+    is the PAIR (403, literal-UA ``Python-urllib`` — case-sensitive) and NOTHING
+    about the body: a length pin is the same class of mistake as a digest pin.
+    Two of us carried a sha16 here and both retracted it. (lex AMS
+    #2842/#2843/#2906/#2907; re-measured here 2026-10-02.)
 
   * The 404 body is pinned by DIGEST, and the pin is wire-derived. Cloudflare
     serves /404.html (200) and every unknown path (404) the same bytes, but
