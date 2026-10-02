@@ -1,4 +1,32 @@
+# ---------------------------------------------------------------------------
+# What is ALLOWED in this repo
+# ---------------------------------------------------------------------------
+# This repository IS the published surface. Cloudflare Pages serves it, so a
+# file being here is the same as a file being on the internet. The list below
+# exists because we have already shipped twice by accident:
+#
+#   * README.md / .gitignore were publicly readable at the apex for days — the
+#     publish root is deploy/, so the repo root was never meant to be served.
+#   * A rendered explainer video with a retracted privacy caption sat at
+#     /deploy/assets/social/shorts/familyos-explainer.mp4 and kept being served
+#     after the copy that generated it had been fixed (#195, 2026-10-02).
+#
+# Nothing under .wrangler/ is ever a source asset; it is local deploy state.
+
 .wrangler/
 **/__pycache__/
 *.pyc
+
+# ---------------------------------------------------------------------------
+# Rendered social media — NOT source, NOT published
+# ---------------------------------------------------------------------------
+# The .mp4/.png in assets/social/ were exported by hand and committed by hand.
+# They are binary, unreviewable in a diff, and they silently contradict the
+# copy in deploy/index.html when the copy changes — which is exactly the 2026-10-02
+# defect. The scripts that generate them are source and stay in git; the renders
+# live outside the publish root (see deploy/assets/social/README.md).
+#
+# If you are re-adding these, stop and read deploy/assets/social/README.md first.
+deploy/assets/social/**/*.mp4
+deploy/assets/social/**/*.gif
 deploy/assets/social/shorts/media/

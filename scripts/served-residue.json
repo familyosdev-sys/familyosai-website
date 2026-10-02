@@ -1,0 +1,131 @@
+{
+  "_note": "Served paths that the tree no longer contains. A tree scan cannot see these by construction; only a fetch can. The guard reads this list and checks the LIVE bytes, because 2026-10-02 proved the hard way that 'deleted from the repo' and 'not on the wire' are different facts: after the MP4s were deleted and the page was fixed, familyosai.com still served the banned-pixel video at 200.",
+  "_maintenance": "Add a path here ONLY when it is deleted from the tree while the zone may still have it cached. A path that is intentionally published and still in the tree does NOT belong here. When a purge is confirmed (404 plain AND cache-busted), the entry can be removed — but the entry going stale is harmless (a 404 is skipped); the entry MISSING is the expensive mistake.",
+  "_evidence": [
+    "AMS #2603 (lizzie) — guard gaps: media scans the tree not the wire; .py never scanned",
+    "AMS #2631 (dana) — corrected 9-URL purge list; cache/scratch/purge-list-2602-corrected.json",
+    "Dana verified each: 200 at the zone with a plain GET and 404 under a unique cache-buster, i.e. a stale zone-cache entry, not origin content."
+  ],
+  "paths": [
+    {
+      "path": "/deploy/assets/social/shorts/familyos-explainer.mp4",
+      "kind": "media",
+      "banned": true,
+      "priority": "P0",
+      "why": "BANNED CLAIM IN THE PIXELS at ~0:36-0:48 ('The AI lives in your house.' / 'Literally.' / 'Local-first.'). Self-renewing (REVALIDATED, no Age).",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/deploy/assets/social/shorts/familyos_explainer.py",
+      "kind": "text",
+      "banned": true,
+      "priority": "P0",
+      "why": "Served the render script itself; carried L166 Text(\"The AI lives in your house.\") and L182 \"the device in your house.\" before the branch reworded it. Still 200 on the wire until the purge.",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/deploy/assets/social/shorts/concat.txt",
+      "kind": "text",
+      "banned": false,
+      "priority": "P1",
+      "why": "Leaks /home/chris/Desktop/website/... build paths. Not a banned claim, but not content anyone intended to publish.",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/deploy/assets/social/shorts/short1-reminder-treadmill.mp4",
+      "kind": "media",
+      "banned": false,
+      "priority": "P1",
+      "why": "Retracted-media class, self-renewing (no Age). Verified clean of banned phrases, kept here so the wire stays checked.",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/deploy/assets/social/shorts/short2-when-then.mp4",
+      "kind": "media",
+      "banned": false,
+      "priority": "P1",
+      "why": "Retracted-media class; deleted from the tree, still answerable at the zone.",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/deploy/assets/social/shorts/short3-local-first.mp4",
+      "kind": "media",
+      "banned": true,
+      "priority": "P1",
+      "why": "'local-first' + 'stays on the device in your house' + 'we literally cannot see it' at 0:05-0:09 (per the bbd1389 audit).",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/deploy/assets/social/shorts/short4-low-demand.mp4",
+      "kind": "media",
+      "banned": false,
+      "priority": "P1",
+      "why": "Retracted-media class; deleted from the tree, still answerable at the zone.",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/deploy/assets/social/shorts/short5-flat-rate.mp4",
+      "kind": "media",
+      "banned": false,
+      "priority": "P1",
+      "why": "Retracted-media class; deleted from the tree, still answerable at the zone.",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/deploy/assets/social/shorts/short6-build-in-public.mp4",
+      "kind": "media",
+      "banned": false,
+      "priority": "P1",
+      "why": "Retracted-media class; deleted from the tree, still answerable at the zone.",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/deploy/assets/social/shorts/walkthrough-familyosai.mp4",
+      "kind": "media",
+      "banned": true,
+      "priority": "P0",
+      "why": "'lives in your house' + 'never touch a cloud' at 0:16-0:19 (per the bbd1389 audit).",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/deploy/assets/brand/familyos-logo-painted.png",
+      "kind": "media",
+      "banned": false,
+      "priority": "P2",
+      "why": "Stale /deploy/ twin of the LIVE root-path logo (byte-identical; root path origin-fresh at both zone and pages.dev, so it is safe to purge).",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/deploy/assets/brand/og-card.png",
+      "kind": "media",
+      "banned": false,
+      "priority": "P2",
+      "why": "Stale /deploy/ twin; the live apex og:image is the ROOT path, origin-fresh.",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/deploy/",
+      "kind": "page",
+      "banned": false,
+      "priority": "P2",
+      "why": "Stale zone copy of the corrected apex; no banned content, but 404 origin-fresh.",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/README.md",
+      "kind": "page",
+      "banned": false,
+      "priority": "P2",
+      "why": "Repo furniture served at the repo-root publish while destination_dir is the repo root.",
+      "first_seen": "2026-10-02"
+    },
+    {
+      "path": "/.gitignore",
+      "kind": "page",
+      "banned": false,
+      "priority": "P2",
+      "why": "Repo furniture served at the repo-root publish while destination_dir is the repo root.",
+      "first_seen": "2026-10-02"
+    }
+  ]
+}
