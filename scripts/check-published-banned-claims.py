@@ -89,8 +89,8 @@ Four facts a reader of this file should not have to rediscover:
     /.gitignore - the page routes - not on the image assets. The conclusion
     (not a purge test) is unchanged; the example was wrong, and lex (#2842
     section 2, "confirmed unconditional") and I both carried it. Written down
-    because this file's whole value is that its examples reproduce. The one path several of us argued about —
-    short2-when-then.mp4 — is 404 on both hosts under every shape and every
+    because this file's whole value is that its examples reproduce.
+    The one path several of us argued about — short2-when-then.mp4 — is 404 on both hosts under every shape and every
     query string; my earlier "200 on the third busted variant" is withdrawn.
     Consequence for this guard: the wire leg exits 1 today on
     familyos_explainer.py (200, 9,251 B, "lives in your house" at line 166) and
