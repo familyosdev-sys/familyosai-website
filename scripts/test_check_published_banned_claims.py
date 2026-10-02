@@ -108,6 +108,26 @@ def main() -> int:
     check("a real body change still differs after stripping",
           g.sha12(g.strip_beacon(beacon)) != g.sha12(g.strip_beacon(plain + "<p>new</p>")))
 
+    print("3b. the cf_email rewrite is normalized out (dana AMS #2724/#2725)")
+    # Cloudflare rewrites /cdn-cgi/l/email-protection#<hex> with a per-request XOR
+    # key, so /privacy/ and /terms/ have no reproducible raw digest even at fixed
+    # length (measured: three plain GETs, three sha16). Normalizing the payload
+    # makes the digest mean content again. The apex carries zero spans, so this
+    # must be a no-op there or the pinned fa31dd15248287ce moves.
+    cfa = ('<a href="/cdn-cgi/l/email-protection#aabbcc">x</a>'
+           "<span data-cfemail=\"aabbcc\">x</span>")
+    cfb = ('<a href="/cdn-cgi/l/email-protection#ddeeff">x</a>'
+           "<span data-cfemail=\"ddeeff\">x</span>")
+    check("cf_email payloads normalize to one digest",
+          g.sha12(g.normalize_request_scoped(cfa)) == g.sha12(g.normalize_request_scoped(cfb)),
+          f"{g.sha12(g.normalize_request_scoped(cfa))} vs {g.sha12(g.normalize_request_scoped(cfb))}")
+    check("normalizing does not collapse genuinely different content",
+          g.sha12(g.normalize_request_scoped(cfa))
+          != g.sha12(g.normalize_request_scoped(cfa + "<p>more</p>")))
+    apex = '<html><body><p>no obfuscation spans here</p></body></html>\n'
+    check("the apex body is unchanged by cf_email normalization (no-op)",
+          g.normalize_request_scoped(apex) == apex)
+
     print("4. the residue registry is honest about being unreadable")
     tmp = pathlib.Path(tempfile.mkdtemp())
     missing = tmp / "nope.json"
