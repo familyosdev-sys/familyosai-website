@@ -544,13 +544,22 @@ Four facts a reader of this file should not have to rediscover:
     and NOT across the tip:
     86714e1 is executed code, so this family moves there to n=3,228 /
     ``0ed18a60ac69e463``, which is why the range is capped here rather than
-    read as a failed reproduction. (re-measured here — the six lex named plus three):
+    read as a failed reproduction. ``typename`` is NOT the ``tok_name`` dict
+    entry the sibling rows use: it is the CLASS NAME of the token number,
+    ``type(t.type).__name__``, the string ``int`` on CPython 3.14.7 — so the two
+    ``typename`` rows are a different construction from ``tok_name``, and they do
+    reproduce (dana #3340/#3343 and lex #3332 could not reach them by reading
+    ``typename`` as ``tok_name``; re-derived here). (re-measured here — the six
+    lex named plus three):
     t.type:t.exact_type:t.string fd2a321487a3c73c; typename:exact_type:string
     db7ffed4e904989e; typename:string 460baa8ff85ff135; t.type:t.string
     1a0bfe5d7b23d5c3; t.exact_type:t.string 456cc992d9962e8a;
     tok_name:exact_type:string 8c9e44777de7bd94; tok_name:string
-    3c423ca4ea6297f1; chr0 t.string 301463ae9668d6fa; and the pipe form of the
-    chr0 family. POSITION rows are per-ref and move on EVERY doc-only commit,
+    3c423ca4ea6297f1; chr0 t.string 196c1402c2f4ed69; pipe t.string
+    301463ae9668d6fa. The last two are the TWO JOINS OF THE SAME ``t.string``
+    family (chr(0) and ``|``) — earlier drafts printed the pipe value
+    ``301463ae9668d6fa`` under a ``chr0`` label (dana #3340 item 1, lex #3332
+    item 6; both right). POSITION rows are per-ref and move on EVERY doc-only commit,
     not only 610b667/2f68e77 — and over the SAME content drop-set above (so
     n=3,214, not the drop{STRING} n=4,151: a position row quoted against the
     wrong drop-set is the one family that legitimately moves reading as drift on
@@ -566,7 +575,9 @@ Four facts a reader of this file should not have to rediscover:
     carried: the construction is the chr0 join of ``t.string+str(t.start)`` over
     the SAME content drop-set the content family uses (34f777b
     ``3d46ba763f3bb8a2``, 86714e1 ``088aa875d5f06926``; the pipe-position rows
-    reproduce under the ``t.string|t.start`` join the doc names).
+    reproduce under the ``t.string|t.start`` join the doc names). That sentence
+    covers the POSITION rows only; the NINE field rows two paragraphs up are the
+    CONTENT family and are separately re-derived and single-valued above.
     STORED vs ``len(git show text)`` is a UNIT clause of this same family:
     ``git cat-file -s`` counts the BLOB's bytes, so it equals the character
     length only for pure ASCII. At 86714e1 the blob is 72,988 B against a decoded
