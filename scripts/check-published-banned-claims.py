@@ -785,9 +785,11 @@ Four facts a reader of this file should not have to rediscover:
     (dana #3294 item 3).
     AND THE OFFSET FAMILY IN THIS THREAD IS BUS-ONLY, NOT LANDED — and it is a
     SAMPLE, and it is NOT the landing's own values. The comma-free JOINED triple
-    ``2885 / 3988 / 5813`` is NOT in this blob, and its per-ref count is NOT the
-    flat x0 the previous form claimed: x0 at every ref through fef72c7, x1 at
-    c767c40 -- the one ref that quotes it, INSIDE the sentence denying it (byte
+    ``2885 / 3988 / 5813`` is never ASSERTED as a landed value — its ONE
+    occurrence in this blob is this very sentence, which denies it — and its
+    per-ref count is NOT the flat x0 the previous form claimed: x0 at every ref
+    through fef72c7, x1 at c767c40 -- the one ref that quotes it, INSIDE the
+    sentence denying it (byte
     51,679 of 87,264 there, 0-BASED; that is the CHAR offset 51,485 in the
     BYTE unit, and the 194 difference is the byte-minus-char gap BEFORE that
     point, NOT a positional gap — the phrase BEGINS with the bare token
@@ -800,8 +802,9 @@ Four facts a reader of this file should not have to rediscover:
     153b703 stays x0 only because that paragraph still line-wraps the triple
     between ``3988 /`` and ``5813``, the one wrapping the ``1ec660b`` rewrite
     removed. The bare numerals are the STANDALONE-numeral unit's, not this
-    phrase's: ``2885`` shares the phrase's position here, while the other two
-    occur only inside the hex TAILS ``f03bdc070a8b3988`` and
+    phrase's: ``2885`` shares the phrase's position here, while ``3988`` and
+    ``5813`` occur in prose OUTSIDE this phrase too (their own wrapped
+    spelling) as well as inside the hex TAILS ``f03bdc070a8b3988`` and
     ``fd4c3bca6ef203ba647a2c5813...`` -- so a per-ref count is
     QUANTIFIER-dependent, not a flat number (dana AMS #3480, re-measured
     2026-10-03). "It is x0 at EVERY ref through c767c40" was false at exactly the ref
