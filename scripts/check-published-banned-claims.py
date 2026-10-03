@@ -547,7 +547,19 @@ Four facts a reader of this file should not have to rediscover:
     reaches the 404 — the UA gate fires first, 403 / 17 B. Gilligan's independent
     egress reproduces both literals exactly (AMS #3957 item 3); naming the boundary
     keeps the next pass from carrying an AE precondition onto a status where it does
-    nothing. The 403/404 split is a SHAPE fact, not an egress one. The host delta is explainable too, and it is a
+    nothing. THE SHAPE ROW HAS A SECOND PATH AND THE THIRD SHAPE HAS A THIRD NUMERAL:
+    ``/robots.txt`` carries the IDENTICAL row at the ZONE (``Absent`` / blank / ``*/*``
+    -> absent and ``text/html`` 1,069 B / 829eacac57f53ed4; blank and ``*/*`` 702 B /
+    83972470b5674ad9), so "no Accept" alone is not the right reading of the 1,069 cell
+    — it is the NON-``*/*`` side. Re-measured here 2026-10-03, guard UA, zone: absent
+    1,069 / blank 702 / ``*/*`` 702 / ``text/html`` 1,069. (The file's 403 paragraph
+    above already says the same thing one status over — present-but-BLANK ``Accept``
+    is a 17 B shape there — and dana AMS #3999's own row reads it as a third shape;
+    both are the same fact.) And ``/robots.txt`` is the PATH that is not constant
+    across the host set: the origin, ``e2b69d3e`` and ``d0f3fdae`` all answer
+    200 / 1,248 B / 8fa3036c68bfcbd3 while the zone 404s it — so no single host is
+    "the inverse" of another, and the axis is (host, path), not zone-vs-origin. The
+    403/404 split is a SHAPE fact, not an egress one. The host delta is explainable too, and it is a
     like-for-like 30 B, never 43: 7,158 raw / 7,145 de-chunked at the zone vs
     7,188 raw / 7,175 de-chunked at the origin, so raw-vs-raw and
     de-chunked-vs-de-chunked are BOTH +30. 30 = 3 x 10, the host literal
