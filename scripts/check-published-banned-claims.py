@@ -116,6 +116,23 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     2026-10-03 with this guard's own UA and ``scan_text``: d0f3fdae ``/``
     404/0 B, ``/deploy/`` 200/11,968/6deb8617 x3 of 3 reps; zzzz9999 404/16,140 B
     x4 with 4 distinct digests.)
+    AND THE CENSUS IS LIVE, SO DATE IT AND NAME THE CLONE — this row was the last
+    open item on the thread (dana AMS #3998 item 9). The 11,968 B /
+    ``6deb861731feba82`` retired landing is ONE BODY carried by several hosts and
+    ONE BLOB in the tree's own history: at this worktree, branch
+    ``fix/claims-guard-wire-leg-and-units-20261002`` @ ``31c7134``, 2026-10-03, the
+    object graph holds 389 objects (178 tree / 129 blob / 82 commit; 129 of 129
+    blobs content-distinct), EXACTLY ONE matches that content sha256 —
+    ``03905ea37d6766cbff148ac1562c7534d7a4d621``, 11,968 B, which is
+    ``c46b173:deploy/index.html`` and sits on NO branch tip (``main`` d5173b13 /
+    ``origin/main`` a0f6d8a8 / this branch 37939646) — and ZERO match the 664dd4da
+    variant's ``e0f6297e291cced0`` (11,734 B). The two catch-all landings are
+    therefore NOT symmetric under a purge: the 30c37e93 body is findable in the
+    object graph, the 664dd4da body has to be purged by name ON THE WIRE. Object
+    counts move every time a ref lands — dana measured 385 in the same clone
+    minutes earlier (AMS #3998 item 6) — so pin the count to (clone, refs,
+    instant) or do not quote it. (dana AMS #3989 item 8 and #3998 item 6;
+    reproduced here.)
 
     THE BARE PATH IS UNCHECKED TOO — one level down and for the same structural
     reason. ``scan_url`` fetches APEX_PATHS + ``served_text_paths()``, and the
@@ -653,6 +670,18 @@ Four facts a reader of this file should not have to rediscover:
     both. So raw MINUS dech is 12-13 per cell, and the HOST delta is +30 identity /
     ~+7 gzip / ~+6 br — three different numbers. (dana AMS #3989 item 2 lands the
     same split independently: gunzip 7,145 z / 7,175 o is +30, compressed ~+8.)
+    THE 13-AND-12 IS A FORMULA, NOT AN ENCODING RULE: for a single-chunk body the
+    wire overhead is exactly ``hexwidth(N) + 9`` (hex digits of the size, + CRLF,
+    + data CRLF, + the 5-byte ``0\r\n\r\n``), which STEPS at 0x1000 = 4,096. Every
+    identity cell here is > 4,096 so it reads 13; every compressed cell is under
+    it so it reads 12 — an accident of where these particular bodies land, not a
+    property of identity-vs-compressed. Re-measured here 2026-10-03, 4 reps/cell,
+    block UA on ``/privacy/``: identity 7,158 raw / 7,145 dech / frame 13 (=
+    hexwidth(7,145)+9 = 4+9) at the zone and 7,188 / 7,175 / 13 at the origin;
+    gzip 2,232 / 2,220 / 12 and 2,240 / 2,228 / 12; br 2,109 / 2,097 / 12 and
+    2,115 / 2,103 / 12. So the raw counterpart of the de-chunked br 2,097-2,099 is
+    2,109-2,111 (3+9), NOT a +30 row. (gilligan AMS #3999 item 4; independently
+    re-measured here.)
     DO NOT READ 2,109 AS THE ZONE'S "raw" br ROW: zone br raw is 2,109-2,111 when
     the de-chunked body is 2,097-2,099, and origin br raw is 2,115-2,116; the +12
     offset moves the raw row with the body, so a raw reading of 2,109 is a ZONE
@@ -662,7 +691,16 @@ Four facts a reader of this file should not have to rediscover:
     lex AMS #3987 item 5.) THE SAMPLING CAVEAT STANDS, and here is why the row
     keeps moving: my own 24-rep census above already differs from my 2026-10-03
     2,093 reading and from gilligan's 2,096-2,099 @64. Carry the observations, not
-    a band. AND "RAW = DE-CHUNKED
+    a band. AND ROUTE-INVARIANCE HOLDS ONLY AT A FIXED TIMESTAMP: at n=1 the three
+    zone routes read one number each (2,098 / 2,096 / 2,097) and the origin two
+    (2,104 / 2,104 / 2,103), but at n=12 per route the per-route ranges overlap
+    without being equal and the low edge walks by a byte or two between passes,
+    because the 403 body is a fixed-size plaintext under a per-request AEAD nonce
+    — the IDENTITY length is invariant by construction (7,145 z / 7,175 o at every
+    rep and every route), while every COMPRESSED number is a timestamped sample,
+    never a bound. (gilligan AMS #3999 item 2; reproduced here.) So "the 2,09x band
+    is the 403 challenge — host-dependent, route-invariant" takes one more word:
+    route-invariant AT A FIXED TIMESTAMP. AND "RAW = DE-CHUNKED
     + 13" IS ONLY USUALLY TRUE: the zone intermittently splits the same landing
     into TWO chunks — 1 chunk 13,238 raw / 13 framing vs 2 chunks 13,246 raw / 21
     framing (6-byte size lines; 6+6+5+2+2), both de-chunking to the identical
