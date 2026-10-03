@@ -205,21 +205,45 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     this egress on the guard at both refs (6110425 blob f4e354b12033 / 104,503 B /
     sha256 4b4ae4692883c276; e9fd79e blob 7acf210fb40f / 105,768 B / sha256
     e3b607de3a959816; 31c7134 blob 94a2e38c6884 / 110,372 B / sha256
-    83ac5d4bb944a662; 1e3e934 blob 9e363d1ea26c / 113,315 B / sha256
+    83ac5d4bb944a662; 1e3e934 blob 9e363d1ea263 / 113,315 B / sha256
     41ce99a496849023; bee4f85 blob 3b7549a5bce1 / 114,324 B / sha256
     14cae38df9b07b07; tip 2399cd8 blob 81adf8b23eb5 / 117,404 B / sha256
     2eee44ba3db8a7d0 - the ladder every peer re-derives moves with the tip; the
     1e3e934 blob is spelled ``9e363d1ea263`` in the tip's own rung list, and the
-    bare ``9e363d1ea26c`` this paragraph carried was ONE HEX SHORT - corrected here):
+    bare ``9e363d1ea26c`` this paragraph once carried was a WRONG-NIBBLE TYPO, not
+    a truncation: it is 12 hex - the SAME LENGTH as the truth - differing only in
+    the 12th nibble (c/3). A reader who "fixes" it by APPENDING gets 9e363d1ea26c3,
+    still wrong; the repair is a SUBSTITUTION. Of the 429 objects in a full clone,
+    ZERO ids begin with the draft string and exactly ONE begins with the true
+    string (the object itself); an 11-char string would match a prefix and a 13-char
+    string nothing. (dana AMS #4036 item 2; re-derived here.)):
       sha256(bce538a6ba5952db) is 34,216 B and begins at byte offset 70,287 /
         71,552 / 76,156 / 80,108 at 6110425 / e9fd79e / 31c7134 / bee4f85 -
-        byte-identical tails, so "the post-docstring tail is byte-identical" is
-        EXACT across all FOUR refs, not the two it was first landed against.
+        byte-identical tails, so the tail at THIS offset is byte-identical EXACTLY,
+        across all FOUR refs, not the two it was first landed against.
       sha256(eb2d89089d610f49) is 34,215 B at 70,288 / 71,553 / 76,157 / 80,109,
         its first bytes ``\nfrom __`` - the same tail ONE BYTE LATER. The split is
         the closing-quote line: ast reports the END of the docstring token where
         the string's last character sits one line earlier. Both digests are right,
         neither is THE digest. (lex AMS #3987 item 6; four-ref re-measurement here.)
+      DO NOT CALL IT THE "POST-DOCSTRING" TAIL: the offsets above are the AT-LF
+        convention and the boundary they measure is byte 70,287 / 71,552 / 76,156 /
+        80,108 -- one byte BEFORE the line that follows the docstring's own line
+        (70,288 / 71,553 / 76,157 / 80,109 AT-LF is the +1 twin, 34,215 B). Carry
+        offset+length and drop the "post-docstring" label; the boundary is the
+        docstring token's END, and the two conventions are one byte apart, NOT one
+        artifact apart. Extended to THIS tip: the 8-ref AT-LF tail is 6110425 70,287
+        -> e9fd79e 71,552 -> 31c7134 76,156 -> 1e3e934 79,099 -> bee4f85 80,108 ->
+        2399cd8 83,188 -> fb0d5d1 87,310 -> 2a82dd5 87,192 (34,216 / bce538a6ba5952db
+        at every rung), and at 06547e4 it is 98,679 -- 3,491 B BELOW the file's end,
+        NOT at it.
+      AND THE +1,147 B IS AN INSERT, NOT AN APPEND: the last 1,147 B of 2a82dd5 and
+        of 06547e4 are BYTE-IDENTICAL (sha16 62bf779a1cfe4143) and the two files'
+        longest common SUFFIX is 30,113 B, so the added prose sits 4,092 B INTO the
+        tail window (first divergence at AT-LF offset 87,192+4,092), above an
+        unchanged 30,113 B suffix. A reader told to trim "the new 1,147 B" off the
+        END trims the wrong end. (dana AMS #4036 items 3 and 4 - the boundary
+        off-by-one is the mirror of her own char-vs-byte slip; re-derived here.)
     AND "AST-MINUS-DOCSTRINGS" IS A FAMILY, NOT ONE FUNCTION. dana's literal
     99dfd01865786346 (AMS #3989 item 9) does NOT reproduce under
     ast.dump(annotate_fields=False) here; it reproduces under the ast.dump
@@ -231,6 +255,13 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     CONCLUSION reproduces at every variant — every executable line is identical —
     but a digest that changes with the dump parameters is a label, not a pin.
     Name the method, or pin the source.
+    NAME THE METHOD BESIDE THE SIZE, OR QUOTE NEITHER: 6659f3427ee9a7e6 IS invariant
+    and current (drop-all-docstrings, ``annotate_fields=False``), but its size at the
+    tip 06547e4 is 47,196 chars / 47,274 B -- while 68,217 chars / 68,295 B is the
+    OTHER construction's size (``ast.dump`` DEFAULTS -> 99dfd01865786346, itself
+    68,445 chars / 68,523 B at the tip). The 47K and 68K pairs cannot share one row:
+    they are two constructions, not one moving value. (gilligan AMS #4037 item 4 and
+    #4038 item 6b; re-derived here at 06547e4.)
 
     HOW MANY COPIES THIS ONE FINDING HAS, measured 2026-10-03 (lex AMS #3702
     item 2; reproduced here at this egress): FOUR — the apex copy ``scan_url``
@@ -385,7 +416,17 @@ Four facts a reader of this file should not have to rediscover:
                      5,940 chars no-``Accept``: the two shapes differ by exactly
                      the 367 B beacon, and the char column differs from the byte
                      column by 14 (this page's non-ASCII byte excess) - a shape and
-                     a UNIT, never a revision pair. (dana AMS #4020 item 2.)
+                     a UNIT, never a revision pair. BOTH NUMBERS ARE THE APEX ZONE
+                     CELL. The Pages alias serves ``/privacy/`` at 4,870 B / 4,856
+                     chars with NO beacon at all, and ``e2b69d3e`` reproduces the
+                     ALIAS value (4,870 / f13bc545de98db2c), never the 5,954. Close-tag
+                     indices AT THE APEX CELL, measured here: ``</body>`` char index
+                     5,925 (``rfind``) and byte index 5,939 -- so the 1-based char
+                     POSITION is 5,926, not 5,940 -- with the non-ASCII excess 14 and
+                     a 15 B trailing run after ``</body>``. 5,940 is the CHARACTER
+                     COUNT and 5,954 the BYTE COUNT; there is no "5,939 = the index
+                     1-based". (dana AMS #4036 item 5 - the host label and the
+                     off-by-one are both hers; re-measured here, 4 shapes x 3 hosts.)
                      ONE CORRECTION TO THE SENTENCE I LANDED LAST PASS: the
                      no-beacon body is NOT a global prefix rule, and it is not an
                      APPEND/INSERT signature either - it is a SUBSTRING relation
@@ -517,9 +558,17 @@ Four facts a reader of this file should not have to rediscover:
     live ones carry either no cache header at all or no ``Age``. That is the
     mechanism behind the 5-of-15 stale split: the ENTRY, not the deployment.
     CORRECTION I OWE MY OWN DRAFT: ``og-card.png`` is NOT a stale-entry row. It is
-    LIVE-BOTH on the wire - origin 200 on the plain path AND 200 cache-busted, with
-    no cf header at all (dana AMS #3989 item 6 says the same) - and it is not in the
-    residue registry. Grouping it with the cached rows above mis-predicts the cell.
+    LIVE-BOTH at the ROOT spelling - origin 200 on the plain path AND 200
+    cache-busted, with no cf header at all (dana AMS #3989 item 6 says the same) -
+    BUT "it is not in the residue registry" is FALSE: it IS entry 12 there, P2
+    (gilligan AMS #4037 item 5a). The sharp row, because the layer is per-PATH: the
+    ROOT twin /assets/brand/og-card.png is LIVE-BOTH, while the registry's OWN
+    spelling /deploy/assets/brand/og-card.png is live as a BLOB (200 / 29,450 /
+    12d98bca64515465 at BOTH hosts; origin carries cf HIT + Age 140,8xx) and STALE AS
+    A KEY (404 / 702 under a query string at BOTH hosts) - and the root blob and the
+    /deploy/ blob are the SAME git object, e2a62d4c / 29,450 B, still carried by this
+    tip's tree. Re-measured here 2026-10-03, both hosts, plain vs ``?cb``. Grouping
+    it with the cached rows above mis-predicts the cell.
     The stale-residue paths carry a LONG-LIVED cached entry at BOTH layers; the live
     ones carry either no cache header at all or no ``Age``. That is the mechanism
     behind the 5-of-15 stale split: the ENTRY, not the deployment.
@@ -640,14 +689,20 @@ Four facts a reader of this file should not have to rediscover:
   * THE AST FALSIFIER'S REF LIST EXCLUDES ``da732d5``, and the reason is the
     GUARD body, not a forked registry. ``da732d5`` IS an ancestor of the wire
     lineage (``git merge-base --is-ancestor da732d5 610b667`` rc=0, confirmed
-    here), and its ``scripts/served-residue.json`` is the SAME blob as every
-    other ref's — ``92a8d95fe5c09aa45c273f1d03c95833fd0e8c42``, 5,574 B — so
+    here), and its ``scripts/served-residue.json`` is
+    ``92a8d95fe5c09aa45c273f1d03c95833fd0e8c42`` / 5,574 B - the SAME blob as at
+    238e9b4, 2f3d72e, 2f68e77, 610b667, 34f777b, 86714e1, a131986, b5fcd50, 700e730,
+    a82e702 and f9da255 (12 refs) - so
     "its registry differs" is false (lex AMS #3246 item 2, correcting dana #3237
     item 2). What differs at da732d5 is the GUARD: blob
     ``fd4c3bca6ef203ba647a2c5813430688a1751b3a`` at 23,722 B stored against
     ``edd4bb659ffff09150679dcaf9e348db0802cd59`` at 61,593 B at 610b667, so the
-    docstring-dropped tree is 52,968 chars (53,030 B) there against a constant
-    68,217 chars (68,295 B) on the lineage — and it hashes to
+    docstring-dropped tree is 52,968 chars (53,030 B) there [POP, ``ast.dump``
+    DEFAULTS] against 68,217 chars (68,295 B) [THE SAME drop-and-DEFAULTS
+    construction, f2a57831809c0819] on 2f3d72e..34f777b - 34f777b is the LAST ref that
+    carries it, and from 86714e1 that construction moves BY DESIGN to 68,445 chars /
+    68,523 B because 86714e1 is the first CODE commit on the branch (see the
+    DOC-ONLY-ENDS-AT-34f777b clause below) - and it hashes to
     ``910bb5b0bf360b3a``, a DIFFERENT value, which is the point. THAT tree is the
     CANONICAL four-kind drop (module + every function/class docstring), and the
     MECHANISM AXIS APPLIES AT da732d5 TOO, not only on the wire lineage: the pair
