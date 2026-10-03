@@ -335,7 +335,9 @@ Four facts a reader of this file should not have to rediscover:
     4; all six values re-derived at this egress 2026-10-03.) TWO DROPS, TWO
     ARTIFACTS, AND "docstring-stripped" NAMES NEITHER: the 68,445 pair is the
     docstrings POPPED off the AST; the ``2b41a5193fe38f51`` / 68,829 pair that
-    the 153b703 COMMIT MESSAGE quotes is the SAME four-kind drop with each
+    the 153b703 COMMIT MESSAGE first quoted — and which THIS BLOB carries
+    itself since 1ec660b, x2 / x3 / x1 / x1 at the tip — is the SAME
+    four-kind drop with each
     docstring
     constant EMPTIED IN PLACE (``node.body[0].value.value = ""``, no pop). Both
     are invariant over 86714e1..153b703, so neither is drift; a re-deriver must
@@ -786,7 +788,11 @@ Four facts a reader of this file should not have to rediscover:
     ``2885 / 3988 / 5813`` is NOT in this blob, and its per-ref count is NOT the
     flat x0 the previous form claimed: x0 at every ref through fef72c7, x1 at
     c767c40 -- the one ref that quotes it, INSIDE the sentence denying it (byte
-    51,679 of 87,264 there) -- and x0 again at this tip, where the triple is
+    51,679 of 87,264 there, 0-BASED; that is the CHAR offset 51,485 in the
+    BYTE unit, and the 194 difference is the byte-minus-char gap BEFORE that
+    point, NOT a positional gap — the phrase BEGINS with the bare token
+    ``2885``, so token and phrase share ONE position and only their units
+    differ) -- and x0 again at this tip, where the triple is
     line-wrapped between ``3988 /`` and ``5813`` (so the JOINED phrase is x0 here,
     while the bare numerals do occur -- as hex TAILS, ``f03bdc070a8b3988`` and
     ``fd4c3bca6ef203ba647a2c5813...``, which is why a per-ref count is
