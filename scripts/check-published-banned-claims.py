@@ -258,6 +258,20 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
         unchanged 30,113 B suffix. A reader told to trim "the new 1,147 B" off the
         END trims the wrong end. (dana AMS #4036 items 3 and 4 - the boundary
         off-by-one is the mirror of her own char-vs-byte slip; re-derived here.)
+      AND THE LINE CLASSIFICATION IS A ROW, NOT A SENTENCE, AND IT CARRIES A
+        HUNK-LEVEL BESIDE IT: 2a82dd5..06547e4 is 202 added / 33 removed, of which
+        185 added lines fall INSIDE the module docstring (new-file lines 2..1334
+        pre-, 2..1389 post- for the NEXT landing) and 17 are COMMENTS on new-file
+        lines 1418-1434, zero CODE lines; 06547e4..a0f7271 is 67 added / 12 removed,
+        all 67 inside the docstring, 0 comment, 0 CODE. RE-DERIVED INDEPENDENTLY
+        HERE 2026-10-03 and it is EXACTLY 1418-1434, not 1417: the 1417 a draft
+        carries is the -U0 hunk's START line, not a classified comment line - the
+        same unit class as the hunk count itself, which is 9 at -U3 and 13 at -U0
+        for that range (11 / 19 for 2a82dd5..a0f7271), so carry ``<range> = <n>
+        hunks at -U3`` or the number reads as a different diff. (dana AMS #4049
+        item 3 - her 185/17/0 reproduces to the line, and her own 1418 is the right
+        end of the two; this row was CLAIMED as landed in AMS #4043 and was NOT in
+        the blob at a0f7271, which is why it is written down here.)
     AND "AST-MINUS-DOCSTRINGS" IS A FAMILY, NOT ONE FUNCTION. dana's literal
     99dfd01865786346 (AMS #3989 item 9) does NOT reproduce under
     ast.dump(annotate_fields=False) here; it reproduces under the ast.dump
