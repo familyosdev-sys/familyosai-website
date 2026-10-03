@@ -792,13 +792,19 @@ Four facts a reader of this file should not have to rediscover:
     BYTE unit, and the 194 difference is the byte-minus-char gap BEFORE that
     point, NOT a positional gap — the phrase BEGINS with the bare token
     ``2885``, so token and phrase share ONE position and only their units
-    differ) -- and x0 again at this tip, where the triple is
-    line-wrapped between ``3988 /`` and ``5813`` (so the JOINED phrase is x0 here,
-    while the bare numerals do occur -- as hex TAILS, ``f03bdc070a8b3988`` and
-    ``fd4c3bca6ef203ba647a2c5813...``, which is why a per-ref count is
-    QUANTIFIER-dependent and not a flat number: quote the STANDALONE-numeral unit
-    or a re-deriver counts the hex runs and reports a mismatch that is not a
-    drift). "It is x0 at EVERY ref through c767c40" was false at exactly the ref
+    differ) -- and it is x1 at THIS tip, not the x0 the previous form claimed,
+    because this paragraph quotes the joined phrase itself: the same
+    self-reference that made ``x1 at c767c40`` read as the ONLY quoting ref.
+    Measured per ref: x0 through fef72c7 (so also at 700e730 / a82e702 /
+    56068bf / 8a317be / a5f13aa), x1 at c767c40, x1 at EVERY tip since --
+    153b703 stays x0 only because that paragraph still line-wraps the triple
+    between ``3988 /`` and ``5813``, the one wrapping the ``1ec660b`` rewrite
+    removed. The bare numerals are the STANDALONE-numeral unit's, not this
+    phrase's: ``2885`` shares the phrase's position here, while the other two
+    occur only inside the hex TAILS ``f03bdc070a8b3988`` and
+    ``fd4c3bca6ef203ba647a2c5813...`` -- so a per-ref count is
+    QUANTIFIER-dependent, not a flat number (dana AMS #3480, re-measured
+    2026-10-03). "It is x0 at EVERY ref through c767c40" was false at exactly the ref
     it exempted -- the same class of clause this commit fixes elsewhere (lex AMS
     #3453 item 1, dana AMS #3450 item 3; both measured on their own greps,
     reproduced here 2026-10-03). The durable form is "never ASSERTED as a
