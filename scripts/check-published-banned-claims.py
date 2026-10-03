@@ -320,13 +320,12 @@ Four facts a reader of this file should not have to rediscover:
     4; all six values re-derived at this egress 2026-10-03.) TWO DROPS, TWO
     ARTIFACTS, AND "docstring-stripped" NAMES NEITHER: the 68,445 pair is the
     docstrings POPPED off the AST; the ``2b41a5193fe38f51`` / 68,829 pair that
-    the 153b703 COMMIT MESSAGE quotes (it is NOT in this file -- grep it here:
-    x0, x1 in that message) is the SAME four-kind drop with each docstring
+    the 153b703 COMMIT MESSAGE quotes is the SAME four-kind drop with each
+    docstring
     constant EMPTIED IN PLACE (``node.body[0].value.value = ""``, no pop). Both
     are invariant over 86714e1..153b703, so neither is drift; a re-deriver must
     run the construction named. (lex AMS #3453 item 0 swept only pop variants
-    and
-    could not reproduce 68,829; measured here 2026-10-03: empty-in-place on
+    and could not reproduce 68,829; measured here 2026-10-03: empty-in-place on
     Mod+FunctionDef+AsyncFunctionDef+ClassDef gives dump ``2b41a5193fe38f51`` /
     68,829 and unparse ``c9480e3ce62189b2`` / 18,537 at every ref
     86714e1..153b703 -- exactly the message's literals.)
@@ -762,15 +761,15 @@ Four facts a reader of this file should not have to rediscover:
     c767c40 -- the one ref that quotes it, INSIDE the sentence denying it (byte
     51,679 of 87,264 there) -- and x0 again at this tip, where the triple is
     line-wrapped between ``3988 /`` and ``5813`` (so the JOINED phrase is x0 here,
-    while ``2885`` is x1 and ``3988`` / ``5813`` are x2 -- the extra hits are hex
-    TAILS, ``f03bdc070a8b3988`` and ``fd4c3bca6ef203ba647a2c5813...``, so quote
-    the STANDALONE-numeral unit or a re-deriver counts the hex runs and reports a
-    mismatch: this is not a drift, it is the quantifier again). "It is x0 at
-    EVERY ref through c767c40" was false at exactly the ref it exempted -- the
-    same class of clause this commit fixes elsewhere (lex AMS #3453 item 1,
-    dana AMS #3450 item 3; both measured on their own greps, reproduced here
-    2026-10-03). The
-    durable form is "never ASSERTED as a landed value": the string occurs only
+    while the bare numerals do occur -- as hex TAILS, ``f03bdc070a8b3988`` and
+    ``fd4c3bca6ef203ba647a2c5813...``, which is why a per-ref count is
+    QUANTIFIER-dependent and not a flat number: quote the STANDALONE-numeral unit
+    or a re-deriver counts the hex runs and reports a mismatch that is not a
+    drift). "It is x0 at EVERY ref through c767c40" was false at exactly the ref
+    it exempted -- the same class of clause this commit fixes elsewhere (lex AMS
+    #3453 item 1, dana AMS #3450 item 3; both measured on their own greps,
+    reproduced here 2026-10-03). The durable form is "never ASSERTED as a
+    landed value": the string occurs only
     inside a passage denying it, in the c767c40 paragraph and in this one. What
     the c767c40 paragraph PRINTS as measured is the COMMA spelling only:
     ``2,885 / 3,988 / 5,813`` x1 each HERE, x0 at fef72c7 -- so read the comma
