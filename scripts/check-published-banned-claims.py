@@ -602,11 +602,18 @@ Four facts a reader of this file should not have to rediscover:
     3741cd299a7b946c (700e730) -> e32674e162cd3bac (a82e702) ->
     13ffc5491f56c029 (f9da255): NOT capped at
     86714e1 — because those commits' added lines are code or prose, not strings,
-    the family keeps moving and is carried to the current tip rather than read as
-    a cap. The chain is CONTIGUOUS — it names every commit on it, so the b5fcd50
-    step is carried too; a chain that jumped a131986 -> 700e730 would read as
-    either a cap or a failed reproduction rather than a selection (dana #3368
-    item 6 and #3394 item 4; every value re-derived at this egress 2026-10-03).
+    the family keeps moving rather than read as a cap. The chain is CONTIGUOUS —
+    it names every commit on it, so the b5fcd50 step is carried too; a chain that
+    jumped a131986 -> 700e730 would read as either a cap or a failed reproduction
+    rather than a selection (dana #3368 item 6 and #3394 item 4; every value
+    re-derived at this egress 2026-10-03). It is carried THROUGH f9da255 — the
+    LAST ref measured, and NOT through any blob at or after it: a POSITION family
+    moves on every commit by this doc's own rule, so "carried to the current tip"
+    can never be durable. The commit that first wrote this sentence (56068bf) had
+    already moved both rows off f9da255 (its own pair is the tip pair named
+    below), so the durable form is "through f9da255", never "to the tip" (dana
+    #3416 item 2; re-measured here — 56068bf pipe d7188806057d08e8 x0 / NUL
+    2352ef20aa39f2ec x0).
     NUL of ``t.string+str(t.start)``: ``2211ab2ec10ee783`` -> ``0200679e96119c4f``
     -> ``7c4c669381f02b0d`` -> ``3d46ba763f3bb8a2`` (34f777b) ->
     ``088aa875d5f06926`` (86714e1) -> ``4582b51aa88d13b4`` (a131986) ->
@@ -626,19 +633,32 @@ Four facts a reader of this file should not have to rediscover:
     ``3741cd299a7b946c``). That sentence
     covers the POSITION rows only; the NINE field rows two paragraphs up are the
     CONTENT family and are separately re-derived and single-valued above.
-    BOTH chains TERMINATE one ref BELOW the blob that carries them: this file's
-    own tip pair (pipe ``d7188806057d08e8`` / the NUL of
-    ``t.string+str(t.start)`` ``2352ef20aa39f2ec``, n=3,228) is x0 in the
-    56068bf blob, as it must be — a blob cannot carry the digest of the commit
-    that contains it. So a reader asking "is the chain carried to the current
-    tip?" lands on a tip whose own pair is absent BY CONSTRUCTION, not by a
-    failed reproduction (lex #3406).
+    EACH PAIR IS NAMED WITH THE REF THAT MEASURED IT, because a POSITION family
+    moves on every commit (the doc's own rule above) and any "to the tip" window
+    goes stale the instant the next doc commit lands. The pair measured at
+    56068bf is pipe ``d7188806057d08e8`` / NUL ``2352ef20aa39f2ec`` (n=3,228),
+    both x0 in the 56068bf blob as they must be — a blob cannot carry the digest
+    of the commit that contains it — and that pair is NOT this file's pair: the
+    blob that first wrote this sentence has since moved both rows. So a reader
+    asking "carried to the tip?" must ask "carried to WHICH ref?", because every
+    answer except "through <the ref measured>" is self-falsifying (lex #3406,
+    dana #3416 item 2; both rows re-measured here).
     THE n=3,228 CONTENT SET IS THREAD-ONLY EXCEPT ONE ROW: of its nine values
     only pipe ``t.string`` ``0ed18a60ac69e463`` is reachable in the 56068bf
     blob (x2, both occurrences in the capped-range sentence above); the other
     eight are x0 there and live only on the bus. Their absence from the blob is
     not a bad quote, and searching this file for them will only ever find the
     one row (lex #3379 item 3, #3406).
+    THE MODULE-ONLY CLAUSE IS LENGTH-CARRIED, NOT DIGEST-CARRIED: the three
+    module-only LENGTHS (23,523 / 23,559 / 23,735) each appear x1 in the 56068bf
+    blob, and so do the three DIGESTS (0b19cd628ea3ba8e, a768a2ed00538d81,
+    c99433a904eecbcb) — all six tokens are reachable, so the clause is
+    tip-carried on both halves for the 56068bf reader. What does NOT reproduce
+    from the tree is the CONSTRUCTION: a reader must run the module-docstring-only
+    drop to re-derive each digest/length pair, and it is not stable across the
+    tip (see the 86714e1/700e730 clause above), so carry each pair WITH ITS REF
+    or it reads as a broken falsifier (dana #3416 item 4; counts re-measured here
+    at 56068bf, both halves x1 each).
     STORED vs ``len(git show text)`` is a UNIT clause of this same family:
     ``git cat-file -s`` counts the BLOB's bytes, so it equals the character
     length only for pure ASCII. At 86714e1 the blob is 72,988 B against a decoded
