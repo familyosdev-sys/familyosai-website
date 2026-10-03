@@ -88,15 +88,26 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     (lex AMS #3436 item 5a; reproduced here 2026-10-03: alias ``/`` 403/17 B
     under Python-urllib, 200/11,968 under this guard's UA).
     "TWO LIVE ALIASES" IS A COUNT ABOUT THE TWO WE KNOW, NOT ABOUT THE PROJECT.
-    Five deployment hostnames are live at this egress (2026-10-03): the two
-    above serve the retired landing + the bare-path banned media; ``d0f3fdae``
-    and ``e2b69d3e`` serve the CURRENT landing (e2b69d3e is byte-identical to
-    the apex, 13,225 / fa31dd15248287ce) and 404 the bare mp4 with the 702 B /
-    83972470b567 body; ``zzzz9999`` answers a 16,140 B "Deployment Not Found"
-    page (no banned phrase fires on it). So the hostname set is not enumerable
-    by name and a per-alias allowlist is the wrong shape - but do not read
-    these five as the project's full alias list either. (lex AMS #3436 item 5b;
-    measured here.)
+    Five deployment hostnames are live at this egress (2026-10-03), and the
+    retired landing has THREE live carriers among them, not two: ``d0f3fdae`` serves that
+    SAME retired landing one level down, at ``/deploy/``. Its ``/`` is a
+    zero-byte 404 (sha256 of empty, ``e3b0c44298fc1c14``), which is precisely why
+    it reads as a dead alias, while ``/deploy/`` answers 200 / 11,968 B / sha256
+    ``6deb861731feba82`` - BYTE-IDENTICAL to 30c37e93's ``/`` and carrying the
+    same 5 banned occurrences / 3 findings under THIS file's own ``scan_text``.
+    The two aliases above serve the retired landing + the bare-path banned media;
+    ``e2b69d3e`` serves the CURRENT landing (byte-identical to the apex, 13,225 /
+    fa31dd15248287ce) and 404s the bare mp4 with the 702 B / 83972470b567 body;
+    ``zzzz9999`` answers a 16,140 B "Deployment Not Found" page whose sha256
+    CHANGES ON EVERY READ - the Cloudflare error page's own Ray ID and timestamp,
+    4 GETs and 4 digests - so carry 16,140 as a shape, NEVER as a pin. So the
+    hostname set is not enumerable by name and a per-alias allowlist is the wrong
+    shape - but do not read these five as the project's full alias list either:
+    every count in this paragraph is a floor measured at one egress, not a
+    census. (lex AMS #3436 item 5b and #3702 items 1/2/4; reproduced here
+    2026-10-03 with this guard's own UA and ``scan_text``: d0f3fdae ``/``
+    404/0 B, ``/deploy/`` 200/11,968/6deb8617 x3 of 3 reps; zzzz9999 404/16,140 B
+    x4 with 4 distinct digests.)
 
     THE BARE PATH IS UNCHECKED TOO — one level down and for the same structural
     reason. ``scan_url`` fetches APEX_PATHS + ``served_text_paths()``, and the
@@ -109,6 +120,24 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     clean, nothing more. (dana AMS #3119; re-measured here 2026-10-02: bare path
     200 / 9,251 B on both aliases, apex 404 — 702 B under ``*/*``, 1,069 B with
     no ``Accept`` header, the same shape split the 404 body carries below.)
+
+    HOW MANY COPIES THIS ONE FINDING HAS, measured 2026-10-03 (lex AMS #3702
+    item 2; reproduced here at this egress): FOUR — the apex copy ``scan_url``
+    DOES read, plus THREE retired-host copies it cannot reach by construction,
+    every one of them 200 / 9,251 B / sha256 ``339f229565545cf7`` carrying the
+    same ``lives in your house`` hit: ``30c37e93`` and ``664dd4da`` at
+    ``/assets/social/shorts/familyos_explainer.py`` (bare path), and d0f3fdae at
+    ``/deploy/assets/social/shorts/familyos_explainer.py``. A red ``--url``
+    therefore undercounts the copies of its own finding by 3x. The residue
+    registry has the same shape one level up: ALL 15 of its paths answer 200 on
+    d0f3fdae under the ``/deploy/`` spelling — including the banned
+    ``familyos-explainer.mp4`` (696,581 / ``69d6bbb5120bd3eb``) — while d0f3fdae's
+    ``/`` is the zero-byte 404 above, and NOT ONE of the 15 paths is
+    host-qualified. So ``reads this list and checks the LIVE bytes`` is true of
+    the apex and false of every retired host, and the registry has no field in
+    which a carrier host could even be recorded. That is the shape the
+    founder-gated deployment DELETE has to cover; no purge, deploy or Pages
+    DELETE was performed here, and none is proposed.
 
 Four facts a reader of this file should not have to rediscover:
 
