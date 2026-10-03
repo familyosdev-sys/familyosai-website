@@ -37,7 +37,8 @@
       "banned": false,
       "priority": "P1",
       "why": "Retracted-media class, self-renewing (no Age). Verified clean of banned phrases, kept here so the wire stays checked.",
-      "first_seen": "2026-10-02"
+      "first_seen": "2026-10-02",
+      "note": "one 404 excursion observed by lex 2026-10-03T07:32Z (guard --media leg); NOT reproduced by dana across 306 reads 08:18-08:25Z (150 sustained + 120 burst + 8 shapes + 30 rapid)"
     },
     {
       "path": "/deploy/assets/social/shorts/short2-when-then.mp4",
