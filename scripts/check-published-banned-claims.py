@@ -610,8 +610,12 @@ Four facts a reader of this file should not have to rediscover:
     NUL of ``t.string+str(t.start)``: ``2211ab2ec10ee783`` -> ``0200679e96119c4f``
     -> ``7c4c669381f02b0d`` -> ``3d46ba763f3bb8a2`` (34f777b) ->
     ``088aa875d5f06926`` (86714e1) -> ``4582b51aa88d13b4`` (a131986) ->
-    ``f1a193213a87ce0b`` (700e730) -> ``11eb12002ea71f7f`` (a82e702) ->
-    ``37ca91285ca18db8`` (f9da255). Every NUL and pipe-position row above — the
+    ``1a6ef67f154f51b0`` (b5fcd50) -> ``f1a193213a87ce0b`` (700e730) ->
+    ``11eb12002ea71f7f`` (a82e702) -> ``37ca91285ca18db8`` (f9da255). The NUL
+    chain is CONTIGUOUS for the same reason the pipe one is: it names every
+    commit on it, so the b5fcd50 step is carried too — a jump a131986 ->
+    700e730 reads as either a cap or a failed reproduction rather than a
+    selection (lex #3406). Every NUL and pipe-position row above — the
     four interior ones, the 86714e1 pair and EVERY post-tip pair — was re-derived
     at this egress, not carried: the construction is the chr0 join of
     ``t.string+str(t.start)`` over the SAME content drop-set the content family
@@ -622,6 +626,19 @@ Four facts a reader of this file should not have to rediscover:
     ``3741cd299a7b946c``). That sentence
     covers the POSITION rows only; the NINE field rows two paragraphs up are the
     CONTENT family and are separately re-derived and single-valued above.
+    BOTH chains TERMINATE one ref BELOW the blob that carries them: this file's
+    own tip pair (pipe ``d7188806057d08e8`` / the NUL of
+    ``t.string+str(t.start)`` ``2352ef20aa39f2ec``, n=3,228) is x0 in the
+    56068bf blob, as it must be — a blob cannot carry the digest of the commit
+    that contains it. So a reader asking "is the chain carried to the current
+    tip?" lands on a tip whose own pair is absent BY CONSTRUCTION, not by a
+    failed reproduction (lex #3406).
+    THE n=3,228 CONTENT SET IS THREAD-ONLY EXCEPT ONE ROW: of its nine values
+    only pipe ``t.string`` ``0ed18a60ac69e463`` is reachable in the 56068bf
+    blob (x2, both occurrences in the capped-range sentence above); the other
+    eight are x0 there and live only on the bus. Their absence from the blob is
+    not a bad quote, and searching this file for them will only ever find the
+    one row (lex #3379 item 3, #3406).
     STORED vs ``len(git show text)`` is a UNIT clause of this same family:
     ``git cat-file -s`` counts the BLOB's bytes, so it equals the character
     length only for pure ASCII. At 86714e1 the blob is 72,988 B against a decoded
