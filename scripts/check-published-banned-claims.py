@@ -63,6 +63,26 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     in served-residue.json. Deliberately NOT added as registry entries: an
     unrelated-host allowlist would just hide the next alias the same way. A
     green ``--url`` means the apex and the origin are clean, nothing more.
+    ANY ALIAS LEG MUST SEND A NON-Python-urllib UA, or it reads a wall of 403.
+    The aliases sit behind the SAME bot protection as the zone: under the
+    literal, case-sensitive ``Python-urllib`` UA every path on both retired
+    aliases - including the bare mp4 this paragraph is about - answers 403 with
+    the 17 B ``error code: 1010`` literal (``2938e9f128418095``), so a default
+    urllib fetch reads 20/20 cells as "blocked" and misses the entire finding.
+    The landing and the media are reachable ONLY with the guard's own UA. That
+    is exactly the third leg's failure mode, written into the same file
+    (lex AMS #3436 item 5a; reproduced here 2026-10-03: alias ``/`` 403/17 B
+    under Python-urllib, 200/11,968 under this guard's UA).
+    "TWO LIVE ALIASES" IS A COUNT ABOUT THE TWO WE KNOW, NOT ABOUT THE PROJECT.
+    Five deployment hostnames are live at this egress (2026-10-03): the two
+    above serve the retired landing + the bare-path banned media; ``d0f3fdae``
+    and ``e2b69d3e`` serve the CURRENT landing (e2b69d3e is byte-identical to
+    the apex, 13,225 / fa31dd15248287ce) and 404 the bare mp4 with the 702 B /
+    83972470b567 body; ``zzzz9999`` answers a 16,140 B "Deployment Not Found"
+    page (no banned phrase fires on it). So the hostname set is not enumerable
+    by name and a per-alias allowlist is the wrong shape - but do not read
+    these five as the project's full alias list either. (lex AMS #3436 item 5b;
+    measured here.)
 
     THE BARE PATH IS UNCHECKED TOO — one level down and for the same structural
     reason. ``scan_url`` fetches APEX_PATHS + ``served_text_paths()``, and the
@@ -695,11 +715,34 @@ Four facts a reader of this file should not have to rediscover:
     UTF-8 excess, NOT line endings (the blob is LF-only). Read any stored-vs-text
     pairing here as "equal for ASCII, plus the non-ASCII byte excess otherwise"
     (dana #3294 item 3).
-    AND THE OFFSET FAMILY IN THIS THREAD IS BUS-ONLY, NOT LANDED: the apex
-    landing's three de-chunked offsets were carried on the bus as raw 1-BASED
-    ``2885 / 3988 / 5813``, and BOTH spellings are x0 in this blob (2,885 /
-    3,988 / 5,813 x0; 2,878 / 3,981 / 5,806 x0) — grep this file for either and
-    you get nothing, so do not read a miss as a bad quote (lex AMS #3429 item 4).
+    AND THE OFFSET FAMILY IN THIS THREAD IS BUS-ONLY, NOT LANDED — and it is a
+    SAMPLE, and it is NOT the landing's own values. The triple ``2885 / 3988 /
+    5813`` (raw 1-BASED, comma-free spelling) is NOT in this blob and never was:
+    it is x0 at EVERY ref through c767c40, including the c767c40 that inserted
+    its comma forms (codey, 2026-10-03). What the c767c40 paragraph prints is the
+    COMMA spelling only: ``2,885 / 3,988 / 5,813`` x1 each HERE, x0 at fef72c7 —
+    so read the comma family as x>0 in this blob, and do not carry the previous
+    sentence's "BOTH spellings are x0" form forward: a value cannot be x0 in the
+    paragraph that prints it (lex AMS #3436 item 6, dana AMS #3445 item 6 — both
+    measured on their own greps; reproduced here).
+    (b) IT IS A SAMPLE, NOT THE CELL: the triple is carried as a point value,
+    and its cells move with the per-request body — the zone's ``AE: gzip``
+    de-chunked lengths read 2,220 / 2,221 / 2,222 over 24 reads at a FIXED
+    request shape (24/24 distinct digests), so pin the +7 FRAME, never the
+    sample (codey #3433; lex AMS #3436 item 4).
+    (c) IT IS THE 403 BLOCK'S RAY TRIPLE, NOT THE 200 LANDING'S ANCHORS — the
+    trap a re-deriver hits, and the reason a landing-side grep returns 3,993.
+    The 2,878 / 3,981 / 5,806 triple is the 403 block's THREE Ray-ID copies (the
+    same 16-hex value x3). The landing's three anchor strings sit at de-chunked
+    0-based 2,878 / **3,993** / 5,806: same first and last, middle differs by 12,
+    because the page's ``.card {padding:20p`` is not the block's Ray copy.
+    Measured here 2026-10-03: 12 reads each at the apex and the Pages origin are
+    byte-identical at 13,225 / fa31dd15248287ce under the guard's own UA, while
+    the 403 block re-renders its Ray per read (7,145 B constant, 10/10 distinct
+    digests, Ray triple constant) — so "the same value at three offsets" is a
+    property of the 403 block only, and the guard's own ``--url`` leg (which
+    sends THIS file's UA) never sees it (codey egress; lex AMS #3406 item 5,
+    dana AMS #3395 item 5b).
     The ARITHMETIC is right and was reproduced here on one live chunked apex read
     (raw 13,238 / de-chunked 13,225, ONE chunk, leading size line 6 B =
     ``33a9\r\n``): the body's content starts at raw 0-BASED 6, so
