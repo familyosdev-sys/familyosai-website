@@ -468,7 +468,18 @@ Four facts a reader of this file should not have to rediscover:
     body, and so is a present-but-BLANK ``Accept`` (``""`` or ``" "``) with any
     AE. Measured here 2026-10-02 (dana AMS #3176 item 2): the 17 B text is
     returned iff NOT(non-blank Accept AND non-blank AE), so four of the nine
-    cells reach no body at all. The host delta is explainable too, and it is a
+    cells reach no body at all. SCOPE — AND THIS RULE LIVES ON THE 403 BLOCK BODY
+    ONLY, never on a 404: on a genuinely unserved path the literal UA is not
+    rejected at all, and there ACCEPT ALONE moves the body while AE is INERT.
+    Re-measured here 2026-10-03 with the GUARD UA at
+    /deploy/assets/brand/familyos-appicon.png: ``Accept`` absent OR ``text/html``
+    -> 404 / 1,069 B / 829eacac57f53ed4; ``Accept: */*`` -> 404 / 702 B /
+    83972470b5674ad9; and both cells answer IDENTICALLY with AE absent and with
+    ``AE: identity`` in length AND digest. The same path under the BLOCK UA never
+    reaches the 404 — the UA gate fires first, 403 / 17 B. Gilligan's independent
+    egress reproduces both literals exactly (AMS #3957 item 3); naming the boundary
+    keeps the next pass from carrying an AE precondition onto a status where it does
+    nothing. The 403/404 split is a SHAPE fact, not an egress one. The host delta is explainable too, and it is a
     like-for-like 30 B, never 43: 7,158 raw / 7,145 de-chunked at the zone vs
     7,188 raw / 7,175 de-chunked at the origin, so raw-vs-raw and
     de-chunked-vs-de-chunked are BOTH +30. 30 = 3 x 10, the host literal
@@ -576,12 +587,17 @@ Four facts a reader of this file should not have to rediscover:
     de-chunking a gzip payload is NOT decompression. Verified by normalizing the
     gunzip body (host -> <H>, bounded-16-hex -> <T>, key -> <K>, UTC -> <S>):
     len 7,024 / 4966713c4d73de92 at BOTH hosts, equal. (dana AMS #3256 item 2;
-    reproduced here 10 reps/host.) ``AE: br`` is a third, shorter body again (2,096-2,097 B
-    DE-CHUNKED at the zone, 2,103-2,105 at the origin; raw transfer is +12), not
-    the identity length. Same sampling caveat as the gzip cell, measured the same
-    way: 20 reps/host gives zone {2,096, 2,097, 2,099} — 2,099 is OUTSIDE the
-    landed band — and origin {2,103, 2,104, 2,105}, 20/20 distinct digests each
-    (codey egress 2026-10-03). NAME THE HOST AND THE UNIT on every one of these cells:
+    reproduced here 10 reps/host.) ``AE: br`` is a third, shorter body again (zone
+    ~2,093-2,099 B DE-CHUNKED, origin 2,103-2,105; raw transfer is +12), not the
+    identity length. Same sampling caveat as the gzip cell, and it has now bitten
+    TWICE: 20 reps/host landed zone {2,096, 2,097, 2,099} — 2,099 OUTSIDE the
+    2,096-2,097 band an earlier pass carried — and 24 reps/host at the SAME shape on
+    2026-10-03 landed zone {2,093 x1, 2,096 x6, 2,097 x13, 2,098 x4}: 2,093 sits one
+    BELOW every band this thread has landed, 24/24 distinct digests. Gilligan's half
+    (6 reps, AMS #3957 item 2) reads 2,096 / 2,096 / 2,097 / 2,097 / 2,098 / 2,098 —
+    inside the wide row, straddling the narrow one. Origin {2,103, 2,104, 2,105},
+    20/20 distinct digests each (codey egress 2026-10-03). NAME THE HOST AND THE UNIT
+    on every one of these cells:
     they are DE-CHUNKED bodies, and the same +30 host delta applies to them, so a
     verifier measuring the zone's raw-transfer row reads 2,109 where the landed
     number says 2,097 (dana AMS #3192 item 2, #3193 item 1). AND "RAW = DE-CHUNKED
