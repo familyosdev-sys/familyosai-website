@@ -100,9 +100,17 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     fa31dd15248287ce) and 404s the bare mp4 with the 702 B / 83972470b567 body;
     ``zzzz9999`` answers a 16,140 B "Deployment Not Found" page whose sha256
     CHANGES ON EVERY READ - the Cloudflare error page's own Ray ID and timestamp,
-    4 GETs and 4 digests - so carry 16,140 as a shape, NEVER as a pin. So the
-    hostname set is not enumerable by name and a per-alias allowlist is the wrong
-    shape - but do not read these five as the project's full alias list either:
+    4 GETs and 4 digests - so carry 16,140 as a shape, NEVER as a pin.
+    ``d0f3fdae`` is NOT a catch-all like the two above: its ``/``,
+    ``/zzz-guard-no-such-path``, ``/assets/brand/og-card.png`` and
+    ``/assets/social/shorts/concat.txt`` ALL answer zero-byte 404s (sha256
+    ``e3b0c44298fc1c14``, the hash of empty) while ``/robots.txt`` answers
+    200 / 1,248 B and ``/README.md`` 200 / 20 B - a PARTIAL deployment (the
+    ``/deploy/`` tree plus the repo-root publish, nothing else), which is
+    exactly why a catch-all test reads it as dead. Re-measured here
+    2026-10-03 (lex AMS #3723 item 4). So the hostname set is not enumerable by
+    name and a per-alias allowlist is the wrong shape - but do not read these
+    five as the project's full alias list either:
     every count in this paragraph is a floor measured at one egress, not a
     census. (lex AMS #3436 item 5b and #3702 items 1/2/4; reproduced here
     2026-10-03 with this guard's own UA and ``scan_text``: d0f3fdae ``/``
@@ -133,11 +141,37 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     d0f3fdae under the ``/deploy/`` spelling — including the banned
     ``familyos-explainer.mp4`` (696,581 / ``69d6bbb5120bd3eb``) — while d0f3fdae's
     ``/`` is the zero-byte 404 above, and NOT ONE of the 15 paths is
-    host-qualified. So ``reads this list and checks the LIVE bytes`` is true of
+    host-qualified. THAT IS A COUNT OVER THE PATHS, NOT OVER THE FILE, and
+    the file-wide form of this sentence was FALSE: the file carries
+    ``pages.dev`` x1 and ``familyosai.com`` x1, both inside row 10's ``why``
+    (the logo twin), plus host prose in ``_note``. Withdrawn as lex's own
+    #3702 item 3 (lex AMS #3723 item 1); the PATH-list form is the one that
+    reproduces: 0 of 15 host-qualified at 6eb61e1 / 34ea06d / 9e5aa1d. So
+    ``reads this list and checks the LIVE bytes`` is true of
     the apex and false of every retired host, and the registry has no field in
     which a carrier host could even be recorded. That is the shape the
     founder-gated deployment DELETE has to cover; no purge, deploy or Pages
     DELETE was performed here, and none is proposed.
+
+    WHAT THE DEPLOYMENT DELETE DOES NOT DISCHARGE (lex AMS #3723 item 2;
+    re-measured here 2026-10-03 by git-BLOB IDENTITY of the FETCHED bytes -
+    ``git hash-object --stdin`` of the de-chunked body, so this is object
+    identity and not a size). The live apex is ``origin/main``'s TREE:
+    APEX ``/`` wire 13,225 B -> blob ``a0f6d8a84c0886fb`` =
+    ``origin/main:deploy/index.html`` (= 565e022's), while the fix-branch tip
+    is ``3793964692dcb702`` / 13,915 B. APEX the
+    ``/deploy/assets/social/shorts/familyos_explainer.py`` spelling: wire
+    9,251 B -> blob ``80c97adf72642613`` = ``origin/main``'s (the tip's copy
+    is ``6562c3cb3d25f7dc`` / 9,444 B / sha256 ``e7d2e71c5c8674b5``, no
+    findings),
+    and the apex answers that ``/deploy/`` spelling while 404ing the BARE one
+    (702 B). ``git merge-base --is-ancestor bbd1389 origin/main`` -> rc 1: the
+    fix is NOT on ``origin/main`` (``origin/main..34ea06d`` is 53 commits, 18
+    files, 9 media deletions). So the deployment DELETE clears the three
+    retired-host copies and does NOT touch the apex, because the apex serves
+    ``origin/main``'s tree and ``origin/main`` is what Pages deployed. The apex
+    needs the merge order (PR #2 -> PR #3) or a republish from the fix branch -
+    do not read the DELETE's promise as "apex clean after DELETE".
 
 Four facts a reader of this file should not have to rediscover:
 
