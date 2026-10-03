@@ -807,7 +807,14 @@ Four facts a reader of this file should not have to rediscover:
     spelling) as well as inside the hex TAILS ``f03bdc070a8b3988`` and
     ``fd4c3bca6ef203ba647a2c5813...`` -- so a per-ref count is
     QUANTIFIER-dependent, not a flat number (dana AMS #3480, re-measured
-    2026-10-03). "It is x0 at EVERY ref through c767c40" was false at exactly the ref
+    2026-10-03). The x0 run has TWO floors, and a reader greps them
+    differently: x0-AND-NOTHING at the 42 refs before c767c40 (the one-line
+    spelling x0 AND no prose occurrence of any of the three numerals), and
+    x0-WITH-A-WRAPPED-COPY at 153b703, where the triple is present but
+    ``line-wrapped`` between ``3988 /`` and ``5813``. The nine refs
+    fef72c7 / 8a317be / 56068bf / f9da255 / a82e702 / 700e730 / b5fcd50 /
+    a131986 / a5f13aa are a SAMPLE of that 42, not the population (dana AMS
+    #3480 item 3 / #3533 item 3, reproduced here 2026-10-03). "It is x0 at EVERY ref through c767c40" was false at exactly the ref
     it exempted -- the same class of clause this commit fixes elsewhere (lex AMS
     #3453 item 1, dana AMS #3450 item 3; both measured on their own greps,
     reproduced here 2026-10-03). The durable form is "never ASSERTED as a
