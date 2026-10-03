@@ -110,8 +110,19 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     it as ``d0f3fdae``'s ``/deploy/``, and that does NOT hold — re-measured here
     2026-10-03, guard UA, raw TLS + own chunk walker: ``d0f3fdae`` ``/deploy/`` is
     200 / 11,968 B / sha256 ``6deb861731feba82`` at BOTH shapes, 4/4 reps — the
-    RETIRED landing, not the second shape, and ``e2b69d3e`` ``/deploy/`` is
-    13,225 / fa31dd15 at BOTH shapes. (codey egress 2026-10-03.)
+    RETIRED landing, not the second shape. AND ``e2b69d3e`` ``/deploy/`` IS NOT
+    13,225 EITHER - that number is its ROOT, copied one path over: measured
+    2026-10-03 at this egress, guard UA, four reads, ``e2b69d3e`` ``/deploy/``
+    answers 404 / 702 B / ``83972470b5674ad9`` under ``*/*``, under
+    ``text/html`` and under no ``Accept``, and its
+    ``/deploy/assets/social/shorts/familyos_explainer.py`` and
+    ``/deploy/assets/social/shorts/familyos-explainer.mp4`` are the same
+    404/702. The 13,225 / ``fa31dd15248287ce`` is ``e2b69d3e``'s APEX ``/``,
+    which I reproduce at both shapes. So ``e2b69d3e`` is the deployment host
+    that carries the APEX, NOT the ``/deploy/`` tree - the current landing at
+    ``/deploy/`` lives at the ZONE. (gilligan AMS #4019 item 2, four fresh
+    reads; independently re-measured here, 4/4. Do not carry a ``/deploy/``
+    row for ``e2b69d3e`` at all.)
     ``zzzz9999`` answers a 16,140 B "Deployment Not Found" page whose sha256
     CHANGES ON EVERY READ - the Cloudflare error page's own Ray ID and timestamp,
     4 GETs and 4 digests - so carry 16,140 as a shape, NEVER as a pin.
@@ -197,7 +208,9 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     83ac5d4bb944a662; 1e3e934 blob 9e363d1ea26c / 113,315 B / sha256
     41ce99a496849023; bee4f85 blob 3b7549a5bce1 / 114,324 B / sha256
     14cae38df9b07b07; tip 2399cd8 blob 81adf8b23eb5 / 117,404 B / sha256
-    2eee44ba3db8a7d0 - the ladder every peer re-derives moves with the tip):
+    2eee44ba3db8a7d0 - the ladder every peer re-derives moves with the tip; the
+    1e3e934 blob is spelled ``9e363d1ea263`` in the tip's own rung list, and the
+    bare ``9e363d1ea26c`` this paragraph carried was ONE HEX SHORT - corrected here):
       sha256(bce538a6ba5952db) is 34,216 B and begins at byte offset 70,287 /
         71,552 / 76,156 / 80,108 at 6110425 / e9fd79e / 31c7134 / bee4f85 -
         byte-identical tails, so "the post-docstring tail is byte-identical" is
@@ -241,6 +254,15 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     ``_note``, nowhere else; the og-card row (11) carries neither. The file is
     blob ``6be07815`` / 5,767 B at 34ea06d / 9e5aa1d / 5effcc7e but 5,574 B
     at 6eb61e1, so byte-identity is pinned to that blob and not back further.
+    AND THE OCCURRENCE COUNT IS THE OTHER HALF OF THAT ROW, measured with THIS
+    file's own ``scan_text`` over live bytes at this egress 2026-10-03: the
+    catch-all landings return THREE findings / FIVE occurrences each - "lives in
+    your house" x2, "runs fully offline" x2, "on-device" x1 - and ``d0f3fdae``
+    ``/deploy/`` returns the SAME 3 / 5, while the ZONE ``/deploy/`` apex landing
+    returns 0 / 0. ``scan_text`` returns ONE ROW PER PHRASE and the occurrence
+    total is the sum of each member's ``.count()``, so the two numbers are never
+    interchangeable and the row must carry both (lex AMS #4006 item 2 named this
+    form for the catch-alls; extended here to the alias and its zone control).
     Withdrawn as lex's own #3702 item 3 (lex AMS #3723 item 1, #3748 item 2);
     the PATH-list form is the one that reproduces: 0 of 15 host-qualified when
     the predicate is the path STRING alone, 1 of 15 (the logo twin) when the
@@ -323,25 +345,59 @@ Four facts a reader of this file should not have to rediscover:
                      13,169 chars / 13,225 B, byte-equal to the ``*/*`` body.
       dead 404 path  beacon at 723 BEFORE the close tag at 1,055 -> INSERT; stripped
                      698 chars / 702 B, byte-equal to the ``*/*`` body.
-      ``/privacy/`` and ``/terms/`` (dana's one-pass reading: beacon 5,607, close
-                     5,939 and 5,313 / 5,645) -> INSERT as well, but there the
-                     byte-identity holds only AFTER ``normalize_request_scoped``:
-                     both pages carry the rotating ``data-cfemail`` span, and the two
-                     shapes first diverge at char 3,438 / 4,442 of the
-                     BEACON-STRIPPED body (3,446 / 4,458 raw) -- INSIDE that rotating
-                     payload, which is why ``strip_beacon`` alone leaves two different
-                     bodies on ONE path. CARRY THE POSITION, NOT THE OFFSET: the
-                     de-chunked body itself drifts (mine read 5,940 and 5,954 two
-                     minutes apart, dana's was 14 longer again), and the beacon AND
-                     close offsets move with it -- +14 on both of hers, exactly the
-                     body delta. What held over 6 reps this pass is the ORDER
-                     (beacon@5,593 BEFORE close@5,925 at ``/privacy/``; 5,295 / 5,627
-                     at ``/terms/``), never the integer. ``strip_beacon`` then
-                     ``normalize_request_scoped`` makes the two shapes equal at all
-                     four, and that is the form to carry. Do not read "the no-beacon
-                     body is a prefix" as a site rule: it is the APPEND signature and it
-                     is FALSE on three of the four paths here. (dana AMS #4003 item 5.)
+      ``/privacy/`` and ``/terms/`` -> INSERT as well. RE-MEASURED HERE
+                     2026-10-03, zone, guard UA, both shapes, the 367 B beacon
+                     span located as a SUBSTRING of the no-``Accept`` body:
+                       ``/``          span at 13,225 == the ``*/*`` de-chunked
+                                     LENGTH and strictly AFTER the close tag
+                                     -> APPEND, nothing behind it.
+                       dead 404      span at 684 == the ``*/*`` body's close-tag
+                                     index (rfind ``</body>``) -> INSERT, 0 bytes
+                                     between the span and the close tag.
+                       ``/privacy/`` span at 5,558 == the ``*/*`` body's
+                                     close-tag index 5,558 -> INSERT; ``/terms/``
+                                     span at 5,260 == the ``*/*`` close-tag index
+                                     5,260 -> INSERT. (dana AMS #4020 item 2
+                                     measured the same three cells at 5,572 /
+                                     5,278 / 688 in her window; the index is
+                                     revision-scoped, the relation is not.)
+                       all four      the span is 367 B, sha256
+                                     ``f548e603cca2ef9a`` - ONE object at all four
+                                     paths, whose first 42 chars are
+                                     ``<script type="module" src="https://static.``
+                     CARRY THE POSITION, NOT THE OFFSET: the integer travels with
+                     the page revision, the ORDER does not. AND THE TWO SHAPES
+                     ARE NOT BYTE-EQUAL ON THE LEGAL PAGES: they differ ONLY
+                     inside the rotating ``data-cfemail`` payload, and in exactly
+                     ONE way - the zone's obfuscated mailto anchor carries one
+                     extra ASCII space before a period (lex AMS #3268 item 5b,
+                     re-confirmed here). The zone two-shape divergence of the
+                     BEACON-STRIPPED body is at char 3,438 (``/privacy/``) and
+                     4,442 (``/terms/``) - both re-measured here, both inside
+                     ``/cdn-cgi/l/email-protection#`` - so ``strip_beacon`` ALONE
+                     leaves two unequal bodies of EQUAL char length on one path
+                     (5,573 / 5,573 and 5,275 / 5,275);
+                     ``normalize_request_scoped`` is the second half of the
+                     invariant. After BOTH, the shapes are equal at ``/privacy/``,
+                     ``/terms/`` AND the 404 - re-measured here, 1/1 each; that is
+                     the form to carry.
+                     AND ``/privacy/`` ``*/*`` 5,587 B / 5,573 chars, 5,954 B /
+                     5,940 chars no-``Accept``: the two shapes differ by exactly
+                     the 367 B beacon, and the char column differs from the byte
+                     column by 14 (this page's non-ASCII byte excess) - a shape and
+                     a UNIT, never a revision pair. (dana AMS #4020 item 2.)
+                     ONE CORRECTION TO THE SENTENCE I LANDED LAST PASS: the
+                     no-beacon body is NOT a global prefix rule, and it is not an
+                     APPEND/INSERT signature either - it is a SUBSTRING relation
+                     with a per-path insertion index. The apex is APPEND and the
+                     other three are INSERT; write it that way.
     NOT a star-vs-non-star rule — ``TEXT/HTML`` is non-star and gets NO beacon.
+    RE-MEASURED AT THIS TIP 2026-10-03 (zone, guard UA, both shapes): the dead
+    path no-``Accept`` reads 1,069 B de-chunked, the ``*/*`` shape 702 B, and the
+    BEACON-STRIPPED pair is byte-equal at 698 chars / 702 B /
+    ``83972470b5674ad9``; ``/404.html`` and the dead path are the SAME bytes at
+    the same status each. The origin is 702 B at all four shapes I probed and
+    carries no beacon, so a purge would expose the 702 body and the pin holds.
     Measured 2026-10-02 from RecRoomRig, 28 shapes x 3 reps, every reading
     stable (evidence: profiles/codey/cache/scratch/sweep_final.{py,out}). On the
     apex ROOT ``/`` (13,592 B / sha16 bcaa297f7b8f130e with the beacon, 13,225 B
@@ -440,7 +496,79 @@ Four facts a reader of this file should not have to rediscover:
     Do NOT use "200 plain / 404 cache-busted" as the purge test: a query string
     is a ROUTE CHANGE, not a cache-buster. It 404s at the ZONE as well as at the
     ORIGIN (dana, AMS #2849), so it is not even a zone-vs-origin discriminator;
-    only plain-vs-plain is a valid leg. And the route change is CONDITIONAL on
+    only plain-vs-plain is a valid leg.
+    AND "200 plain" IS NOT PROOF THE DEPLOYMENT HOLDS THE PATH EITHER - the
+    plain read can be served out of a Cloudflare edge-cache entry. MEASURED
+    2026-10-03 at this egress, guard UA, ``*/*``, plain vs the SAME path with
+    one unique query string, both layers:
+      origin ``/deploy/``     plain 200 / 13,225 / ``cf-cache-status: HIT`` /
+                               ``Age: 137,5xx`` -> ?cb 404 / 702 / no cf header
+      origin ``/README.md``   plain 200 / 20 / HIT / Age 136,9xx -> ?cb 404 / 702
+      origin ``/.gitignore``  plain 200 / 68 / HIT / Age 136,9xx -> ?cb 404 / 702
+      origin og-card.png      plain 200 / 29,450 / NO cf header -> ?cb 200 / 29,450
+      origin ``/``            plain 200 / 13,225 / no cf header -> ?cb 200 / 13,225
+      origin ``/privacy/``    plain 200 / 4,870  / no cf header -> ?cb 200 / 4,870
+      zone   ``/deploy/``     plain 200 / 13,225 / DYNAMIC / Age 141,4xx -> ?cb 404
+      zone   ``/README.md``   plain 200 / 20 / DYNAMIC / Age 141,4xx -> ?cb 404
+      zone   ``/.gitignore``  plain 200 /  68 / DYNAMIC / Age 141,4xx -> ?cb 404
+      zone   ``/``            plain 200 / 13,225 / DYNAMIC, NO ``Age`` -> ?cb 200
+      zone   og-card.png      plain 200 / 29,450 / REVALIDATED / no Age -> ?cb MISS 200
+    The stale-residue paths carry a LONG-LIVED cached entry at BOTH layers; the
+    live ones carry either no cache header at all or no ``Age``. That is the
+    mechanism behind the 5-of-15 stale split: the ENTRY, not the deployment.
+    CORRECTION I OWE MY OWN DRAFT: ``og-card.png`` is NOT a stale-entry row. It is
+    LIVE-BOTH on the wire - origin 200 on the plain path AND 200 cache-busted, with
+    no cf header at all (dana AMS #3989 item 6 says the same) - and it is not in the
+    residue registry. Grouping it with the cached rows above mis-predicts the cell.
+    The stale-residue paths carry a LONG-LIVED cached entry at BOTH layers; the live
+    ones carry either no cache header at all or no ``Age``. That is the mechanism
+    behind the 5-of-15 stale split: the ENTRY, not the deployment.
+    READ THE HEADER, NOT JUST THE STATUS. The ``.gitignore`` entry is cached at BOTH
+    layers (origin cf ``HIT`` / zone ``DYNAMIC`` at the same Age, 68 B, and still 200
+    cache-busted) - a repo file never meant to publish, kept up by the cache age
+    rather than by a live deployment. (gilligan AMS #4019 items 2/3; dana AMS #4020
+    item 5 / #4021 item 5 reads the apex ``/deploy/`` cell the same way. Every value
+    above re-measured HERE, 2026-10-03; the caches move, the header pattern does not.)
+    THE TWO RESIDUE ENTRIES CARRY DIFFERENT CLOCKS, each derivable from its own
+    headers (created = ``Date`` - ``Age``; expiry = created + s-maxage). MEASURED
+    HERE 2026-10-03, guard UA, ``*/*``, zone:
+      ``/deploy/``     Age 141,4xx -> created 2026-10-02T05:05:12Z, expiry 2026-10-09T05:05:12Z
+      the .py entry    Age 288,2xx -> created 2026-09-30T12:18:00Z, expiry 2026-10-07T12:18:00Z
+    THREE days apart, so ONE purge cannot be assumed to clear both, and after
+    2026-10-09 the ``/deploy/`` landing entry is gone by expiry alone. lex AMS #4023
+    item 4 published the 12:18 pair against the SERVED .py; the 05:05 pair is the
+    ``/deploy/`` entry that serves the current landing, measured here for the first
+    time.
+    THIS RE-READS THE 5-of-15 STALE ROW ABOVE, and the correction is a MECHANISM,
+    not a count: "zone 200 / origin 200, equal digests -> the deployment holds it"
+    is only true when the plain 200 is FRESH. On a stale path both layers can hold
+    the same CACHED entry, so a plain 200 pair is not by itself evidence of a live
+    file - that is why the split row above must be read with the cache headers.
+    The stale split itself still reproduces 5 / 4 / 6 at this egress; what changes
+    is what a green plain 200 is allowed to mean.
+    AND ``e2b69d3e`` IS A FOURTH KIND OF HOST, not a member of the two catch-alls:
+    it serves a REAL TREE AT THE ROOT and 404s one prefix down. Measured here
+    2026-10-03, guard UA, ``*/*``: ``/`` 200 / 13,225 / fa31dd15, ``/privacy/``
+    200 / 4,870 / f13bc545de98db2c, ``/terms/`` 200 / 4,862 / d9c76a85e444f380,
+    ``/robots.txt`` 200 / 1,248 / 8fa3036c68bfcbd3, ``/assets/brand/og-card.png``
+    200 / 29,450 / 12d98bca64515465 - while ``/deploy/``, ``/deploy/index.html``,
+    ``/README.md``, ``/.gitignore``, ``/deploy/assets/.../concat.txt``,
+    ``.../familyos-explainer.mp4``, ``.../familyos_explainer.py`` and the bare
+    ``/assets/social/shorts/familyos_explainer.py`` are ALL 404 / 702 /
+    ``83972470b5674ad9``, and ``/index.html`` and ``/404.html`` are 308/0. So the
+    "landing at every path that is not a real file" rule does NOT describe it, and
+    grouping it with ``30c37e93`` / ``664dd4da`` (which serve the RETIRED landing at
+    every path) mis-predicts every cell. (dana AMS #4021 item 5, named independently;
+    every value above re-measured here.)
+    AND THE ``/deploy/`` PREFIX ITSELF IS CACHE-SERVED AT THE APEX, NOT AT THE
+    ORIGIN: apex ``/deploy/`` plain 200 / 13,225 / ``fa31dd15248287ce`` /
+    ``cf-cache-status: DYNAMIC`` / ``Age: 139,9xx``, but the SAME path with one
+    unique query string -> 404 / 702 / ``83972470b5674ad9`` (measured here; dana
+    AMS #4021 item 5 reproduces it under ``*/*`` at Age 138,931). A purge clears
+    the cached entry - and that is exactly why the residue registry entries for
+    ``/deploy/``, ``/README.md`` and ``/.gitignore`` are stale-entry rows rather
+    than live-file rows.
+    And the route change is CONDITIONAL on
     the route, not universal: /deploy/, /README.md, /.gitignore and every
     SERVED /deploy/assets/... path answer 200 plain and 404 for any query
     string at BOTH hosts - the two images that flip AT THE ZONE are
@@ -487,7 +615,8 @@ Four facts a reader of this file should not have to rediscover:
     The one path several of us argued about — short2-when-then.mp4 — is 404 on both hosts under every shape and every
     query string; my earlier "200 on the third busted variant" is withdrawn.
     Consequence for this guard: the wire leg exits 1 today on
-    familyos_explainer.py (200, 9,251 B, "lives in your house" at line 166) and
+    familyos_explainer.py (200, 9,251 B, "lives in your house" at BYTE 5,814,
+    line 166 of the served blob - both re-measured here off the wire bytes) and
     on familyos-explainer.mp4 in --media. Both are Chris-gated (a zone purge or
     PR #2's deploy). Trimming the registry cannot discharge them.
       - And the banned bytes are ``origin/main``'s, not just the zone's. The wire
@@ -728,11 +857,19 @@ Four facts a reader of this file should not have to rediscover:
     2,219-2,222 (AMS #4002 item 2, 2026-10-03 14:00-14:04 EDT) - so the 2,220 low
     edge in the 20-rep row above is one rep count, not the cell, and the published
     2,220-2,222 band stays withdrawn on both our sides.
-    THE ORIGIN FLOOR IS NOT 2,228: dana's 12 fresh reads at this shape reached
+    THE ORIGIN FLOOR IS NOT 2,228, AND 2,228 IS NOT A FLOOR AT ALL:
+    dana's 12 fresh reads at this shape reached
     2,226 (AMS #3450 item 5), one below the 2,227 this thread had carried,
     while this egress's own 30 reads landed 2,228 / 2,229 / 2,230 only (10/15/5)
     -- so the origin gzip floor is still UNWITNESSED and the landed 2,228 is a
-    20-rep sample, not a floor. Zone gzip and zone br stayed inside their landed
+    20-rep sample, not a floor. FRESH 20-REP CENSUS, THIS EGRESS, 2026-10-03,
+    block UA, ``/privacy/``: origin gzip {2,227 x1, 2,228 x14, 2,229 x5} with
+    raw = +12 on each rep, zone gzip {2,220 x5, 2,221 x11, 2,222 x4}; identity
+    stayed 7,145 (zone) / 7,175 (origin) at 20/20. The identity length is the
+    only cell here that is a VALUE and not a sample. gilligan AMS #4019 item 3
+    reads origin gzip {2,228 x1, 2,229 x5, 2,230 x2} at n=8, and AMS #4020
+    retracts the word "floor" from its own subject line - his correction, and it
+    reproduces here. Zone gzip and zone br stayed inside their landed
     bands here. The 1-2 B move IS real and
     THIS SENTENCE IS SCOPED TO GZIP: do not extend it to the identity cell, where
     the DE-CHUNKED length is stable per host (7,145 zone / 7,175 origin, 5/5
@@ -778,20 +915,36 @@ Four facts a reader of this file should not have to rediscover:
     the ``raw / dech / frame`` triple is repeated on EVERY row here, not only on
     the identity one, because a de-chunked figure quoted inside a raw-labelled
     family is the exact misread this row already cost one reader. So the raw
-    counterpart of the de-chunked br 2,097-2,099 is
-    2,109-2,111 (3+9), NOT a +30 row. (gilligan AMS #3999 item 4; independently
+    counterpart of a de-chunked br reading is +12 ON THAT REP, taken ROW BY
+    ROW, never as a raw band: at the 2,096 rep the raw reading is 2,108, and
+    a "raw 2,109-2,111" written against a de-chunked "2,097-2,099" pairs two
+    different reps of a drifting cell - the same defect as writing a band on
+    the compressed side of the triple. (gilligan AMS #4019 item 3, whose own
+    fresh rows land 2,096 x3 / 2,097 x1 / 2,098 x3 / 2,099 x1 at the zone; my
+    own 20-rep census this pass, block UA, is zone br {2,096 x4, 2,097 x7,
+    2,098 x7, 2,099 x2} / raw {2,108 x4, 2,109 x7, 2,110 x7, 2,111 x2} and
+    origin br {2,102 x1, 2,103 x12, 2,104 x7} / raw {2,114 x1, 2,115 x12,
+    2,116 x7}, 20/20 distinct digests per cell.) (gilligan AMS #3999 item 4; independently
     re-measured here.) FRESH CENSUS THIS PASS, block UA, ``*/*``, 3 reps/cell:
     identity 7,145 x3/3 dech (raw 7,158 x3/3, frame 13 = hexwidth+9); gzip
     2,220 / 2,222 / 2,222 dech (raw 2,232 / 2,234 / 2,234, frame 12); br 2,096 /
     2,097 / 2,098 dech (raw 2,108 / 2,109 / 2,110, frame 12). Origin br
-    2,103 / 2,105 dech across 2 reps (raw 2,115 / 2,117). Every identity cell
+    2,103 / 2,105 dech across 2 reps (raw 2,115 / 2,117) — TWO REPS OF A DRIFTING
+    CELL, NOT A BAND (WIDENED HERE at 20 reps/cell, block UA, ``*/*``,
+    ``/privacy/``: zone br {2,096 x4, 2,097 x7, 2,098 x7, 2,099 x2} raw
+    {2,108 x4, 2,109 x7, 2,110 x7, 2,111 x2}; origin br {2,102 x1, 2,103 x12,
+    2,104 x7} raw {2,114 x1, 2,115 x12, 2,116 x7}; 20/20 distinct digests per
+    cell). Every identity cell
     landed on 7,145 and no compressed cell repeated — the identity length is the
     carrier and the compressed cells are timestamped samples, on a third egress.
     (codey egress 2026-10-03.)
-    DO NOT READ 2,109 AS THE ZONE'S "raw" br ROW: zone br raw is 2,109-2,111 when
-    the de-chunked body is 2,097-2,099, and origin br raw is 2,115-2,116; the +12
-    offset moves the raw row with the body, so a raw reading of 2,109 is a ZONE
-    reading and cannot be mistaken for the +30 identity delta. NAME THE HOST, THE
+    DO NOT READ 2,109 AS THE ZONE'S "raw" br ROW: the +12 frame moves the raw row
+    WITH the body, so a raw reading of 2,109 corresponds to a de-chunked 2,097
+    and cannot be mistaken for the +30 identity delta. Read each raw number
+    against the de-chunked number OF ITS OWN REP, never against a range:
+    this egress measured zone br raw {2,108..2,111} against de-chunked
+    {2,096..2,099} over 20 reps, and origin br raw {2,114..2,116} against
+    de-chunked {2,102..2,104}. NAME THE HOST, THE
     ENCODING AND THE UNIT — raw or de-chunked — on every one of these cells.
     (codey egress 2026-10-03; dana AMS #3989 items 2/3, gilligan AMS #3976 item 2,
     lex AMS #3987 item 5.) THE SAMPLING CAVEAT STANDS, and here is why the row
@@ -1262,7 +1415,23 @@ SKIP_PATHS = {
 }
 PUBLISHED_PREFIX = "deploy/"
 # .py is here because the zone SERVES the render scripts: familyos_explainer.py
-# answered 200, 9,251 B and carried "The AI lives in your house." (L166) while
+# answered 200, 9,251 B and carried "The AI lives in your house." (byte 5,814,
+# L166) while
+# THE SERVED .py IS *NOT* CHUNK-FRAMED - it answers `Content-Type:
+# application/octet-stream` + a `Content-Length` header, and it is the ONE cell
+# in this file where the reader's own implementation decides the answer. A recv
+# loop that stops at a chunk terminator (or reuses the HTML legs' chunk walker)
+# reads the body as ~534-544 B and MISSES the banned phrase at byte 5,814.
+# MEASURED 2026-10-03 at this egress, zone and d0f3fdae, guard UA, 2/2 each:
+#   HTTP 200, no Transfer-Encoding, Content-Length 9,251, body 9,251 B,
+#   sha256 339f229565545cf7, "lives in your house" x1 at byte 5,814.
+# The .mp4 legs that DO carry Content-Length and are NOT chunk-framed:
+#   /deploy/.../familyos-explainer.mp4   CL 696,581 / 69d6bbb5120bd3eb (zone, d0f3fdae)
+#   /deploy/.../walkthrough-familyosai.mp4 CL 254,527 / 76dd2eaf9e4c5733 (d0f3fdae)
+# so a Content-Length reader is REQUIRED for the .py and the media legs, while
+# the HTML legs are chunk-framed and need the chunk walker. Two readers, named
+# per leg, or one leg silently under-reads. (gilligan AMS #4019 item 5 - the
+# finding is his; every value above re-measured here.)
 # the guard's own matcher would have flagged it — only this suffix gate kept
 # ``--all`` green against a live defect. Caught by lizzie, AMS #2603.
 SCAN_SUFFIXES = {".html", ".htm", ".md", ".txt", ".js", ".css", ".json", ".py"}
