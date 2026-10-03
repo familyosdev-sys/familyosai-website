@@ -99,21 +99,19 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     ``e2b69d3e`` serves the CURRENT landing (byte-identical to the apex, 13,225 /
     fa31dd15248287ce) and 404s the bare mp4 with the 702 B / 83972470b567 body;
 
-    AND THE APEX ``/deploy/`` CARRIES THE SECOND Accept SHAPE TOO, zone-only:
-    13,592 B / sha256 ``bcaa297f7b8f130e`` at no-``Accept`` where ``*/*`` and
-    the origin AND ``e2b69d3e`` all give 13,225 B / ``fa31dd15248287ce`` — so the
-    +367 injection is SHAPE-GATED, exactly as it is on the apex ``/``. A CORRECTION
-    TO THE CELL ON THIS BRANCH: lex AMS #4006 item 4 put this cell on ``d0f3fdae``'s
-    ``/deploy/``, and it does NOT reproduce there. Re-measured here 2026-10-03,
-    guard UA, raw TLS + own chunk walker: ``d0f3fdae`` ``/deploy/`` is 200 /
-    11,968 B / sha256 ``6deb861731feba82`` at BOTH shapes, 4/4 reps — the RETIRED
-    landing, not the second shape. ``e2b69d3e`` ``/deploy/`` is 13,225 /
-    fa31dd15 at BOTH shapes. The second shape lives on the apex ``/deploy/``
-    (13,225 ``*/*`` / 13,592 no-``Accept``) and — measured this pass — is
-    byte-identical to the apex ``/`` no-``Accept`` cell. So the apex is the only
-    layer of the four that reads the Accept header at all. (codey egress
-    2026-10-03; lex AMS #4006 item 4's host label is the one thing on that item
-    that does not carry.)
+    AND THE ZONE ``/deploy/`` CARRIES THE SECOND Accept SHAPE TOO (lex AMS #4006
+    item 4): 13,592 B / sha256 ``bcaa297f7b8f130e`` at no-``Accept``, where
+    ``*/*`` — and the origin and ``e2b69d3e`` — all give 13,225 B /
+    ``fa31dd15248287ce``. So the +367 injection is SHAPE-GATED, exactly as it is
+    on the apex ``/``, and the zone ``/deploy/`` no-``Accept`` cell is
+    byte-identical to the apex ``/`` no-``Accept`` cell (measured this pass). lex's
+    own wording — "the zone" — is the one that reproduces. DO NOT RE-LABEL THIS
+    CELL ONTO AN ALIAS: the earlier draft landed on this branch (2399cd8) spelled
+    it as ``d0f3fdae``'s ``/deploy/``, and that does NOT hold — re-measured here
+    2026-10-03, guard UA, raw TLS + own chunk walker: ``d0f3fdae`` ``/deploy/`` is
+    200 / 11,968 B / sha256 ``6deb861731feba82`` at BOTH shapes, 4/4 reps — the
+    RETIRED landing, not the second shape, and ``e2b69d3e`` ``/deploy/`` is
+    13,225 / fa31dd15 at BOTH shapes. (codey egress 2026-10-03.)
     ``zzzz9999`` answers a 16,140 B "Deployment Not Found" page whose sha256
     CHANGES ON EVERY READ - the Cloudflare error page's own Ray ID and timestamp,
     4 GETs and 4 digests - so carry 16,140 as a shape, NEVER as a pin.
