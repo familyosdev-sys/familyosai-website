@@ -38,12 +38,26 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     served as real files at the BARE spelling: /assets/brand/og-card.png 200 /
     29,450 B / 12d98bca64515465 and /assets/social/shorts/concat.txt 200 / 1,016
     B / 86d7b82e7c6d75f3 on both. THE REAL FILES INCLUDE THE BANNED MEDIA: the
-    bare /assets/social/shorts/familyos-explainer.mp4 is 200 / 696,581 B / sha1
-    5f364e21e0830807, and /assets/social/shorts/short3-local-first.mp4 is 200 /
-    90,818 B / sha1 24316a424b303c73, each BYTE-IDENTICAL to origin/main's blob
+    bare /assets/social/shorts/familyos-explainer.mp4 is 200 / 696,581 B, and
+    /assets/social/shorts/short3-local-first.mp4 is 200 / 90,818 B, each
+    CONTENT-IDENTICAL to origin/main's blob
     (bed05488facf59cfeac3aa7884f8d6b82203884b and
     d8a3c6e487b921a520ea55be3e2b7efc67986255, `git hash-object --stdin`
-    equality). Those are P0/P1 banned bytes the zone's OWN purge list has spent
+    equality). DO NOT QUOTE THE 5f364e21e0830807 / 24316a424b303c73 LITERALS AS
+    THAT PROOF: they are the WIRE-BYTES sha1, and a git blob sha1 is
+    sha1("blob " + len + NUL + bytes), so the two are NEVER equal. Re-measured
+    here 2026-10-03: wire sha1 5f364e21e0830807 vs ``git hash-object``
+    bed05488facf59cfeac3aa7884f8d6b82203884b for the one file, and
+    24316a424b303c73 vs d8a3c6e487b921a520ea55be3e2b7efc67986255 for the other
+    (same three cells: og-card.png wire sha1 1fe633c5beacd69d vs blob
+    e2a62d4cb1592d4af43e624290f1bc48c91ff1c0; its 29,450 B / 12d98bca64515465
+    row is a sha256[:16] of the wire bytes, a THIRD unit again). All pairs are
+    correct; they are two units for one file, the same class as the byte-vs-char
+    row below. But a sentence that puts a wire sha1 beside a blob sha1 with
+    "byte-identical" between them reads as one value compared to itself -- say
+    "content-identical" and, if a digest is wanted, quote the `git hash-object`
+    of the FETCHED bytes (dana AMS #3450 item 4; reproduced here).
+    Those are P0/P1 banned bytes the zone's OWN purge list has spent
     two days on, live on two MORE hostnames - and NO leg fetches them: the
     residue registry carries only the /deploy/assets/... spelling, and BOTH apex
     and Pages-origin 404 the bare /assets/ path (702 / 83972470b5674ad9). So the
@@ -303,7 +317,20 @@ Four facts a reader of this file should not have to rediscover:
     not drift: carry a module-only length WITH ITS REF or it reads as a broken
     falsifier. The canonical drop (``99dfd01865786346`` / 68,445, unparse
     ``eaa1b300786c2768``) IS invariant across 86714e1..f9da255. (lex #3379 item
-    4; all six values re-derived at this egress 2026-10-03.) Carry the falsifier
+    4; all six values re-derived at this egress 2026-10-03.) TWO DROPS, TWO
+    ARTIFACTS, AND "docstring-stripped" NAMES NEITHER: the 68,445 pair is the
+    docstrings POPPED off the AST; the ``2b41a5193fe38f51`` / 68,829 pair that
+    the 153b703 COMMIT MESSAGE quotes (it is NOT in this file -- grep it here:
+    x0, x1 in that message) is the SAME four-kind drop with each docstring
+    constant EMPTIED IN PLACE (``node.body[0].value.value = ""``, no pop). Both
+    are invariant over 86714e1..153b703, so neither is drift; a re-deriver must
+    run the construction named. (lex AMS #3453 item 0 swept only pop variants
+    and
+    could not reproduce 68,829; measured here 2026-10-03: empty-in-place on
+    Mod+FunctionDef+AsyncFunctionDef+ClassDef gives dump ``2b41a5193fe38f51`` /
+    68,829 and unparse ``c9480e3ce62189b2`` / 18,537 at every ref
+    86714e1..153b703 -- exactly the message's literals.)
+    Carry the falsifier
     (``f2a57831809c0819``, dump_len 68,217) only over the guard-bearing wire
     refs; da732d5 belongs in the present/absent
     population, and a reader who checks the one ref that differs must not
@@ -404,8 +431,15 @@ Four facts a reader of this file should not have to rediscover:
     four shapes collapse to len 7,024 / 4966713c4d73de92. NOTE the 7,512 cell
     carries b32 x2, not x1 — the second is the beacon's data-cf-beacon token,
     so a normalizer that eats only the constant key yields two different
-    digests for the two shapes. (lex AMS #3379 item 5; re-measured here
-    2026-10-03 against familyosai.com and familyosai-cma.pages.dev.) Do not
+    digests for the two shapes. COUNT WITH THE QUANTIFIER: that cell has
+    THREE hex runs of length >= 32 (the key ``c771f0e4b54944bebf4261d44bd79a1e``
+    @1,287, the beacon.min.js version path
+    ``31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495`` @7,210 -- 45 chars, so NOT
+    a bounded-32 -- and the token ``c95dbd131d38427292b7bd8aacd28568`` @7,413)
+    but only TWO bounded-32, which is why this row says x2 while lex AMS #3453
+    item 6 says three: both are right at their own quantifier. (lex AMS #3379
+    item 5; re-measured here 2026-10-03 against familyosai.com and
+    familyosai-cma.pages.dev.) Do not
     carry the gzip cells as a length pin
     either: at ``Accept: */*`` + ``AE: gzip`` the DE-CHUNKED body measured
     2,221/2,221/2,220/2,221/2,221 across reads at the zone and 2,229/2,228 across
@@ -418,7 +452,13 @@ Four facts a reader of this file should not have to rediscover:
     top edge), 20/20 distinct digests each. A band narrower than the sample that
     produced it is the same defect class this file punishes everywhere else, so
     read every "2,NNN-2,NNN" row here as the SAMPLE that measured it, not as the
-    range of the cell (codey egress 2026-10-03, 20 reps/host, py 3.14.7). The 1-2 B move IS real and
+    range of the cell (codey egress 2026-10-03, 20 reps/host, py 3.14.7).
+    THE ORIGIN FLOOR IS NOT 2,228: dana's 12 fresh reads at this shape reached
+    2,226 (AMS #3450 item 5), one below the 2,227 this thread had carried,
+    while this egress's own 30 reads landed 2,228 / 2,229 / 2,230 only (10/15/5)
+    -- so the origin gzip floor is still UNWITNESSED and the landed 2,228 is a
+    20-rep sample, not a floor. Zone gzip and zone br stayed inside their landed
+    bands here. The 1-2 B move IS real and
     THIS SENTENCE IS SCOPED TO GZIP: do not extend it to the identity cell, where
     the DE-CHUNKED length is stable per host (7,145 zone / 7,175 origin, 5/5
     here, 5/5 distinct digests) — that cell's length is stable and its digest is
@@ -716,15 +756,27 @@ Four facts a reader of this file should not have to rediscover:
     pairing here as "equal for ASCII, plus the non-ASCII byte excess otherwise"
     (dana #3294 item 3).
     AND THE OFFSET FAMILY IN THIS THREAD IS BUS-ONLY, NOT LANDED — and it is a
-    SAMPLE, and it is NOT the landing's own values. The triple ``2885 / 3988 /
-    5813`` (raw 1-BASED, comma-free spelling) is NOT in this blob and never was:
-    it is x0 at EVERY ref through c767c40, including the c767c40 that inserted
-    its comma forms (codey, 2026-10-03). What the c767c40 paragraph prints is the
-    COMMA spelling only: ``2,885 / 3,988 / 5,813`` x1 each HERE, x0 at fef72c7 —
-    so read the comma family as x>0 in this blob, and do not carry the previous
-    sentence's "BOTH spellings are x0" form forward: a value cannot be x0 in the
-    paragraph that prints it (lex AMS #3436 item 6, dana AMS #3445 item 6 — both
-    measured on their own greps; reproduced here).
+    SAMPLE, and it is NOT the landing's own values. The comma-free JOINED triple
+    ``2885 / 3988 / 5813`` is NOT in this blob, and its per-ref count is NOT the
+    flat x0 the previous form claimed: x0 at every ref through fef72c7, x1 at
+    c767c40 -- the one ref that quotes it, INSIDE the sentence denying it (byte
+    51,679 of 87,264 there) -- and x0 again at this tip, where the triple is
+    line-wrapped between ``3988 /`` and ``5813`` (so the JOINED phrase is x0 here,
+    while ``2885`` is x1 and ``3988`` / ``5813`` are x2 -- the extra hits are hex
+    TAILS, ``f03bdc070a8b3988`` and ``fd4c3bca6ef203ba647a2c5813...``, so quote
+    the STANDALONE-numeral unit or a re-deriver counts the hex runs and reports a
+    mismatch: this is not a drift, it is the quantifier again). "It is x0 at
+    EVERY ref through c767c40" was false at exactly the ref it exempted -- the
+    same class of clause this commit fixes elsewhere (lex AMS #3453 item 1,
+    dana AMS #3450 item 3; both measured on their own greps, reproduced here
+    2026-10-03). The
+    durable form is "never ASSERTED as a landed value": the string occurs only
+    inside a passage denying it, in the c767c40 paragraph and in this one. What
+    the c767c40 paragraph PRINTS as measured is the COMMA spelling only:
+    ``2,885 / 3,988 / 5,813`` x1 each HERE, x0 at fef72c7 -- so read the comma
+    family as x>0 in this blob, and do not carry the previous sentence's "BOTH
+    spellings are x0" form forward: a value cannot be x0 in the paragraph that
+    prints it.
     (b) IT IS A SAMPLE, NOT THE CELL: the triple is carried as a point value,
     and its cells move with the per-request body — the zone's ``AE: gzip``
     de-chunked lengths read 2,220 / 2,221 / 2,222 over 24 reads at a FIXED
@@ -733,13 +785,29 @@ Four facts a reader of this file should not have to rediscover:
     (c) IT IS THE 403 BLOCK'S RAY TRIPLE, NOT THE 200 LANDING'S ANCHORS — the
     trap a re-deriver hits, and the reason a landing-side grep returns 3,993.
     The 2,878 / 3,981 / 5,806 triple is the 403 block's THREE Ray-ID copies (the
-    same 16-hex value x3). The landing's three anchor strings sit at de-chunked
-    0-based 2,878 / **3,993** / 5,806: same first and last, middle differs by 12,
-    because the page's ``.card {padding:20p`` is not the block's Ray copy.
-    Measured here 2026-10-03: 12 reads each at the apex and the Pages origin are
-    byte-identical at 13,225 / fa31dd15248287ce under the guard's own UA, while
-    the 403 block re-renders its Ray per read (7,145 B constant, 10/10 distinct
-    digests, Ray triple constant) — so "the same value at three offsets" is a
+    same 16-hex value x3); that block is pure ASCII, so its byte and char offsets
+    coincide. The LANDING carries NO 16-hex token at all — bounded-16 x0 on
+    every read, measured here 2026-10-03 — so "the landing's three anchor
+    strings" is a POSITION fact wearing a STRING noun, and two of the three
+    offsets are mid-token. Name the unit and the strings: the landing's three
+    anchor-SUBSTRING BYTE offsets are 2,878 / **3,993** / 5,806
+    (``e:none;box-sizing:border-box``, ``.card {padding:2``, ``mething between
+    the ask and ``), while their CHAR offsets are 2,866 / 3,981 / 5,786 — the
+    page carries 56 non-ASCII bytes (13,225 B / 13,169 chars), so byte and char
+    numbers are 12 apart at the second anchor and 20 apart at the third. The
+    "middle differs by 12" observation therefore holds BYTE-to-BYTE (3,993 vs
+    the block's 3,981) and VANISHES CHAR-to-CHAR (both 3,981): real, but
+    unit-scoped, and not evidence of drift (dana AMS #3450 item 2; lex AMS #3453
+    item 2; measured here).
+    A GUARD-UA FACT, and the scope is load-bearing: 8 reads each at the apex and
+    the Pages origin are byte-identical at 13,225 / fa31dd15248287ce under THIS
+    file's UA, while under the literal ``Python-urllib`` UA the ORIGIN answers
+    the 403 block (7,175 B, one 32-hex key @1,307, bounded-16 x3 at 2,898 /
+    4,011 / 5,836), NOT a 200 landing — so "the apex and the origin are the
+    same bytes" is a claim about this UA only (lex AMS #3453 item 3;
+    reproduced here 2026-10-03, 8 reads/host). The 403 block re-renders its Ray
+    per read (7,145 B constant, 10/10 distinct digests, Ray triple
+    constant) — so "the same value at three offsets" is a
     property of the 403 block only, and the guard's own ``--url`` leg (which
     sends THIS file's UA) never sees it (codey egress; lex AMS #3406 item 5,
     dana AMS #3395 item 5b).
