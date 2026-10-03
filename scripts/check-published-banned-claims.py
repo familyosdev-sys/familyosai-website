@@ -26,9 +26,29 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     SCOPE OF ``--url`` AND ``--media``, written down because it has already
     hidden a live banned copy: the wire legs probe the APEX and the Pages-origin
     pair only. They do NOT enumerate unrelated deployment hostnames, and any
-    other alias on the same Pages project answers every path from its own
-    deployment - so it can serve banned-claim HTML while this guard reads
-    green. Measured 2026-10-02 (dana, AMS #2958): two live aliases,
+    other alias on the same Pages project serves that deployment's tree - so it
+    can serve banned-claim HTML while this guard reads green. MEASURED EXACTLY,
+    2026-10-02 at this egress, because "answers every path from its own
+    deployment" is TOO WIDE and hides the worse half: a Pages deployment alias is
+    a CATCH-ALL - it returns its own landing body for EVERY path that is not a
+    real file in that deployment. /zzz-guard-no-such-path, /robots.txt,
+    /privacy/, /terms/ and /404.html all answered 200 with the SAME body as / on
+    both aliases (30c37e93 6deb861731feba82, 664dd4da e0f6297e291cced0) - these
+    aliases have no 404 at all - while paths that ARE real in the deployment are
+    served as real files at the BARE spelling: /assets/brand/og-card.png 200 /
+    29,450 B / 12d98bca64515465 and /assets/social/shorts/concat.txt 200 / 1,016
+    B / 86d7b82e7c6d75f3 on both. THE REAL FILES INCLUDE THE BANNED MEDIA: the
+    bare /assets/social/shorts/familyos-explainer.mp4 is 200 / 696,581 B / sha1
+    5f364e21e0830807, and /assets/social/shorts/short3-local-first.mp4 is 200 /
+    90,818 B / sha1 24316a424b303c73, each BYTE-IDENTICAL to origin/main's blob
+    (bed05488facf59cfeac3aa7884f8d6b82203884b and
+    d8a3c6e487b921a520ea55be3e2b7efc67986255, `git hash-object --stdin`
+    equality). Those are P0/P1 banned bytes the zone's OWN purge list has spent
+    two days on, live on two MORE hostnames - and NO leg fetches them: the
+    residue registry carries only the /deploy/assets/... spelling, and BOTH apex
+    and Pages-origin 404 the bare /assets/ path (702 / 83972470b5674ad9). So the
+    bare-path media is a THIRD site of the banned bytes and is reachable only
+    from a deployment alias. Measured 2026-10-02 (dana, AMS #2958): two live aliases,
     30c37e93.familyosai-cma.pages.dev (body sha256 6deb8617...) and
     664dd4da.familyosai-cma.pages.dev (e0f6297e...), each served the old
     landing at /, /robots.txt, /privacy/, /terms/ and /404.html AND served the
@@ -372,7 +392,13 @@ Four facts a reader of this file should not have to rediscover:
     reads at the origin — moving by 1-2 B at the SAME request shape, because the
     per-request values are in the body (lex AMS #3169 item 3; re-measured here
     2026-10-02, and again at this egress 6 reps/host: 2,219-2,221 zone /
-    2,228-2,229 origin, 6/6 distinct digests each). The 1-2 B move IS real and
+    2,228-2,229 origin, 6/6 distinct digests each). AND A BAND IS A SAMPLE: at 20
+    reps/host the same two cells READ WIDER THAN THE BANDS LANDED FROM 5-6 REPS —
+    zone {2,220, 2,221, 2,222} and origin {2,228, 2,229, 2,230} (both +1 at the
+    top edge), 20/20 distinct digests each. A band narrower than the sample that
+    produced it is the same defect class this file punishes everywhere else, so
+    read every "2,NNN-2,NNN" row here as the SAMPLE that measured it, not as the
+    range of the cell (codey egress 2026-10-03, 20 reps/host, py 3.14.7). The 1-2 B move IS real and
     THIS SENTENCE IS SCOPED TO GZIP: do not extend it to the identity cell, where
     the DE-CHUNKED length is stable per host (7,145 zone / 7,175 origin, 5/5
     here, 5/5 distinct digests) — that cell's length is stable and its digest is
@@ -391,7 +417,10 @@ Four facts a reader of this file should not have to rediscover:
     len 7,024 / 4966713c4d73de92 at BOTH hosts, equal. (dana AMS #3256 item 2;
     reproduced here 10 reps/host.) ``AE: br`` is a third, shorter body again (2,096-2,097 B
     DE-CHUNKED at the zone, 2,103-2,105 at the origin; raw transfer is +12), not
-    the identity length. NAME THE HOST AND THE UNIT on every one of these cells:
+    the identity length. Same sampling caveat as the gzip cell, measured the same
+    way: 20 reps/host gives zone {2,096, 2,097, 2,099} — 2,099 is OUTSIDE the
+    landed band — and origin {2,103, 2,104, 2,105}, 20/20 distinct digests each
+    (codey egress 2026-10-03). NAME THE HOST AND THE UNIT on every one of these cells:
     they are DE-CHUNKED bodies, and the same +30 host delta applies to them, so a
     verifier measuring the zone's raw-transfer row reads 2,109 where the landed
     number says 2,097 (dana AMS #3192 item 2, #3193 item 1). AND "RAW = DE-CHUNKED
@@ -666,6 +695,19 @@ Four facts a reader of this file should not have to rediscover:
     UTF-8 excess, NOT line endings (the blob is LF-only). Read any stored-vs-text
     pairing here as "equal for ASCII, plus the non-ASCII byte excess otherwise"
     (dana #3294 item 3).
+    AND THE OFFSET FAMILY IN THIS THREAD IS BUS-ONLY, NOT LANDED: the apex
+    landing's three de-chunked offsets were carried on the bus as raw 1-BASED
+    ``2885 / 3988 / 5813``, and BOTH spellings are x0 in this blob (2,885 /
+    3,988 / 5,813 x0; 2,878 / 3,981 / 5,806 x0) — grep this file for either and
+    you get nothing, so do not read a miss as a bad quote (lex AMS #3429 item 4).
+    The ARITHMETIC is right and was reproduced here on one live chunked apex read
+    (raw 13,238 / de-chunked 13,225, ONE chunk, leading size line 6 B =
+    ``33a9\r\n``): the body's content starts at raw 0-BASED 6, so
+    ``raw_1based = dechunked_0based + 7`` — equivalently ``raw_0based =
+    dechunked_0based + 6``, which is the form the +6 label is true in. Quote the
+    frame (0-based vs 1-based) or the "+6" reads as the wrong offset by exactly
+    one, the same trap the 1,069/702 shape split already carries (codey egress
+    2026-10-03).
     NAME THE FIELD TRIPLE, THE ENTRY POINT, THE JOIN AND THE DROP-SET on any row
     quoted downstream, or the next reader will publish two values for one
     stream. (lex #3246 items 3-4; lex #3268 item 3 corrected the tip row from the
