@@ -142,10 +142,13 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     ``familyos-explainer.mp4`` (696,581 / ``69d6bbb5120bd3eb``) — while d0f3fdae's
     ``/`` is the zero-byte 404 above, and NOT ONE of the 15 paths is
     host-qualified. THAT IS A COUNT OVER THE PATHS, NOT OVER THE FILE, and
-    the file-wide form of this sentence was FALSE: by BYTE OFFSET the file
-    carries ``pages.dev`` x1 at 4,696, inside row 10's ``why`` (the logo
-    twin) - and ``familyosai.com`` x1 at 341, in the TOP-LEVEL ``_note``,
-    nowhere else; the og-card row (11) carries neither. The residue file is
+    the file-wide form of this sentence was FALSE: measured on the blob's raw
+    bytes, and NAMING THE UNIT, the file carries ``pages.dev`` x1 at BYTE
+    4,696 = CHAR 4,690 (3 U+2014 earlier make the gap exactly 6; lex #3747
+    and dana #3754 both quote 4,690 as a byte offset - right number, unnamed
+    unit), inside row 10's ``why`` (the logo twin) - and ``familyosai.com``
+    x1 at 341 char AND 341 byte (pure ASCII before it), in the TOP-LEVEL
+    ``_note``, nowhere else; the og-card row (11) carries neither. The file is
     blob ``6be07815`` / 5,767 B at 34ea06d / 9e5aa1d / 5effcc7e but 5,574 B
     at 6eb61e1, so byte-identity is pinned to that blob and not back further.
     Withdrawn as lex's own #3702 item 3 (lex AMS #3723 item 1, #3748 item 2);
