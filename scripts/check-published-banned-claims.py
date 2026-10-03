@@ -305,10 +305,25 @@ Four facts a reader of this file should not have to rediscover:
     item 2). What differs at da732d5 is the GUARD: blob
     ``fd4c3bca6ef203ba647a2c5813430688a1751b3a`` at 23,722 B stored against
     ``edd4bb659ffff09150679dcaf9e348db0802cd59`` at 61,593 B at 610b667, so the
-    docstring-dropped tree is 52,968 B there against a constant 68,217 on the
-    lineage — and it hashes to ``910bb5b0bf360b3a``, a DIFFERENT value, which is
-    the point. THAT tree is the CANONICAL four-kind drop (module + every
-    function/class docstring). A MODULE-DOCSTRING-ONLY drop is a DIFFERENT
+    docstring-dropped tree is 52,968 chars (53,030 B) there against a constant
+    68,217 chars (68,295 B) on the lineage — and it hashes to
+    ``910bb5b0bf360b3a``, a DIFFERENT value, which is the point. THAT tree is the
+    CANONICAL four-kind drop (module + every function/class docstring), and the
+    MECHANISM AXIS APPLIES AT da732d5 TOO, not only on the wire lineage: the pair
+    differs by mechanism alone at that ref as well — POP (docstrings removed from
+    the AST) -> ``910bb5b0bf360b3a`` / 52,968 chars and unparse
+    ``06e4f288ffd2dc90`` / 14,138 chars; EMPTY-IN-PLACE (each docstring constant
+    set to ``""``, no pop) -> ``fbc2532be8b8985d`` / 53,256 chars and
+    ``8c16318223aa2b90`` / 14,233 chars. So the da732d5 pair (52,968 / 14,138)
+    quoted on the bus is the POP one: a re-deriver who empties in place at that
+    ref reports a drift that is not one (lex AMS #3462 item 0).
+    NAMING, FROM THIS FILE'S OWN AST: the guard has ZERO ClassDef nodes — 0
+    classes at da732d5 (17 functions, 8 with docstrings) and 0 at the tip (21
+    functions, 11 with docstrings) — so {Module,Class} == {Module} and
+    {Module,Func,Async,Class} == {Module,Func,Async} ON THIS FILE. The durable
+    phrase is therefore "module docstring + function/async-function docstrings",
+    with the class member a no-op here (lex AMS #3462 item 0).
+    A MODULE-DOCSTRING-ONLY drop is a DIFFERENT
     artifact and is NOT stable across the tip: its unparse is 23,523 /
     ``0b19cd628ea3ba8e`` (34f777b) -> 23,559 / ``a768a2ed00538d81``
     (86714e1..a131986, b5fcd50) -> 23,735 / ``c99433a904eecbcb`` (700e730,
@@ -436,7 +451,19 @@ Four facts a reader of this file should not have to rediscover:
     ``31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495`` @7,210 -- 45 chars, so NOT
     a bounded-32 -- and the token ``c95dbd131d38427292b7bd8aacd28568`` @7,413)
     but only TWO bounded-32, which is why this row says x2 while lex AMS #3453
-    item 6 says three: both are right at their own quantifier. (lex AMS #3379
+    item 6 says three: both are right at their own quantifier. THE SAME RULE
+    APPLIES ONE CELL OVER, to the 16-hex runs: on this block BOUNDED-16 is x3 at
+    2,878 / 3,981 / 5,806 (the Ray triple, on BOTH the beacon-OFF 7,145 and the
+    beacon-ON 7,512 shapes), while a PREFIX-16 predicate reads x5 on the
+    beacon-OFF shape and x9 on the beacon-ON one. The extra members are
+    PREFIX-only, never bounded: @1,287 and @1,303 are the two halves of the
+    32-hex key ``c771f0e4b54944bebf4261d44bd79a1e`` (1,287 + 16 = 1,303); the
+    beacon-ON shape adds the two halves of the 45-char beacon path @7,210 / 7,226
+    and of the 32-hex token ``c95dbd131d38427292b7bd8aacd28568`` @7,413 / 7,429.
+    So name the PREDICATE per position — "the 4th/5th members" of a 16-hex row
+    are PREFIX matches, never bounded ones, and counting them as bounded
+    inflates x3 to x5 (lex AMS #3462 item 4; measured here 2026-10-03:
+    bounded-16 x3 on both shapes, prefix-16 x5 off / x9 on). (lex AMS #3379
     item 5; re-measured here 2026-10-03 against familyosai.com and
     familyosai-cma.pages.dev.) Do not
     carry the gzip cells as a length pin
@@ -785,7 +812,14 @@ Four facts a reader of this file should not have to rediscover:
     trap a re-deriver hits, and the reason a landing-side grep returns 3,993.
     The 2,878 / 3,981 / 5,806 triple is the 403 block's THREE Ray-ID copies (the
     same 16-hex value x3); that block is pure ASCII, so its byte and char offsets
-    coincide. The LANDING carries NO 16-hex token at all — bounded-16 x0 on
+    coincide. AND THE RAY VALUE ITSELF MOVES AT A FIXED SHAPE: across reps at
+    ``*/*`` the three bounded-16 copies walk ``a448d3e6`` -> ``a448d3e7`` here
+    (lex saw ``a448bcd78c85dcf2`` -> ``a448bcd81ff2c411`` -> ``a448bcd89b2741a3``
+    in his window), all sharing the ``a448d3e`` / ``a448bcd`` stem — so the Ray
+    row is the SHAPE (three EQUAL-length runs plus the run count), NEVER a value,
+    and a verifier who pins one digest reads drift on an unchanged artifact (lex
+    AMS #3462 item 5; measured here 2026-10-03, 6 reps: 6/6 distinct, one stem).
+    The LANDING carries NO 16-hex token at all — bounded-16 x0 on
     every read, measured here 2026-10-03 — so "the landing's three anchor
     strings" is a POSITION fact wearing a STRING noun, and two of the three
     offsets are mid-token. Name the unit and the strings: the landing's three
