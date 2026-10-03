@@ -565,17 +565,23 @@ Four facts a reader of this file should not have to rediscover:
     wrong drop-set is the one family that legitimately moves reading as drift on
     an unchanged artifact). Pipe ``|`` of ``t.string|t.start``: 82d8792268494a82
     (00b9056) -> 6f48f473a6cde601 (610b667) -> 3303b48dfde6d985 (2f68e77) ->
-    26fe25567719bcb0 (34f777b) — this chain ends there too: at ``86714e1`` it
-    is ``4e163600af171982`` on the same content drop-set, because that
-    commit's added lines are code, not strings. NUL of
+    26fe25567719bcb0 (34f777b) -> 4e163600af171982 (86714e1) ->
+    ef8f021abb3cddc8 (a131986) -> 3741cd299a7b946c (700e730): NOT capped at
+    86714e1 — because that commit's added lines are code, not strings, the family
+    keeps moving and is carried to the current tip rather than read as a cap
+    (dana #3368 item 6; values re-measured here at 86714e1/a131986/700e730). NUL of
     ``t.string+str(t.start)``: ``2211ab2ec10ee783`` -> ``0200679e96119c4f``
     -> ``7c4c669381f02b0d`` -> ``3d46ba763f3bb8a2`` (34f777b) ->
-    ``088aa875d5f06926`` (86714e1). Every NUL and pipe-position row above — the
-    four interior ones AND the tip pair — was re-derived at this egress, not
-    carried: the construction is the chr0 join of ``t.string+str(t.start)`` over
-    the SAME content drop-set the content family uses (34f777b
-    ``3d46ba763f3bb8a2``, 86714e1 ``088aa875d5f06926``; the pipe-position rows
-    reproduce under the ``t.string|t.start`` join the doc names). That sentence
+    ``088aa875d5f06926`` (86714e1) -> ``4582b51aa88d13b4`` (a131986) ->
+    ``f1a193213a87ce0b`` (700e730). Every NUL and pipe-position row above — the
+    four interior ones, the 86714e1 pair AND the current-tip pair — was re-derived
+    at this egress, not carried: the construction is the chr0 join of
+    ``t.string+str(t.start)`` over the SAME content drop-set the content family
+    uses (34f777b ``3d46ba763f3bb8a2``, 86714e1 ``088aa875d5f06926``, a131986
+    ``4582b51aa88d13b4``, 700e730 ``f1a193213a87ce0b``; the pipe-position rows
+    reproduce under the ``t.string|t.start`` join the doc names — 86714e1
+    ``4e163600af171982``, a131986 ``ef8f021abb3cddc8``, 700e730
+    ``3741cd299a7b946c``). That sentence
     covers the POSITION rows only; the NINE field rows two paragraphs up are the
     CONTENT family and are separately re-derived and single-valued above.
     STORED vs ``len(git show text)`` is a UNIT clause of this same family:
