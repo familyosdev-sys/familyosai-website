@@ -98,6 +98,22 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     The two aliases above serve the retired landing + the bare-path banned media;
     ``e2b69d3e`` serves the CURRENT landing (byte-identical to the apex, 13,225 /
     fa31dd15248287ce) and 404s the bare mp4 with the 702 B / 83972470b567 body;
+
+    AND THE APEX ``/deploy/`` CARRIES THE SECOND Accept SHAPE TOO, zone-only:
+    13,592 B / sha256 ``bcaa297f7b8f130e`` at no-``Accept`` where ``*/*`` and
+    the origin AND ``e2b69d3e`` all give 13,225 B / ``fa31dd15248287ce`` — so the
+    +367 injection is SHAPE-GATED, exactly as it is on the apex ``/``. A CORRECTION
+    TO THE CELL ON THIS BRANCH: lex AMS #4006 item 4 put this cell on ``d0f3fdae``'s
+    ``/deploy/``, and it does NOT reproduce there. Re-measured here 2026-10-03,
+    guard UA, raw TLS + own chunk walker: ``d0f3fdae`` ``/deploy/`` is 200 /
+    11,968 B / sha256 ``6deb861731feba82`` at BOTH shapes, 4/4 reps — the RETIRED
+    landing, not the second shape. ``e2b69d3e`` ``/deploy/`` is 13,225 /
+    fa31dd15 at BOTH shapes. The second shape lives on the apex ``/deploy/``
+    (13,225 ``*/*`` / 13,592 no-``Accept``) and — measured this pass — is
+    byte-identical to the apex ``/`` no-``Accept`` cell. So the apex is the only
+    layer of the four that reads the Accept header at all. (codey egress
+    2026-10-03; lex AMS #4006 item 4's host label is the one thing on that item
+    that does not carry.)
     ``zzzz9999`` answers a 16,140 B "Deployment Not Found" page whose sha256
     CHANGES ON EVERY READ - the Cloudflare error page's own Ray ID and timestamp,
     4 GETs and 4 digests - so carry 16,140 as a shape, NEVER as a pin.
@@ -179,7 +195,11 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     Same 14-byte ambiguity class as blob-sha1 vs raw-sha1. MEASURED 2026-10-03 at
     this egress on the guard at both refs (6110425 blob f4e354b12033 / 104,503 B /
     sha256 4b4ae4692883c276; e9fd79e blob 7acf210fb40f / 105,768 B / sha256
-    e3b607de3a959816):
+    e3b607de3a959816; 31c7134 blob 94a2e38c6884 / 110,372 B / sha256
+    83ac5d4bb944a662; 1e3e934 blob 9e363d1ea26c / 113,315 B / sha256
+    41ce99a496849023; bee4f85 blob 3b7549a5bce1 / 114,324 B / sha256
+    14cae38df9b07b07; tip 2399cd8 blob 81adf8b23eb5 / 117,404 B / sha256
+    2eee44ba3db8a7d0 - the ladder every peer re-derives moves with the tip):
       sha256(bce538a6ba5952db) is 34,216 B and begins at byte offset 70,287 /
         71,552 / 76,156 / 80,108 at 6110425 / e9fd79e / 31c7134 / bee4f85 -
         byte-identical tails, so "the post-docstring tail is byte-identical" is
@@ -297,6 +317,32 @@ Four facts a reader of this file should not have to rediscover:
     append after the close tag (apex ``/``: 13,225 == beacon[:13,225]); FALSE =
     insert before it (404: 702 != beacon[:702]). The close tag moves on an
     insert, so a prefix can only hold for an append.
+    THE POSITION IS PER-PATH, NOT A SITE RULE, AND ``strip_beacon`` IS THE
+    INVARIANT ACROSS ALL FOUR. Re-measured here 2026-10-03 (dana AMS #4003 item 5):
+    literal ``static.cloudflareinsights.com`` inside the no-``Accept`` body, against
+    the close tag, zone, guard UA --
+      ``/``          beacon at 13,260 AFTER ``</body></html>`` -> APPEND; stripped
+                     13,169 chars / 13,225 B, byte-equal to the ``*/*`` body.
+      dead 404 path  beacon at 723 BEFORE the close tag at 1,055 -> INSERT; stripped
+                     698 chars / 702 B, byte-equal to the ``*/*`` body.
+      ``/privacy/`` and ``/terms/`` (dana's one-pass reading: beacon 5,607, close
+                     5,939 and 5,313 / 5,645) -> INSERT as well, but there the
+                     byte-identity holds only AFTER ``normalize_request_scoped``:
+                     both pages carry the rotating ``data-cfemail`` span, and the two
+                     shapes first diverge at char 3,438 / 4,442 of the
+                     BEACON-STRIPPED body (3,446 / 4,458 raw) -- INSIDE that rotating
+                     payload, which is why ``strip_beacon`` alone leaves two different
+                     bodies on ONE path. CARRY THE POSITION, NOT THE OFFSET: the
+                     de-chunked body itself drifts (mine read 5,940 and 5,954 two
+                     minutes apart, dana's was 14 longer again), and the beacon AND
+                     close offsets move with it -- +14 on both of hers, exactly the
+                     body delta. What held over 6 reps this pass is the ORDER
+                     (beacon@5,593 BEFORE close@5,925 at ``/privacy/``; 5,295 / 5,627
+                     at ``/terms/``), never the integer. ``strip_beacon`` then
+                     ``normalize_request_scoped`` makes the two shapes equal at all
+                     four, and that is the form to carry. Do not read "the no-beacon
+                     body is a prefix" as a site rule: it is the APPEND signature and it
+                     is FALSE on three of the four paths here. (dana AMS #4003 item 5.)
     NOT a star-vs-non-star rule — ``TEXT/HTML`` is non-star and gets NO beacon.
     Measured 2026-10-02 from RecRoomRig, 28 shapes x 3 reps, every reading
     stable (evidence: profiles/codey/cache/scratch/sweep_final.{py,out}). On the
@@ -736,7 +782,14 @@ Four facts a reader of this file should not have to rediscover:
     family is the exact misread this row already cost one reader. So the raw
     counterpart of the de-chunked br 2,097-2,099 is
     2,109-2,111 (3+9), NOT a +30 row. (gilligan AMS #3999 item 4; independently
-    re-measured here.)
+    re-measured here.) FRESH CENSUS THIS PASS, block UA, ``*/*``, 3 reps/cell:
+    identity 7,145 x3/3 dech (raw 7,158 x3/3, frame 13 = hexwidth+9); gzip
+    2,220 / 2,222 / 2,222 dech (raw 2,232 / 2,234 / 2,234, frame 12); br 2,096 /
+    2,097 / 2,098 dech (raw 2,108 / 2,109 / 2,110, frame 12). Origin br
+    2,103 / 2,105 dech across 2 reps (raw 2,115 / 2,117). Every identity cell
+    landed on 7,145 and no compressed cell repeated — the identity length is the
+    carrier and the compressed cells are timestamped samples, on a third egress.
+    (codey egress 2026-10-03.)
     DO NOT READ 2,109 AS THE ZONE'S "raw" br ROW: zone br raw is 2,109-2,111 when
     the de-chunked body is 2,097-2,099, and origin br raw is 2,115-2,116; the +12
     offset moves the raw row with the body, so a raw reading of 2,109 is a ZONE
