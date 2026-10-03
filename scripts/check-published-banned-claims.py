@@ -129,6 +129,57 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     200 / 9,251 B on both aliases, apex 404 — 702 B under ``*/*``, 1,069 B with
     no ``Accept`` header, the same shape split the 404 body carries below.)
 
+    THE PURGE KEY IS THE CURRENT FILENAME, AND TWO NAMES I CARRIED ARE NOT FILES.
+    Written down because getting this backwards deletes the LANDING and leaves the
+    banned file: measured 2026-10-03 at this egress on the two catch-alls, guard UA,
+    bare /assets/social/shorts/<name>, 200 at every cell —
+      30c37e93: short1-local-first.mp4              200 / 11,968 / 6deb861731feba82  <- ITS LANDING
+                 short1-reminder-treadmill.mp4      200 / 90,196 / 5bab348ebd10f3e7  <- THE FILE
+                 walkthrough.mp4                    200 / 11,968 / 6deb861731feba82  <- ITS LANDING
+                 walkthrough-familyosai.mp4         200 / 254,527 / 76dd2eaf9e4c5733 <- THE FILE
+      664dd4da: the same two pairs, landings 11,734 / e0f6297e291cced0, files identical.
+    So `short1-local-first.mp4` and `walkthrough.mp4` are CATCH-ALL LANDINGS, not
+    shorts at all: they fall through the "landing at every path that is not a real
+    file" rule this file records one level up. `git ls-tree origin/main
+    deploy/assets/social/shorts/` tracks TEN names and the two real ones are
+    short1-reminder-treadmill.mp4 and walkthrough-familyosai.mp4; `git rev-list
+    --all --objects` matches NEITHER stale name, and the two sizes 90,196 and
+    254,527 each exist as exactly one blob (bd68ca54 / fc9b0fd6, whose content
+    sha256 equals the wire bytes above). (dana AMS #3989 item 1 — the two wrong
+    names are mine, carried in AMS #3983 item 2 and #3984 item 1; lex AMS #3987
+    item 2 caught the same pair independently. Purge key = the tree filename.)
+    THIS IS WHY THE RESIDUE REGISTRY IS SAFE TODAY AND WOULD NOT ALWAYS BE: every
+    entry in scripts/served-residue.json is spelled with the CURRENT name, so the
+    registry already carries the right key — but a purge drafted from a bus thread
+    that had the older spelling would have targeted the landing. Re-check any list
+    against `git ls-tree origin/main:deploy/assets/social/shorts/` BEFORE it becomes
+    a DELETE.
+
+    PIN A TAIL BY OFFSET-PLUS-LENGTH, NOT BY A DIGEST THAT DEPENDS ON A CONVENTION.
+    Same 14-byte ambiguity class as blob-sha1 vs raw-sha1. MEASURED 2026-10-03 at
+    this egress on the guard at both refs (6110425 blob f4e354b12033 / 104,503 B /
+    sha256 4b4ae4692883c276; e9fd79e blob 7acf210fb40f / 105,768 B / sha256
+    e3b607de3a959816):
+      sha256(bce538a6ba5952db) begins at byte offset 70,287 and is 34,216 B at
+        6110425, and at offset 71,552 / 34,216 B at e9fd79e — byte-identical tails,
+        so "the post-docstring tail is byte-identical at both refs" is EXACT.
+      sha256(eb2d89089d610f49) begins at 70,288 / 34,215 B and its first bytes are
+        ``\nfrom __`` — the same tail ONE BYTE LATER. The split is the closing-quote
+        line: ast reports the END of the docstring token where the string's last
+        character sits one line earlier. Both digests are right, neither is THE
+        digest. (lex AMS #3987 item 6.)
+    AND "AST-MINUS-DOCSTRINGS" IS A FAMILY, NOT ONE FUNCTION. dana's literal
+    99dfd01865786346 (AMS #3989 item 9) does NOT reproduce under
+    ast.dump(annotate_fields=False) here; it reproduces under the ast.dump
+    DEFAULTS. Measured at both refs, all EQUAL: annotate_fields=False ->
+    6659f3427ee9a7e6; ast.dump defaults -> 99dfd01865786346 (dana's literal);
+    module-docstring-only variants -> aae7fe1ba4110229 / 79cff80553b8825f;
+    with include_attributes=True the two refs DIVERGE (273733de3b8318dd vs
+    046ed8a540a6abc1) because the docstring edit moves every line number. Her
+    CONCLUSION reproduces at every variant — every executable line is identical —
+    but a digest that changes with the dump parameters is a label, not a pin.
+    Name the method, or pin the source.
+
     HOW MANY COPIES THIS ONE FINDING HAS, measured 2026-10-03 (lex AMS #3702
     item 2; reproduced here at this egress): FOUR — the apex copy ``scan_url``
     DOES read, plus THREE retired-host copies it cannot reach by construction,
@@ -587,20 +638,31 @@ Four facts a reader of this file should not have to rediscover:
     de-chunking a gzip payload is NOT decompression. Verified by normalizing the
     gunzip body (host -> <H>, bounded-16-hex -> <T>, key -> <K>, UTC -> <S>):
     len 7,024 / 4966713c4d73de92 at BOTH hosts, equal. (dana AMS #3256 item 2;
-    reproduced here 10 reps/host.) ``AE: br`` is a third, shorter body again (zone
-    ~2,093-2,099 B DE-CHUNKED, origin 2,103-2,105; raw transfer is +12), not the
-    identity length. Same sampling caveat as the gzip cell, and it has now bitten
-    TWICE: 20 reps/host landed zone {2,096, 2,097, 2,099} — 2,099 OUTSIDE the
-    2,096-2,097 band an earlier pass carried — and 24 reps/host at the SAME shape on
-    2026-10-03 landed zone {2,093 x1, 2,096 x6, 2,097 x13, 2,098 x4}: 2,093 sits one
-    BELOW every band this thread has landed, 24/24 distinct digests. Gilligan's half
-    (6 reps, AMS #3957 item 2) reads 2,096 / 2,096 / 2,097 / 2,097 / 2,098 / 2,098 —
-    inside the wide row, straddling the narrow one. Origin {2,103, 2,104, 2,105},
-    20/20 distinct digests each (codey egress 2026-10-03). NAME THE HOST AND THE UNIT
-    on every one of these cells:
-    they are DE-CHUNKED bodies, and the same +30 host delta applies to them, so a
-    verifier measuring the zone's raw-transfer row reads 2,109 where the landed
-    number says 2,097 (dana AMS #3192 item 2, #3193 item 1). AND "RAW = DE-CHUNKED
+    reproduced here 10 reps/host.) ``AE: br`` is a third, shorter body again — NOT the
+    identity length, and NOT a band. A union of samples is not a bound: gilligan
+    (AMS #3976 item 2, 64 reps) was narrower than his own sample and my 2,093
+    (AMS #3961) was narrower still, so the durable form NAMES EACH OBSERVATION AND
+    ITS REP COUNT and never quotes a bare range:
+      zone   /privacy/ block UA */* br: 2,095 x1, 2,096 x2, 2,097 x5, 2,098 x14,
+             2,099 x2 (24 reps here, 24/24 distinct digests)
+      origin /privacy/ block UA */* br: 2,099 x1, 2,103 x6, 2,104 x17 (24 reps)
+    THE +30 IS AN IDENTITY-ROW FACT AND DOES NOT CARRY. My earlier sentence here
+    said "the same +30 host delta applies to them"; that is false and this is the
+    correction. MEASURED 2026-10-03, 8-10 reps/cell, raw bytes-on-wire minus
+    de-chunked body: identity raw-dech = +13 both hosts; gzip = +12 both; br = +12
+    both. So raw MINUS dech is 12-13 per cell, and the HOST delta is +30 identity /
+    ~+7 gzip / ~+6 br — three different numbers. (dana AMS #3989 item 2 lands the
+    same split independently: gunzip 7,145 z / 7,175 o is +30, compressed ~+8.)
+    DO NOT READ 2,109 AS THE ZONE'S "raw" br ROW: zone br raw is 2,109-2,111 when
+    the de-chunked body is 2,097-2,099, and origin br raw is 2,115-2,116; the +12
+    offset moves the raw row with the body, so a raw reading of 2,109 is a ZONE
+    reading and cannot be mistaken for the +30 identity delta. NAME THE HOST, THE
+    ENCODING AND THE UNIT — raw or de-chunked — on every one of these cells.
+    (codey egress 2026-10-03; dana AMS #3989 items 2/3, gilligan AMS #3976 item 2,
+    lex AMS #3987 item 5.) THE SAMPLING CAVEAT STANDS, and here is why the row
+    keeps moving: my own 24-rep census above already differs from my 2026-10-03
+    2,093 reading and from gilligan's 2,096-2,099 @64. Carry the observations, not
+    a band. AND "RAW = DE-CHUNKED
     + 13" IS ONLY USUALLY TRUE: the zone intermittently splits the same landing
     into TWO chunks — 1 chunk 13,238 raw / 13 framing vs 2 chunks 13,246 raw / 21
     framing (6-byte size lines; 6+6+5+2+2), both de-chunking to the identical
