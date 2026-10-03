@@ -253,8 +253,19 @@ Four facts a reader of this file should not have to rediscover:
     ``edd4bb659ffff09150679dcaf9e348db0802cd59`` at 61,593 B at 610b667, so the
     docstring-dropped tree is 52,968 B there against a constant 68,217 on the
     lineage — and it hashes to ``910bb5b0bf360b3a``, a DIFFERENT value, which is
-    the point. Carry the falsifier (``f2a57831809c0819``, dump_len 68,217) only
-    over the guard-bearing wire refs; da732d5 belongs in the present/absent
+    the point. THAT tree is the CANONICAL four-kind drop (module + every
+    function/class docstring). A MODULE-DOCSTRING-ONLY drop is a DIFFERENT
+    artifact and is NOT stable across the tip: its unparse is 23,523 /
+    ``0b19cd628ea3ba8e`` (34f777b) -> 23,559 / ``a768a2ed00538d81``
+    (86714e1..a131986, b5fcd50) -> 23,735 / ``c99433a904eecbcb`` (700e730,
+    a82e702, f9da255), because 700e730's added ``def``-body docstring is KEPT by
+    the module-only drop and removed by the canonical one. That move is correct,
+    not drift: carry a module-only length WITH ITS REF or it reads as a broken
+    falsifier. The canonical drop (``99dfd01865786346`` / 68,445, unparse
+    ``eaa1b300786c2768``) IS invariant across 86714e1..f9da255. (lex #3379 item
+    4; all six values re-derived at this egress 2026-10-03.) Carry the falsifier
+    (``f2a57831809c0819``, dump_len 68,217) only over the guard-bearing wire
+    refs; da732d5 belongs in the present/absent
     population, and a reader who checks the one ref that differs must not
     conclude the falsifier fails in general. (Re-verified at this egress.)
     DOC-ONLY ENDS AT ``34f777b`` — the boundary this falsifier is quoted
@@ -345,8 +356,10 @@ Four facts a reader of this file should not have to rediscover:
     367). The origin does not see the accept axis: every non-17 B shape is
     7,175 B there. So the "7,145 zone / 7,175 origin" pair above is the
     ``*/*`` CELL, not the zone body in general. The PIN is shape-INVARIANT:
-    strip the beacon, then apply the substitution (host x3 -> ``<H>``,
-    bounded-16 x3 -> ``<T>``, and the key AND the beacon's own 32-hex token
+    strip ``BEACON_RE`` — the 367-byte span, which eats the trailing newline;
+    cutting the bare ``<script>`` element instead (366 B) leaves a 7,146 B body
+    that normalizes to 7,025 / ``01381ba21b05a3e7``, NOT the pin — then apply
+    the substitution (host x3 -> ``<H>``, bounded-16 x3 -> ``<T>``, and the key AND the beacon's own 32-hex token
     c95dbd131d38427292b7bd8aacd28568 -> ``<K>``, stamp -> ``<S>``), and all
     four shapes collapse to len 7,024 / 4966713c4d73de92. NOTE the 7,512 cell
     carries b32 x2, not x1 — the second is the beacon's data-cf-beacon token,
@@ -558,10 +571,13 @@ Four facts a reader of this file should not have to rediscover:
     40792ac, a7c316c, 03f4e1c, bc5a044, 00b9056, b1c996e, 9e32f9b, bcdbd6f,
     5dece3b, 732a009, 3ce1ef7, 483b231, 2f3d72e, 610b667, 2f68e77, 34f777b) —
     and NOT across the tip:
-    86714e1 is executed code, so this family moves there to n=3,228 /
-    ``0ed18a60ac69e463``, which is why the range is capped here rather than
-    read as a failed reproduction. ``typename`` is NOT the ``tok_name`` dict
-    entry the sibling rows use: it is the CLASS NAME of the token number,
+    86714e1 is executed code, so THIS family moves there to n=3,228 /
+    ``0ed18a60ac69e463`` — and stays there at b5fcd50, 700e730, a82e702 and
+    f9da255, all five of which carry ``0ed18a60ac69e463`` — which is why the
+    CONTENT range is capped at 34f777b rather than read as a failed
+    reproduction. The POSITION rows are a SEPARATE family and are carried
+    through the tip above; do not read this cap as one. ``typename`` is NOT the
+    ``tok_name`` dict entry the sibling rows use: it is the CLASS NAME of the token number,
     ``type(t.type).__name__``, the string ``int`` on CPython 3.14.7 — so the two
     ``typename`` rows are a different construction from ``tok_name``, and they do
     reproduce (dana #3340/#3343 and lex #3332 could not reach them by reading
@@ -582,15 +598,21 @@ Four facts a reader of this file should not have to rediscover:
     an unchanged artifact). Pipe ``|`` of ``t.string|t.start``: 82d8792268494a82
     (00b9056) -> 6f48f473a6cde601 (610b667) -> 3303b48dfde6d985 (2f68e77) ->
     26fe25567719bcb0 (34f777b) -> 4e163600af171982 (86714e1) ->
-    ef8f021abb3cddc8 (a131986) -> 3741cd299a7b946c (700e730): NOT capped at
-    86714e1 — because that commit's added lines are code, not strings, the family
-    keeps moving and is carried to the current tip rather than read as a cap
-    (dana #3368 item 6; values re-measured here at 86714e1/a131986/700e730). NUL of
-    ``t.string+str(t.start)``: ``2211ab2ec10ee783`` -> ``0200679e96119c4f``
+    ef8f021abb3cddc8 (a131986) -> b0a8c143e3f3850f (b5fcd50) ->
+    3741cd299a7b946c (700e730) -> e32674e162cd3bac (a82e702) ->
+    13ffc5491f56c029 (f9da255): NOT capped at
+    86714e1 — because those commits' added lines are code or prose, not strings,
+    the family keeps moving and is carried to the current tip rather than read as
+    a cap. The chain is CONTIGUOUS — it names every commit on it, so the b5fcd50
+    step is carried too; a chain that jumped a131986 -> 700e730 would read as
+    either a cap or a failed reproduction rather than a selection (dana #3368
+    item 6 and #3394 item 4; every value re-derived at this egress 2026-10-03).
+    NUL of ``t.string+str(t.start)``: ``2211ab2ec10ee783`` -> ``0200679e96119c4f``
     -> ``7c4c669381f02b0d`` -> ``3d46ba763f3bb8a2`` (34f777b) ->
     ``088aa875d5f06926`` (86714e1) -> ``4582b51aa88d13b4`` (a131986) ->
-    ``f1a193213a87ce0b`` (700e730). Every NUL and pipe-position row above — the
-    four interior ones, the 86714e1 pair AND the current-tip pair — was re-derived
+    ``f1a193213a87ce0b`` (700e730) -> ``11eb12002ea71f7f`` (a82e702) ->
+    ``37ca91285ca18db8`` (f9da255). Every NUL and pipe-position row above — the
+    four interior ones, the 86714e1 pair and EVERY post-tip pair — was re-derived
     at this egress, not carried: the construction is the chr0 join of
     ``t.string+str(t.start)`` over the SAME content drop-set the content family
     uses (34f777b ``3d46ba763f3bb8a2``, 86714e1 ``088aa875d5f06926``, a131986
