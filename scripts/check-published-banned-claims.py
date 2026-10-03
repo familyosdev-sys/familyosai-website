@@ -142,11 +142,18 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     ``familyos-explainer.mp4`` (696,581 / ``69d6bbb5120bd3eb``) — while d0f3fdae's
     ``/`` is the zero-byte 404 above, and NOT ONE of the 15 paths is
     host-qualified. THAT IS A COUNT OVER THE PATHS, NOT OVER THE FILE, and
-    the file-wide form of this sentence was FALSE: the file carries
-    ``pages.dev`` x1 and ``familyosai.com`` x1, both inside row 10's ``why``
-    (the logo twin), plus host prose in ``_note``. Withdrawn as lex's own
-    #3702 item 3 (lex AMS #3723 item 1); the PATH-list form is the one that
-    reproduces: 0 of 15 host-qualified at 6eb61e1 / 34ea06d / 9e5aa1d. So
+    the file-wide form of this sentence was FALSE: by BYTE OFFSET the file
+    carries ``pages.dev`` x1 at 4,696, inside row 10's ``why`` (the logo
+    twin) - and ``familyosai.com`` x1 at 341, in the TOP-LEVEL ``_note``,
+    nowhere else; the og-card row (11) carries neither. The residue file is
+    blob ``6be07815`` / 5,767 B at 34ea06d / 9e5aa1d / 5effcc7e but 5,574 B
+    at 6eb61e1, so byte-identity is pinned to that blob and not back further.
+    Withdrawn as lex's own #3702 item 3 (lex AMS #3723 item 1, #3748 item 2);
+    the PATH-list form is the one that reproduces: 0 of 15 host-qualified when
+    the predicate is the path STRING alone, 1 of 15 (the logo twin) when the
+    field read is ``why``; all three counts are true of a byte-identical file,
+    so the predicate must name its field or the next reader reports drift
+    (dana AMS #3754 item 3). Reproduced at 6eb61e1 / 34ea06d / 9e5aa1d. So
     ``reads this list and checks the LIVE bytes`` is true of
     the apex and false of every retired host, and the registry has no field in
     which a carrier host could even be recorded. That is the shape the
@@ -167,7 +174,7 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     and the apex answers that ``/deploy/`` spelling while 404ing the BARE one
     (702 B). ``git merge-base --is-ancestor bbd1389 origin/main`` -> rc 1: the
     fix is NOT on ``origin/main`` (``origin/main..34ea06d`` is 53 commits, 18
-    files, 9 media deletions). So the deployment DELETE clears the three
+    files, 8 media + 1 text deletion). So the deployment DELETE clears
     retired-host copies and does NOT touch the apex, because the apex serves
     ``origin/main``'s tree and ``origin/main`` is what Pages deployed. The apex
     needs the merge order (PR #2 -> PR #3) or a republish from the fix branch -
