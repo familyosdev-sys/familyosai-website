@@ -997,7 +997,10 @@ def not_found_findings() -> list[str]:
     Three readings, each requiring its own status AND agreeing on the
     beacon-stripped digest:
       * the apex ZONE unknown path — must answer 404 with the 404 body;
-      * the apex ZONE ``/404.html`` — must answer 200 with the same body;
+      * the apex ZONE ``/404.html`` — must answer 200 with the same body
+        (REDIRECT-FOLLOWING: a no-redirect GET reads 308/0 B with ``Location:
+        /404``, so the 200 is the followed shape — see the note above; dana
+        #3341 item 1);
       * the Pages ORIGIN (``familyosai-cma.pages.dev``) unknown path — must
         answer 404 with the same body. This is the layer discriminator: the
         origin injects no beacon, so it is what a purge would expose, and a pin
