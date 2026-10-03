@@ -124,8 +124,11 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     object graph holds 389 objects (178 tree / 129 blob / 82 commit; 129 of 129
     blobs content-distinct), EXACTLY ONE matches that content sha256 —
     ``03905ea37d6766cbff148ac1562c7534d7a4d621``, 11,968 B, which is
-    ``c46b173:deploy/index.html`` and sits on NO branch tip (``main`` d5173b13 /
-    ``origin/main`` a0f6d8a8 / this branch 37939646) — and ZERO match the 664dd4da
+    ``c46b173:deploy/index.html`` and sits on NO branch tip - and here the three
+    tokens in that parenthesis are NOT branch tips but BLOBS of
+    ``deploy/index.html`` at those refs (``main`` d5173b13 / 12,398 B;
+    ``origin/main`` a0f6d8a8 / 13,225 B; this branch 37939646 / 13,915 B; each
+    ``git cat-file -t`` = ``blob``; dana AMS #4003 item 2) - and ZERO match the 664dd4da
     variant's ``e0f6297e291cced0`` (11,734 B). The two catch-all landings are
     therefore NOT symmetric under a purge: the 30c37e93 body is findable in the
     object graph, the 664dd4da body has to be purged by name ON THE WIRE. Object
@@ -177,14 +180,15 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     this egress on the guard at both refs (6110425 blob f4e354b12033 / 104,503 B /
     sha256 4b4ae4692883c276; e9fd79e blob 7acf210fb40f / 105,768 B / sha256
     e3b607de3a959816):
-      sha256(bce538a6ba5952db) begins at byte offset 70,287 and is 34,216 B at
-        6110425, and at offset 71,552 / 34,216 B at e9fd79e — byte-identical tails,
-        so "the post-docstring tail is byte-identical at both refs" is EXACT.
-      sha256(eb2d89089d610f49) begins at 70,288 / 34,215 B and its first bytes are
-        ``\nfrom __`` — the same tail ONE BYTE LATER. The split is the closing-quote
-        line: ast reports the END of the docstring token where the string's last
-        character sits one line earlier. Both digests are right, neither is THE
-        digest. (lex AMS #3987 item 6.)
+      sha256(bce538a6ba5952db) is 34,216 B and begins at byte offset 70,287 /
+        71,552 / 76,156 / 80,108 at 6110425 / e9fd79e / 31c7134 / bee4f85 -
+        byte-identical tails, so "the post-docstring tail is byte-identical" is
+        EXACT across all FOUR refs, not the two it was first landed against.
+      sha256(eb2d89089d610f49) is 34,215 B at 70,288 / 71,553 / 76,157 / 80,109,
+        its first bytes ``\nfrom __`` - the same tail ONE BYTE LATER. The split is
+        the closing-quote line: ast reports the END of the docstring token where
+        the string's last character sits one line earlier. Both digests are right,
+        neither is THE digest. (lex AMS #3987 item 6; four-ref re-measurement here.)
     AND "AST-MINUS-DOCSTRINGS" IS A FAMILY, NOT ONE FUNCTION. dana's literal
     99dfd01865786346 (AMS #3989 item 9) does NOT reproduce under
     ast.dump(annotate_fields=False) here; it reproduces under the ast.dump
@@ -250,6 +254,29 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     ``origin/main``'s tree and ``origin/main`` is what Pages deployed. The apex
     needs the merge order (PR #2 -> PR #3) or a republish from the fix branch -
     do not read the DELETE's promise as "apex clean after DELETE".
+
+    THE FIX'S OWN BLOB IS REACHABLE FROM BOTH FIX BRANCHES, AND THE GUARD'S OWN
+    ACCEPTANCE TEST IS RED AT THE LIVE TIP. Two cells not previously pinned here,
+    re-measured 2026-10-03. (1) THE SCRUBBED COPY - 9,444 B / sha256
+    ``e7d2e71c5c8674b5``, ZERO ``lives in your house`` and zero of the other two
+    phrases - first lands at ``bbd1389`` and is carried by BOTH
+    ``fix/claims-guard-wire-leg-and-units-20261002`` AND
+    ``fix/social-claims-and-publish-hygiene-20261002``: ``git merge-base
+    --is-ancestor da732d5 bee4f85`` -> rc 0, so the hygiene tip is an ANCESTOR of
+    this branch's tip. (AMS #4006 item 7 reads the scrubbed blob as existing
+    "ONLY" on the hygiene branch: true against ``origin/main``, FALSE between the
+    two fix branches - and the distinction is the useful one, because landing
+    EITHER branch clears the apex explainer.) The stale copy ``339f229565545cf7``
+    / 9,251 B sits on FOUR refs measured here: ``origin/main``, ``main``,
+    ``chore/legal-pages-and-week6-cards`` and ``deployed-state/apex-2026-10-02``.
+    (2) ``python3 scripts/check-published-banned-claims.py --url`` EXITS 1 at this
+    tip: it fetches
+    ``https://familyosai.com/deploy/assets/social/shorts/familyos_explainer.py``
+    (9,251 B / ``339f229565545cf7``) and reports ``banned claim 'lives in your
+    house'`` - while ``--tree`` exits 0 on the SAME tree, because the worktree
+    already carries the scrubbed file. Green where the fix is, red where the zone
+    is: the correct reading, and the one to put in front of Chris. The remaining
+    step is MERGE + REDEPLOY, both founder-held.
 
 Four facts a reader of this file should not have to rediscover:
 
@@ -551,10 +578,17 @@ Four facts a reader of this file should not have to rediscover:
     ``/robots.txt`` carries the IDENTICAL row at the ZONE (``Absent`` / blank / ``*/*``
     -> absent and ``text/html`` 1,069 B / 829eacac57f53ed4; blank and ``*/*`` 702 B /
     83972470b5674ad9), so "no Accept" alone is not the right reading of the 1,069 cell
-    — it is the NON-``*/*`` side. Re-measured here 2026-10-03, guard UA, zone: absent
-    1,069 / blank 702 / ``*/*`` 702 / ``text/html`` 1,069. (The file's 403 paragraph
+    - the 1,069 side is the case-SENSITIVE literal ``text/html`` SUBSTRING of the
+    raw header, plus the ABSENT header, and blank lands on the 702 side, so it is
+    neither "no Accept" nor "non-``*/*``". Nine-cell row, re-measured here
+    2026-10-03, guard UA, ZONE: absent 1,069 / blank 702 / ``*/*`` 702 /
+    ``text/html`` 1,069 / ``TEXT/HTML`` 702 / ``Text/Html`` 702 / ``text/html2``
+    1,069 / ``text/htmlish`` 1,069 / ``*/*, text/html`` 1,069; the ORIGIN is 702 at
+    all four shapes. So the axis is the raw-header substring, exactly as the apex
+    bullet says one status over. (The file's 403 paragraph
     above already says the same thing one status over — present-but-BLANK ``Accept``
-    is a 17 B shape there — and dana AMS #3999's own row reads it as a third shape;
+    is a 17 B shape there - and dana AMS #3998 ITEM 4's own row reads it as a third
+    shape;
     both are the same fact.) And ``/robots.txt`` is the PATH that is not constant
     across the host set: the origin, ``e2b69d3e`` and ``d0f3fdae`` all answer
     200 / 1,248 B / 8fa3036c68bfcbd3 while the zone 404s it — so no single host is
@@ -644,7 +678,12 @@ Four facts a reader of this file should not have to rediscover:
     top edge), 20/20 distinct digests each. A band narrower than the sample that
     produced it is the same defect class this file punishes everywhere else, so
     read every "2,NNN-2,NNN" row here as the SAMPLE that measured it, not as the
-    range of the cell (codey egress 2026-10-03, 20 reps/host, py 3.14.7).
+    range of the cell (codey egress 2026-10-03, 20 reps/host, py 3.14.7). GILLIGAN'S
+    FRESH 16-REP ZONE CENSUS WIDENS THAT SAMPLE DOWNWARD and is carried as an
+    observation, never a band: {2,219 x1, 2,220 x5, 2,221 x9, 2,222 x1}, union
+    2,219-2,222 (AMS #4002 item 2, 2026-10-03 14:00-14:04 EDT) - so the 2,220 low
+    edge in the 20-rep row above is one rep count, not the cell, and the published
+    2,220-2,222 band stays withdrawn on both our sides.
     THE ORIGIN FLOOR IS NOT 2,228: dana's 12 fresh reads at this shape reached
     2,226 (AMS #3450 item 5), one below the 2,227 this thread had carried,
     while this egress's own 30 reads landed 2,228 / 2,229 / 2,230 only (10/15/5)
@@ -690,8 +729,12 @@ Four facts a reader of this file should not have to rediscover:
     property of identity-vs-compressed. Re-measured here 2026-10-03, 4 reps/cell,
     block UA on ``/privacy/``: identity 7,158 raw / 7,145 dech / frame 13 (=
     hexwidth(7,145)+9 = 4+9) at the zone and 7,188 / 7,175 / 13 at the origin;
-    gzip 2,232 / 2,220 / 12 and 2,240 / 2,228 / 12; br 2,109 / 2,097 / 12 and
-    2,115 / 2,103 / 12. So the raw counterpart of the de-chunked br 2,097-2,099 is
+    gzip 2,232 raw / 2,220 dech / frame 12 and 2,240 raw / 2,228 dech / frame 12;
+    br 2,109 raw / 2,097 dech / frame 12 and 2,115 raw / 2,103 dech / frame 12 -
+    the ``raw / dech / frame`` triple is repeated on EVERY row here, not only on
+    the identity one, because a de-chunked figure quoted inside a raw-labelled
+    family is the exact misread this row already cost one reader. So the raw
+    counterpart of the de-chunked br 2,097-2,099 is
     2,109-2,111 (3+9), NOT a +30 row. (gilligan AMS #3999 item 4; independently
     re-measured here.)
     DO NOT READ 2,109 AS THE ZONE'S "raw" br ROW: zone br raw is 2,109-2,111 when
