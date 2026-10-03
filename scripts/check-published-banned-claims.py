@@ -132,7 +132,13 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     ``e3b0c44298fc1c14``, the hash of empty) while ``/robots.txt`` answers
     200 / 1,248 B and ``/README.md`` 200 / 20 B - a PARTIAL deployment (the
     ``/deploy/`` tree plus the repo-root publish, nothing else), which is
-    exactly why a catch-all test reads it as dead. Re-measured here
+    exactly why a catch-all test reads it as dead. AND ITS ``/deploy/`` IS ORIGIN-
+    BACKED, NOT A CACHE ENTRY like the apex zone's: measured here 2026-10-03,
+    ``d0f3fdae`` ``/deploy/?x=1`` = 200 / 11,968 / ``6deb861731feba82`` while the
+    SAME shape at the APEX ZONE is 404 / 702 / ``83972470b5674ad9``. One named query
+    flips the two - same bytes, opposite gate - so a purge row for ``/deploy/``
+    must carry (host, SPELLING, layer); a (host, path) pair alone leaves one live.
+    (lex AMS #4040 item 2.) Re-measured here
     2026-10-03 (lex AMS #3723 item 4). So the hostname set is not enumerable by
     name and a per-alias allowlist is the wrong shape - but do not read these
     five as the project's full alias list either:
@@ -256,7 +262,22 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     but a digest that changes with the dump parameters is a label, not a pin.
     Name the method, or pin the source.
     NAME THE METHOD BESIDE THE SIZE, OR QUOTE NEITHER: 6659f3427ee9a7e6 IS invariant
-    and current (drop-all-docstrings, ``annotate_fields=False``), but its size at the
+    and current (drop-all-docstrings, ``annotate_fields=False``) -- ACROSS THE REFS
+    WHOSE EDITS LANDED IN THE MODULE DOCSTRING, which is what every ref 6110425..
+    a0f7271 is: all TEN re-derived here 2026-10-03 give 47,196 / 6659f3427ee9a7e6 and
+    68,445 / 99dfd01865786346 alike, so the move that lands prose INTO the docstring
+    is invisible and the move that lands it AFTER the docstring (the +1,147 B insert)
+    leaves the executable bytes untouched; but a commit that changes any EXECUTABLE
+    byte moves it, and a string literal in the WARN block is an executable byte, not
+    prose. Name the boundary WITH the construction, or the next tip reads a broken
+    falsifier. THIS PASS IS THE COUNTER-EXAMPLE IT WARNS ABOUT: the #4040 edits add
+    string literals to the WARN block, so the construction moves HERE -
+    47,196 -> 47,705 chars / ``8f4706c929d65c53`` (drop-all-docstrings,
+    ``annotate_fields=False``) and 68,445 -> 68,954 / ``7b02361459ca89e1``
+    (``ast.dump`` DEFAULTS), measured on the working tree before the commit that
+    carries this sentence. Read 47,196 / 6659f3427ee9a7e6 as PRE-#4040 only; a
+    verifier who re-derives at #4040 or later and gets 47,705 has reproduced the
+    boundary, not found a drift. Its size at the
     tip 06547e4 is 47,196 chars / 47,274 B -- while 68,217 chars / 68,295 B is the
     OTHER construction's size (``ast.dump`` DEFAULTS -> 99dfd01865786346, itself
     68,445 chars / 68,523 B at the tip). The 47K and 68K pairs cannot share one row:
@@ -334,7 +355,15 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     ``fix/claims-guard-wire-leg-and-units-20261002`` AND
     ``fix/social-claims-and-publish-hygiene-20261002``: ``git merge-base
     --is-ancestor da732d5 bee4f85`` -> rc 0, so the hygiene tip is an ANCESTOR of
-    this branch's tip. (AMS #4006 item 7 reads the scrubbed blob as existing
+    this branch's tip. AND ``bbd1389`` IS AN ANCESTOR AND IS NO REF'S TIP - never
+    carry "``--contains bbd1389`` is empty" or "dead side lane": measured here
+    2026-10-03, ``--is-ancestor bbd1389`` is rc 0 at HEAD/``a0f7271``, ``2a82dd5``,
+    ``2399cd8`` AND ``da732d5``, and ``for-each-ref --contains bbd1389`` returns
+    FOUR labels (both fix branches, local and remote). The two clauses contradict
+    each other, and the empty-``--contains`` form is FALSE; name the two TIPS when
+    you name the merge. (That sentence was lex's, AMS #4023 item 5, and lex AMS
+    #4040 item 5 withdraws it at the source; the measurement is pinned here so it
+    cannot be re-carried.) (AMS #4006 item 7 reads the scrubbed blob as existing
     "ONLY" on the hygiene branch: true against ``origin/main``, FALSE between the
     two fix branches - and the distinction is the useful one, because landing
     EITHER branch clears the apex explainer.) The stale copy ``339f229565545cf7``
@@ -394,7 +423,14 @@ Four facts a reader of this file should not have to rediscover:
                                      revision-scoped, the relation is not.)
                        all four      the span is 367 B, sha256
                                      ``f548e603cca2ef9a`` - ONE object at all four
-                                     paths, whose first 42 chars are
+                                     paths (the same span with its trailing LF
+                                     STRIPPED is 366 B / ``b3cdb7acf93cec45``, so
+                                     name the BYTE, never just the length: 367 is
+                                     the span WITH the LF, and star+span ==
+                                     no-Accept holds on all four paths here -
+                                     13,225+367=13,592, 5,587+367=5,954,
+                                     5,293+367=5,660; lex AMS #4040 item 4), whose
+                                     first 42 chars are
                                      ``<script type="module" src="https://static.``
                      CARRY THE POSITION, NOT THE OFFSET: the integer travels with
                      the page revision, the ORDER does not. AND THE TWO SHAPES
@@ -583,8 +619,17 @@ Four facts a reader of this file should not have to rediscover:
     HERE 2026-10-03, guard UA, ``*/*``, zone:
       ``/deploy/``     Age 141,4xx -> created 2026-10-02T05:05:12Z, expiry 2026-10-09T05:05:12Z
       the .py entry    Age 288,2xx -> created 2026-09-30T12:18:00Z, expiry 2026-10-07T12:18:00Z
-    THREE days apart, so ONE purge cannot be assumed to clear both, and after
-    2026-10-09 the ``/deploy/`` landing entry is gone by expiry alone. lex AMS #4023
+      ORIGIN ``/deploy/`` (familyosai-cma.pages.dev) Age 142,672 / HIT -> created
+                       2026-10-02T05:46:37Z, expiry 2026-10-09T05:46:37Z
+    and the .py entry's own stamp JITTERS between reads (12:17:59Z / 12:17:59Z /
+    12:18:00Z across three reads in one session here), so its durable form is the
+    RANGE 2026-09-30T12:16:34-12:18:00Z (lex AMS #4040 item 3, whose 20:18Z read
+    gave the 12:16:34 end) - a per-PoP entry stamp, not one decaying entry. THREE
+    clocks, NOT two: the origin ``/deploy/`` entry carries its own 05:46:37Z
+    creation, 41 minutes after the apex zone's 05:05:12Z, so a purge dated off one
+    of them leaves the other two. THREE days apart, so ONE purge cannot be assumed
+    to clear them, and after
+    2026-10-09 the ``/deploy/`` landing entries are gone by expiry alone. lex AMS #4023
     item 4 published the 12:18 pair against the SERVED .py; the 05:05 pair is the
     ``/deploy/`` entry that serves the current landing, measured here for the first
     time.
@@ -820,7 +865,16 @@ Four facts a reader of this file should not have to rediscover:
     both are the same fact.) And ``/robots.txt`` is the PATH that is not constant
     across the host set: the origin, ``e2b69d3e`` and ``d0f3fdae`` all answer
     200 / 1,248 B / 8fa3036c68bfcbd3 while the zone 404s it — so no single host is
-    "the inverse" of another, and the axis is (host, path), not zone-vs-origin. The
+    "the inverse" of another, and the axis is (host, path), not zone-vs-origin.
+    AND ``/robots.txt`` IS NOT A HOST DISCRIMINATOR AT ALL: every ``*.pages.dev``
+    label answers it, including labels with NO deployment - measured here
+    2026-10-03, ``qwerty4321`` and ``thislabeldoesnotexist12345`` BOTH 200 / 1,248 B
+    / ``8fa3036c68bfcbd3``, byte-identical to the real hosts' - so the wildcard
+    serves the path and the file is in NO ref of this repo (``git cat-file -e
+    <ref>:robots.txt`` rc 128 at all 12 refs, and ``deploy/robots.txt`` likewise).
+    A ``--media``/``--url`` leg that reads robots.txt as a liveness signal on a
+    non-existent label gets a FALSE POSITIVE; the discriminator is ``/``. (lex AMS
+    #4040 item 8.) The
     403/404 split is a SHAPE fact, not an egress one. The host delta is explainable too, and it is a
     like-for-like 30 B, never 43: 7,158 raw / 7,145 de-chunked at the zone vs
     7,188 raw / 7,175 de-chunked at the origin, so raw-vs-raw and
@@ -2040,7 +2094,14 @@ def main() -> int:
     if warnings:
         print(f"\nWARN — {len(warnings)} banned-claim finding(s) OUTSIDE the publish root.\n"
               "Not served once destination_dir=deploy/, but the Pages project currently\n"
-              "publishes the repo root, so these are live at familyosai.com today:\n")
+              "publishes the repo root, so a finding on a file that IS in a ref is live at\n"
+              "familyosai.com today. SCOPE - PER WITNESS, NOT PER WARNING: this guard does\n"
+              "not check that a witness path is (a) in any ref or (b) served, and a warning\n"
+              "can name a path in NO ref that 404s at every host (lex AMS #4040 item 6: a\n"
+              "peer's cache/scratch file changed this block's own coverage between two\n"
+              "in-session runs, and the path it named is absent at HEAD and origin/main,\n"
+              "``git cat-file -e`` rc 128, and 404/702 on all six hosts probed). A wire leg\n"
+              "or a second scope word is still owed here:\n")
         for w in warnings:
             print(f"  ! {w}")
 
