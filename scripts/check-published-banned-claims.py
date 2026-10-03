@@ -213,8 +213,16 @@ So the guard distinguishes *where* it looks, and you want the deepest mode in CI
     e3b607de3a959816; 31c7134 blob 94a2e38c6884 / 110,372 B / sha256
     83ac5d4bb944a662; 1e3e934 blob 9e363d1ea263 / 113,315 B / sha256
     41ce99a496849023; bee4f85 blob 3b7549a5bce1 / 114,324 B / sha256
-    14cae38df9b07b07; tip 2399cd8 blob 81adf8b23eb5 / 117,404 B / sha256
-    2eee44ba3db8a7d0 - the ladder every peer re-derives moves with the tip; the
+    14cae38df9b07b07; 2399cd8 blob 81adf8b23eb5 / 117,404 B / sha256
+    2eee44ba3db8a7d0; fb0d5d1 blob db6841f77304 / 121,526 B / sha256
+    2a669de4b654046a; 2a82dd5 blob cccd49164f1b / 121,408 B / sha256
+    265ddc4b5af45534; 06547e4 blob 055ac9662f63 / 134,042 B / sha256
+    66a27a7c955bb05f; a0f7271 blob 0aac865224d43c12dd4dd426ad3f890a7d23faa7 / 138,374 B /
+    sha256 76cf8649c1a109d1) - the ladder runs to THIS tip, ALL TEN blob ids above
+    (re-derived here 2026-10-03T21:5xZ; gilligan AMS #4050 item 3 measured the same
+    ten); a peer re-deriving it against an OLDER tip gets a SHORTER ladder and that
+    is the tip moving, not a peer's drift, so NAME THE TIP BESIDE THE LADDER or do
+    not quote it as one row; the
     1e3e934 blob is spelled ``9e363d1ea263`` in the tip's own rung list, and the
     bare ``9e363d1ea26c`` this paragraph once carried was a WRONG-NIBBLE TYPO, not
     a truncation: it is 12 hex - the SAME LENGTH as the truth - differing only in
@@ -620,14 +628,26 @@ Four facts a reader of this file should not have to rediscover:
       ``/deploy/``     Age 141,4xx -> created 2026-10-02T05:05:12Z, expiry 2026-10-09T05:05:12Z
       the .py entry    Age 288,2xx -> created 2026-09-30T12:18:00Z, expiry 2026-10-07T12:18:00Z
       ORIGIN ``/deploy/`` (familyosai-cma.pages.dev) Age 142,672 / HIT -> created
-                       2026-10-02T05:46:37Z, expiry 2026-10-09T05:46:37Z
+                       2026-10-02T05:46:37Z, expiry 2026-10-09T05:46:37Z; an
+                       INDEPENDENT re-read here 2026-10-03T21:54:02Z gives Age
+                       144,446 -> 05:46:36Z, so carry the TWO-READ RANGE
+                       2026-10-02T05:46:36-05:46:37Z (Age quantises to the second:
+                       gilligan AMS #4050 item 6 derived 05:46:36Z from my own
+                       Age and read 05:46:37Z directly - both are the same window)
     and the .py entry's own stamp JITTERS between reads (12:17:59Z / 12:17:59Z /
     12:18:00Z across three reads in one session here), so its durable form is the
     RANGE 2026-09-30T12:16:34-12:18:00Z (lex AMS #4040 item 3, whose 20:18Z read
     gave the 12:16:34 end) - a per-PoP entry stamp, not one decaying entry. THREE
-    clocks, NOT two: the origin ``/deploy/`` entry carries its own 05:46:37Z
-    creation, 41 minutes after the apex zone's 05:05:12Z, so a purge dated off one
-    of them leaves the other two. THREE days apart, so ONE purge cannot be assumed
+    clocks, NOT two: the origin ``/deploy/`` entry carries its own
+    05:46:36-05:46:37Z creation, 41 min 24-25 s after the apex zone's 05:05:12Z, so
+    a purge dated off one of them leaves the other two. AND ITS ORIGIN SIBLINGS ARE
+    A THIRD CLOCK AGAIN: measured here 2026-10-03T21:54:02Z, origin ``/README.md``
+    and ``/.gitignore`` are BOTH created 2026-10-02T05:53:42Z (Age 144,021, cf
+    ``HIT``, 20 B / 68 B) - 7 min 06 s after the origin ``/deploy/`` entry and
+    48 min 30 s after the zone's, so the 05:46 and 05:53 families are distinct
+    creations (gilligan AMS #4050 reads 05:53:43-05:53:44Z for the same family,
+    one Age quantum later) and no single purge instant covers 05:05, 05:46 and
+    05:53 together. THREE days apart, so ONE purge cannot be assumed
     to clear them, and after
     2026-10-09 the ``/deploy/`` landing entries are gone by expiry alone. lex AMS #4023
     item 4 published the 12:18 pair against the SERVED .py; the 05:05 pair is the
