@@ -336,7 +336,23 @@ Four facts a reader of this file should not have to rediscover:
     10 B longer at the origin, so neither is "the" 403 digest. So do NOT describe
     it as "per-request-XOR" (that is the ``data-cfemail`` payload's mechanism, a
     different section) and do NOT pin it either way. Note the guard's own live
-    leg sends ``Accept: */*`` — it is on the BIG shape, not the 17 B one. Do not
+    leg sends ``Accept: */*`` — it is on the BIG shape, not the 17 B one.
+    THE 403 BODY IS ACCEPT-SHAPE-DEPENDENT AT THE ZONE, the same class as the
+    404 row below: at ``Accept`` absent / empty / blank the zone answers 17 B
+    (2938e9f128418095); at ``*/*`` / ``TEXT/HTML`` / ``application/xhtml+xml``
+    / ``*/*;q=0.8`` it answers 7,145 B beacon-free; at LOWERCASE ``text/html``
+    and ``text/htmlish`` it answers 7,512 B WITH the beacon (BEACON_RE span
+    367). The origin does not see the accept axis: every non-17 B shape is
+    7,175 B there. So the "7,145 zone / 7,175 origin" pair above is the
+    ``*/*`` CELL, not the zone body in general. The PIN is shape-INVARIANT:
+    strip the beacon, then apply the substitution (host x3 -> ``<H>``,
+    bounded-16 x3 -> ``<T>``, and the key AND the beacon's own 32-hex token
+    c95dbd131d38427292b7bd8aacd28568 -> ``<K>``, stamp -> ``<S>``), and all
+    four shapes collapse to len 7,024 / 4966713c4d73de92. NOTE the 7,512 cell
+    carries b32 x2, not x1 — the second is the beacon's data-cf-beacon token,
+    so a normalizer that eats only the constant key yields two different
+    digests for the two shapes. (lex AMS #3379 item 5; re-measured here
+    2026-10-03 against familyosai.com and familyosai-cma.pages.dev.) Do not
     carry the gzip cells as a length pin
     either: at ``Accept: */*`` + ``AE: gzip`` the DE-CHUNKED body measured
     2,221/2,221/2,220/2,221/2,221 across reads at the zone and 2,229/2,228 across
